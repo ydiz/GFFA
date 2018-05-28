@@ -28,32 +28,31 @@ void GF_heatbath(const LatticeGaugeField &Umu, LatticeColourMatrix &g, int nswee
     U[mu] = PeekIndex<LorentzIndex>(Umu, mu);
 
   //dU_for_verbose and ta are for verbose; can be deleted
-  //LatticeGaugeField dU_for_verbose(Umu._grid);
-  //std::vector<ColourMatrix> ta(8);
-  //for(int i=0; i<8; ++i) SU3::generator(i, ta[i]);
+  LatticeGaugeField dU_for_verbose(Umu._grid);
+  std::vector<ColourMatrix> ta(8);
+  for(int i=0; i<8; ++i) SU3::generator(i, ta[i]);
 
   for(int sweep=0;sweep<nsweeps;sweep++){
 
   //  // std::cout<<GridLogMessage<<"sweep "<<sweep<<" S: "<<GF_S(g, Umu)<<std::endl;
 
-  //  if(verbose)
-  //  {
-  //    std::cout << GridLogMessage
-  //    << "sweeps: " << sweep << std::endl;
+   if(verbose)
+   {
+     std::cout << GridLogMessage
+     << "sweeps: " << sweep << std::endl;
 
-  //    std::cout << GridLogMessage
-  //    << "dOmegaSquare: " << dOmegaSquare2(g, Umu) << std::endl;
+     std::cout << GridLogMessage
+     << "dOmegaSquare: " << dOmegaSquare2(g, Umu) << std::endl;
 
-  //    dU_for_verbose = dSGF1dU_g(g, Umu);
+     dU_for_verbose = dOmegadU_g(g, Umu);
 
-  //    std::cout << GridLogMessage
-  //    << "dU[1,2,3,4], 0: " << peek_xa(dU_for_verbose, std::vector<int>{1,2,3,4}, 0, ta) << std::endl;
+     std::cout << GridLogMessage
+     << "dU[1,2,3,4], 0: " << peek_xa(dU_for_verbose, std::vector<int>{1,2,3,4}, 0, ta) << std::endl;
 
+     std::cout << GridLogMessage
+     << "dU[2,2,2,2], 2" << peek_xa(dU_for_verbose, std::vector<int>{2,2,2,2}, 2, ta) << std::endl;
 
-  //    std::cout << GridLogMessage
-  //    << "dU[2,2,2,2], 2" << peek_xa(dU_for_verbose, std::vector<int>{2,2,2,2}, 2, ta) << std::endl;
-
-  //  }
+   }
 
     for( int cb=0;cb<2;cb++ ) {
 

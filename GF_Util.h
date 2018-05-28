@@ -10,7 +10,7 @@ void assign_lc(LatticeComplex &l, const std::complex<double> &s)
 	vComplex::conv_t con_v;
 	for(int i=0; i<vComplex::Nsimd(); ++i) con_v.s[i] = s;
 	v.v = con_v.v;
-	
+
 	parallel_for(int ss=0; ss<l._grid->oSites(); ++ss)
 	{
 		l._odata[ss] = v;
@@ -199,65 +199,25 @@ Real Omega_g(const LatticeColourMatrix &g, const LatticeGaugeField &Umu)
 
 }
 
-//return \sum_i\{ \sum_{x,\mu} Re\ tr[ i t_i U_\mu(x)] \} t_i
-//LatticeGaugeField dOmegadU_no_g(const LatticeGaugeField &Umu)
-//{
-//  std::vector<ColourMatrix> ti(8);
-//  for(int i=0; i<8; ++i)
-//  {
-//    SU<3>::generator(i, ti[i]);
-//  }
-//
-//  LatticeGaugeField ret(Umu._grid);
-//  ret = zero;
-//  Lattice< iVector<iScalar<iScalar<vComplex> > ,4> > p(Umu._grid);
-//
-//  for(int i=0; i<8; ++i)
-//  {
-//    p = trace(timesI(ti[i] * Umu ));
-//    ret += zyd_real(p) * ti[i];
-//  }
-//
-//  // return -ret;
-//  return ret;
-//}
-
 //return \sum_i\{ \sum_{x,\mu} Re\ tr[g(x) i t_i U_\mu(x) g(x+\hat{\mu})^\dagger] \} t_i
 LatticeGaugeField dOmegadU_g(const LatticeColourMatrix &g, const LatticeGaugeField &Umu)
 {
-  //std::vector<ColourMatrix> ti(8);
-  //for(int i=0; i<8; ++i)
-  //{
-  //  SU<3>::generator(i, ti[i]);
-  //}
-
   LatticeGaugeField ret(Umu._grid);
   ret = zero;
 
   LatticeColourMatrix s(Umu._grid);
-  //LatticeComplex p(Umu._grid);
 
   std::vector<LatticeColourMatrix> U(4, Umu._grid);
   for(int mu=0; mu<Nd; mu++)
   {
-    //s=zero;
     U[mu] = PeekIndex<LorentzIndex>(Umu, mu);
-	s = U[mu] * adj(Cshift(g, mu, 1)) * g;
-
-    //for(int i=0; i<8; ++i)
-    //{
-      //s = trace( timesI (g * ti[i] * U[mu] * adj(Cshift(g, mu, 1)) ) );
-      //s += zyd_real(p) * ti[i];
-    //}
-
+		s = U[mu] * adj(Cshift(g, mu, 1)) * g;
     PokeIndex<LorentzIndex>(ret, s, mu);
   }
 
   ret = Ta(ret);
-  // return -ret;
   return ret;
 }
-
 
 
 Real dOmegaSquare2_no_g(const LatticeGaugeField &Umu)

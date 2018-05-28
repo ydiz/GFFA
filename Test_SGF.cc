@@ -31,8 +31,9 @@ int main (int argc, char ** argv)
   LatticeColourMatrix g(grid);
   g = 1.0;
 
-  double betaMM = 30;
+  double betaMM = 50;
   int sweeps = 5000;
+  bool SDGF = true;
 
   stringstream ss;
   string arg;
@@ -51,32 +52,39 @@ int main (int argc, char ** argv)
     ss >> sweeps;
   }
 
+  if(GridCmdOptionExists(argv, argv+argc, string("--SDGF"))){
+    arg = GridCmdOptionPayload(argv, argv+argc, string("--SDGF"));
+    ss.clear();
+    ss.str(arg);
+    ss >> SDGF;
+  }
+
   cout << "sweeps: " << sweeps << endl;
   cout << "betaMM: " << betaMM << endl;
+  cout << "SDGF: " << SDGF << endl;
 
   Real alpha=0.1;
   // must be false. cannot be true
-  FourierAcceleratedGaugeFixer<PeriodicGimplR>::SteepestDescentGaugeFix(U,alpha,200,1.0e-12, 1.0e-12,false);
+  // if(SDGF) FourierAcceleratedGaugeFixer<PeriodicGimplR>::SteepestDescentGaugeFix(U,alpha,200,1.0e-12, 1.0e-12,false);
+
+  if(SDGF){
+    Real alpha=0.1;
+    // must be false. cannot be true
+    std::cout << "before SDGF dOmegaSquare: " << dOmegaSquare2_no_g(U) << std::endl;
+    std::cout << "before SDGF SGF1: " << - betaMM * Omega_no_g(U) << std::endl;
+
+    LatticeColourMatrix g(U._grid);
+    g = 1.0;
+    GF_heatbath(U, g, 100, betaMM);
+    SU3::GaugeTransform(U, g);
+    //FourierAcceleratedGaugeFixer<PeriodicGimplR>::SteepestDescentGaugeFix(U,alpha,100,1.0e-12, 1.0e-12,false);
+    std::cout << "after SDGF dOmegaSquare: " << dOmegaSquare2_no_g(U) << std::endl;
+    std::cout << "after SDGF SGF1: " << - betaMM * Omega_no_g(U) << std::endl;
+  }
 
   GF_heatbath(U, g, sweeps, betaMM, 1);
 
-  // LatticeColourMatrix g(grid);
-  // g = 1.0;
-  //
-  // std::cout << GridLogMessage
-  // << "dOmegaSquare: " << dOmegaSquare2(g, U) << std::endl;
-  //
-  // Real alpha=0.1;
-  // // must be false. cannot be true
-  // FourierAcceleratedGaugeFixer<PeriodicGimplR>::SteepestDescentGaugeFix(U,alpha,100,1.0e-12, 1.0e-12,false);
-  //
-  // std::cout << GridLogMessage
-  // << "dOmegaSquare: " << dOmegaSquare2(g, U) << std::endl;
-  //
-  // FourierAcceleratedGaugeFixer<PeriodicGimplR>::SteepestDescentGaugeFix(U,alpha,100,1.0e-12, 1.0e-12,false);
-  //
-  // std::cout << GridLogMessage
-  // << "dOmegaSquare: " << dOmegaSquare2(g, U) << std::endl;
+
 
 
   Grid_finalize();
