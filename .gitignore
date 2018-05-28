@@ -1,0 +1,15 @@
+# Ignore all
+*
+
+# Unignore all with extensions; ignore executables
+!*.*
+
+# Unignore all dirs
+*/
+*/*
+
+
+ckpoint*
+*.txt
+*.o
+U_equilibrium
