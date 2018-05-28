@@ -85,6 +85,8 @@ void GF_init(int argc, char **argv, int &noMetro, int &traj, int &mdSteps, Real 
     ss.str(arg);
     ss >> HMC_para.UInitEquil;
   }
+
+  HMC_para.betaMM = HMC_para.beta * HMC_para.M * HMC_para.M;
 }
 
 }

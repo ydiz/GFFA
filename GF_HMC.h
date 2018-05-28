@@ -107,8 +107,8 @@ class GF_HybridMonteCarlo {
 
       DeltaH = evolve_hmc_step(Ucopy, KK);
 
-	  Real tt;
-	  Real FinalDeltaH;
+	  Real tt=0;
+	  Real FinalDeltaH=0;
 
       //calculate delta S_GF2
       if(HMC_para.newAction){
@@ -118,12 +118,10 @@ class GF_HybridMonteCarlo {
         Real DeltaH_SG2=0;
         for(int i=0; i<HMC_para.innerMC_N; ++i)
         {
-          GF_heatbath(Ucur, g, HMC_para.hb_nsweeps, HMC_para.betaMM);
 		  tt = DeltaH + HMC_para.betaMM * (Omega_g(g, Ucopy) - Omega_g(g, Ucur));
-		  //DeltaH_SG2 += HMC_para.betaMM * (GF_S_g(g, Ucur) - GF_S_g(g, Ucopy));
 		  DeltaH_SG2 += std::exp( tt );
 		  if(i%100==0) std::cout << "DeltaH tt: "<< tt << std::endl;
-          if(i%100==0) std::cout << "deltaH: " << i << std::endl;
+          GF_heatbath(Ucur, g, HMC_para.hb_nsweeps, HMC_para.betaMM);
         }
         FinalDeltaH = std::log(DeltaH_SG2/double(HMC_para.innerMC_N));
         //FinalDeltaH = DeltaH_SG2/double(HMC_para.innerMC_N);

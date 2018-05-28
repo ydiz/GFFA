@@ -51,11 +51,10 @@ class GFAction : public Action<typename Gimpl::GaugeField> {
     GF_heatbath(U, g, hb_offset, betaMM); //hb_nsweeps before calculate equilibrium value
 
     //???maybe error here is large;(if dSGF2dU is large)
-    std::cout << "deriv: " << std::endl;
     for(int i=0; i<innerMC_N; ++i)
     {
-      GF_heatbath(U, g, hb_nsweeps, betaMM);
       dSGF2dU += dOmegadU_g(g, U);
+      GF_heatbath(U, g, hb_nsweeps, betaMM);
     }
 
     dSGF2dU = factor *  (1.0 / double(innerMC_N)) * dSGF2dU;

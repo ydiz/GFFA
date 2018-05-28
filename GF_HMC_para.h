@@ -14,16 +14,14 @@ struct HMC_PARA{
   bool UInitEquil; //use equilibrium U
 
   HMC_PARA(): beta(5.6), M(3.0), epsilon(0.2), hb_offset(300), innerMC_N(500), hb_nsweeps(1),
-              newHp(false), newAction(true), SDGF(true), UInitEquil(true)
-  {
-    betaMM = beta * M *M;
-  }
+              newHp(false), newAction(true), SDGF(true), UInitEquil(true) {} //betaMM is initialzed in GF_init()
 };
 
 std::ostream& operator<<(std::ostream& out, const HMC_PARA &HMC_para)
 {
   out << "beta: " << HMC_para.beta << std::endl;
   out << "M: " << HMC_para.M << std::endl;
+  out << "betaMM" << HMC_para.betaMM << std::endl;
   out << "epsilon: " << HMC_para.epsilon << std::endl;
   out << "innerMC_N: " << HMC_para.innerMC_N << std::endl;
   out << "hb_offset: " << HMC_para.hb_offset << std::endl;
