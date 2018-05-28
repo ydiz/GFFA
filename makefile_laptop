@@ -1,0 +1,54 @@
+CC = clang++
+CXX = clang++
+
+CXXFLAGS = -mavx -mf16c -std=c++11 -Wall -O3 -MT GF_heatbath.o -DHAVE_CONFIG_H -I. -I/home/yz/Grid/include -I/usr/lib/x86_64-linux-gnu/include
+
+#-fopenmp=libomp
+
+#LINK.o = $(CXX) $(LDFLAGS)
+LDFLAGS = -mavx -mf16c -std=c++11 -O3 -I. -I/home/yz/Grid/include -I/usr/lib/x86_64-linux-gnu/include
+#-fopenmp=libomp
+#LDFLAGS = -mavx -mf16c -fopenmp  -O3  -std=c++11
+LDLIBS = -lGrid -lz -lmpfr -lgmp -lstdc++ -lm  -lz
+
+
+Test_hmc: Test_hmc.o
+	clang++ -g -I/home/yz/Grid/include -I/usr/lib/x86_64-linux-gnu/include -mavx -mf16c  -O3 -std=c++11 -L/home/yz/Grid/lib -L/usr/lib/x86_64-linux-gnu/lib  -o Test_hmc Test_hmc.o -lGrid -lnuma -lz -lfftw3f -lfftw3 -lmpfr -lgmp -lstdc++ -lm  -lz -lnuma
+
+Test_hmc.o: Test_hmc.cc
+	clang++ -g -DHAVE_CONFIG_H -I.    -I/home/yz/Grid/include -I/usr/lib/x86_64-linux-gnu/include -mavx -mf16c -O3 -std=c++11 -MT Test_hmc.o  -c -o Test_hmc.o Test_hmc.cc
+
+
+Test_SGF: Test_SGF.o
+	clang++ -I/home/yz/Grid/include -I/usr/lib/x86_64-linux-gnu/include -mavx -mf16c  -O3  -std=c++11 -L/home/yz/Grid/lib -L/usr/lib/x86_64-linux-gnu/lib  -o Test_SGF Test_SGF.o -lGrid -lnuma -lz -lfftw3f -lfftw3 -lmpfr -lgmp -lstdc++ -lm  -lz -lnuma
+
+Test_SGF.o: Test_SGF.cc
+	clang++ -DHAVE_CONFIG_H -I.    -I/home/yz/Grid/include -I/usr/lib/x86_64-linux-gnu/include -mavx -mf16c  -O3  -std=c++11 -MT Test_SGF.o  -c -o Test_SGF.o Test_SGF.cc
+
+Test_fft: Test_fft.o
+	clang++ -I/home/yz/Grid/include -I/usr/lib/x86_64-linux-gnu/include -mavx -mf16c  -O3  -std=c++11 -L/home/yz/Grid/lib -L/usr/lib/x86_64-linux-gnu/lib  -o Test_fft Test_fft.o -lGrid -lnuma -lz -lfftw3f -lfftw3 -lmpfr -lgmp -lstdc++ -lm  -lz -lnuma
+
+Test_fft.o: Test_fft.cc
+	clang++ -DHAVE_CONFIG_H -I.    -I/home/yz/Grid/include -I/usr/lib/x86_64-linux-gnu/include -mavx -mf16c  -O3  -std=c++11 -MT Test_fft.o  -c -o Test_fft.o Test_fft.cc
+
+Test_momenta: Test_momenta.o
+	clang++ -I/home/yz/Grid/include -I/usr/lib/x86_64-linux-gnu/include -mavx -mf16c  -O3  -std=c++11 -L/home/yz/Grid/lib -L/usr/lib/x86_64-linux-gnu/lib  -o Test_momenta Test_momenta.o -lGrid -lnuma -lz -lfftw3f -lfftw3 -lmpfr -lgmp -lstdc++ -lm  -lz -lnuma
+
+Test_momenta.o: Test_momenta.cc
+	clang++ -DHAVE_CONFIG_H -I.    -I/home/yz/Grid/include -I/usr/lib/x86_64-linux-gnu/include -mavx -mf16c  -O3  -std=c++11 -MT Test_momenta.o  -c -o Test_momenta.o Test_momenta.cc
+
+Test_k: Test_k.o
+	clang++ -I/home/yz/Grid/include -I/usr/lib/x86_64-linux-gnu/include -mavx -mf16c  -O3  -std=c++11 -L/home/yz/Grid/lib -L/usr/lib/x86_64-linux-gnu/lib  -o Test_k Test_k.o -lGrid -lnuma -lz -lfftw3f -lfftw3 -lmpfr -lgmp -lstdc++ -lm  -lz -lnuma
+
+Test_k.o: Test_k.cc
+	clang++ -DHAVE_CONFIG_H -I.    -I/home/yz/Grid/include -I/usr/lib/x86_64-linux-gnu/include -mavx -mf16c  -O3  -std=c++11 -MT Test_k.o  -c -o Test_k.o Test_k.cc
+
+Test_hmc_WilsonGauge: Test_hmc_WilsonGauge.o
+	clang++ -I/home/yz/Grid/include -I/usr/lib/x86_64-linux-gnu/include -mavx -mf16c  -O3  -std=c++11 -L/home/yz/Grid/lib -L/usr/lib/x86_64-linux-gnu/lib  -o Test_hmc_WilsonGauge Test_hmc_WilsonGauge.o -lGrid -lnuma -lz -lfftw3f -lfftw3 -lmpfr -lgmp -lstdc++ -lm  -lz -lnuma
+
+Test_hmc_WilsonGauge.o: Test_hmc_WilsonGauge.cc
+	clang++ -DHAVE_CONFIG_H -I.    -I/home/yz/Grid/include -I/usr/lib/x86_64-linux-gnu/include -mavx -mf16c  -O3  -std=c++11 -MT Test_hmc_WilsonGauge.o  -c -o Test_hmc_WilsonGauge.o Test_hmc_WilsonGauge.cc
+
+
+clean:
+	- rm *.o
