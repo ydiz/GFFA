@@ -10,6 +10,7 @@
 #include "GF_Action.h"
 #include "GF_deltaU.h"
 #include "GF_hmc_integrator.h"
+#include "GF_hmc_integrator_alg.h"
 #include "GF_HMC.h"
 #include "GF_GenericHMCrunner.h"
 
@@ -36,7 +37,8 @@ int main(int argc, char **argv) {
 
   GF_init(argc, argv, noMetro, traj, mdSteps, trajL, HMC_para);
 
-  typedef GF_GenericHMCRunner<GFLeapFrog> HMCWrapper;  // Uses the default minimum norm
+  typedef GF_GenericHMCRunner<GFMinimumNorm2> HMCWrapper;
+  // typedef GF_GenericHMCRunner<GFLeapFrog> HMCWrapper;  // Uses the default minimum norm
   HMCWrapper TheHMC;
 
   TheHMC.Resources.AddFourDimGrid("gauge");
