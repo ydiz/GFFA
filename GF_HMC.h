@@ -115,6 +115,8 @@ class GF_HybridMonteCarlo {
         LatticeColourMatrix g(Ucur._grid);
         g = 1.0;
         GF_heatbath(Ucur, g, HMC_para.hb_offset, HMC_para.betaMM);
+		std::cout << "Omega_g(g, Ucur): "<< Omega_g(g, Ucur) << std::endl;
+		std::cout << "Omega_g(g, Ucopy): "<< Omega_g(g, Ucopy) << std::endl;
         Real DeltaH_SG2=0;
         for(int i=0; i<HMC_para.innerMC_N; ++i)
         {
