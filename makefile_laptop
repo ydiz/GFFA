@@ -25,11 +25,11 @@ Test_SGF: Test_SGF.o
 Test_SGF.o: Test_SGF.cc
 	clang++ -DHAVE_CONFIG_H -I.    -I/home/yz/Grid/include -I/usr/lib/x86_64-linux-gnu/include -mavx -mf16c  -O3  -std=c++11 -MT Test_SGF.o  -c -o Test_SGF.o Test_SGF.cc
 
-Test_fft: Test_fft.o
-	clang++ -I/home/yz/Grid/include -I/usr/lib/x86_64-linux-gnu/include -mavx -mf16c  -O3  -std=c++11 -L/home/yz/Grid/lib -L/usr/lib/x86_64-linux-gnu/lib  -o Test_fft Test_fft.o -lGrid -lnuma -lz -lfftw3f -lfftw3 -lmpfr -lgmp -lstdc++ -lm  -lz -lnuma
+Test_random: Test_random.o
+	clang++ -I/home/yz/Grid/include -I/usr/lib/x86_64-linux-gnu/include -mavx -mf16c  -O3  -std=c++11 -L/home/yz/Grid/lib -L/usr/lib/x86_64-linux-gnu/lib  -o Test_random Test_random.o -lGrid -lnuma -lz -lfftw3f -lfftw3 -lmpfr -lgmp -lstdc++ -lm  -lz -lnuma
 
-Test_fft.o: Test_fft.cc
-	clang++ -DHAVE_CONFIG_H -I.    -I/home/yz/Grid/include -I/usr/lib/x86_64-linux-gnu/include -mavx -mf16c  -O3  -std=c++11 -MT Test_fft.o  -c -o Test_fft.o Test_fft.cc
+Test_random.o: Test_random.cc
+	clang++ -DHAVE_CONFIG_H -I.    -I/home/yz/Grid/include -I/usr/lib/x86_64-linux-gnu/include -mavx -mf16c  -O3  -std=c++11 -MT Test_random.o  -c -o Test_random.o Test_random.cc
 
 Test_momenta: Test_momenta.o
 	clang++ -I/home/yz/Grid/include -I/usr/lib/x86_64-linux-gnu/include -mavx -mf16c  -O3  -std=c++11 -L/home/yz/Grid/lib -L/usr/lib/x86_64-linux-gnu/lib  -o Test_momenta Test_momenta.o -lGrid -lnuma -lz -lfftw3f -lfftw3 -lmpfr -lgmp -lstdc++ -lm  -lz -lnuma

@@ -8,12 +8,10 @@ void GF_heatbath(const LatticeGaugeField &Umu, LatticeColourMatrix &g, int nswee
 {
   GridRedBlackCartesian rbGrid(Umu._grid);
 
+  int seed = std::chrono::system_clock::now().time_since_epoch().count();
   //FIXME: seeds are the same for each step
-  std::vector<int> pseeds({1,2,3,4,5}); // once I caught a fish alive
-  std::vector<int> sseeds({6,7,8,9,10});// then i let it go again
-  GridParallelRNG  pRNG(Umu._grid); pRNG.SeedFixedIntegers(pseeds);
-  GridSerialRNG    sRNG;       sRNG.SeedFixedIntegers(sseeds);
-
+  GridParallelRNG  pRNG(Umu._grid); pRNG.SeedFixedIntegers(std::vector<int>{seed});
+  GridSerialRNG    sRNG;       sRNG.SeedFixedIntegers(std::vector<int>{seed});
 
   LatticeColourMatrix staple(Umu._grid);
 
