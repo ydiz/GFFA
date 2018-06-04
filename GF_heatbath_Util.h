@@ -4,7 +4,7 @@ namespace Grid{
 namespace QCD{
 
 //betaMM; use pRNG, sRNG outside
-void GF_heatbath(const LatticeGaugeField &Umu, LatticeColourMatrix &g, int nsweeps, Real _betaMM, bool verbose=0)
+void GF_heatbath(const LatticeGaugeField &Umu, LatticeColourMatrix &g, int nsweeps, Real _betaMM, int multi_hit, bool verbose=0)
 {
   GridRedBlackCartesian rbGrid(Umu._grid);
 
@@ -67,7 +67,8 @@ void GF_heatbath(const LatticeGaugeField &Umu, LatticeColourMatrix &g, int nswee
       }
 
       for( int subgroup=0;subgroup<SU3::su2subgroups();subgroup++) {
-        SU3::SubGroupHeatBath(sRNG,pRNG,betaMM,g,staple,subgroup,20,mask);
+        //SU3::SubGroupHeatBath(sRNG,pRNG,betaMM,g,staple,subgroup,20,mask);
+        SU3::SubGroupHeatBath(sRNG,pRNG,betaMM,g,staple,subgroup,multi_hit,mask);
       }
       //reunitarise
       ProjectOnGroup(g);

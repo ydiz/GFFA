@@ -85,6 +85,13 @@ void GF_init(int argc, char **argv, int &noMetro, int &traj, int &mdSteps, Real 
     ss.str(arg);
     ss >> HMC_para.UInitEquil;
   }
+  if(GridCmdOptionExists(argv, argv+argc, "--hb_multi_hit")){
+    arg = GridCmdOptionPayload(argv, argv+argc, "--hb_multi_hit");
+    ss.clear();
+    ss.str(arg);
+    ss >> HMC_para.hb_multi_hit;
+  }
+
 
   HMC_para.betaMM = HMC_para.beta * HMC_para.M * HMC_para.M;
 }

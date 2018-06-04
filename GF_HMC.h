@@ -114,7 +114,7 @@ class GF_HybridMonteCarlo {
       if(HMC_para.newAction){
         LatticeColourMatrix g(Ucur._grid);
         g = 1.0;
-        GF_heatbath(Ucur, g, HMC_para.hb_offset, HMC_para.betaMM);
+        GF_heatbath(Ucur, g, HMC_para.hb_offset, HMC_para.betaMM, HMC_para.hb_multi_hit);
 		std::cout << "Omega_g(g, Ucur): "<< Omega_g(g, Ucur) << std::endl;
 		std::cout << "Omega_g(g, Ucopy): "<< Omega_g(g, Ucopy) << std::endl;
         Real DeltaH_SG2=0;
@@ -123,7 +123,7 @@ class GF_HybridMonteCarlo {
 		  tt = DeltaH + HMC_para.betaMM * (Omega_g(g, Ucopy) - Omega_g(g, Ucur));
 		  DeltaH_SG2 += std::exp( tt );
 		  if(i%100==0) std::cout << "DeltaH tt: "<< tt << std::endl;
-          GF_heatbath(Ucur, g, HMC_para.hb_nsweeps, HMC_para.betaMM);
+          GF_heatbath(Ucur, g, HMC_para.hb_nsweeps, HMC_para.betaMM, HMC_para.hb_multi_hit);
         }
         FinalDeltaH = std::log(DeltaH_SG2/double(HMC_para.innerMC_N));
         //FinalDeltaH = DeltaH_SG2/double(HMC_para.innerMC_N);

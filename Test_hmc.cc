@@ -37,8 +37,8 @@ int main(int argc, char **argv) {
 
   GF_init(argc, argv, noMetro, traj, mdSteps, trajL, HMC_para);
 
-  typedef GF_GenericHMCRunner<GFMinimumNorm2> HMCWrapper;
-  // typedef GF_GenericHMCRunner<GFLeapFrog> HMCWrapper;  // Uses the default minimum norm
+  // typedef GF_GenericHMCRunner<GFMinimumNorm2> HMCWrapper;
+  typedef GF_GenericHMCRunner<GFLeapFrog> HMCWrapper;  // Uses the default minimum norm
   HMCWrapper TheHMC;
 
   TheHMC.Resources.AddFourDimGrid("gauge");
@@ -62,7 +62,7 @@ int main(int argc, char **argv) {
 
   ActionLevel<HMCWrapper::Field> Level1(1);
 
-  GFActionR Gaction(HMC_para.beta, HMC_para.betaMM, HMC_para.innerMC_N, HMC_para.hb_offset, HMC_para.hb_nsweeps);
+  GFActionR Gaction(HMC_para.beta, HMC_para.betaMM, HMC_para.innerMC_N, HMC_para.hb_offset, HMC_para.hb_nsweeps, HMC_para.hb_multi_hit);
   WilsonGaugeActionR Waction(HMC_para.beta);
 
   //cannot define action inside if statement

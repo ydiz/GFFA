@@ -63,7 +63,7 @@ class GF_HMCWrapperTemplate: public HMCWrapperTemplate<Implementation, Integrato
       std::cout << "before SDGF dOmegaSquare: " << dOmegaSquare2_no_g(U) << std::endl;
 	  LatticeColourMatrix g(U._grid);
   	  g = 1.0;
-	  GF_heatbath(U, g, 100, HMC_para.betaMM);
+	  GF_heatbath(U, g, 50, HMC_para.betaMM, HMC_para.hb_multi_hit);
 	  SU3::GaugeTransform(U, g);
       //FourierAcceleratedGaugeFixer<PeriodicGimplR>::SteepestDescentGaugeFix(U,alpha,100,1.0e-12, 1.0e-12,false);
       std::cout << "after SDGF dOmegaSquare: " << dOmegaSquare2_no_g(U) << std::endl;
