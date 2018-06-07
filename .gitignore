@@ -4,7 +4,7 @@
 # Unignore all with extensions; ignore executables
 !*.*
 
-# Unignore all dirs
+# ignore all dirs
 */
 */*
 
@@ -12,4 +12,7 @@
 ckpoint*
 *.txt
 *.o
-U_equilibrium
+
+Test*.cc
+!Test_hmc.cc
+
