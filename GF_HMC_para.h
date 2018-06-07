@@ -22,7 +22,7 @@ std::ostream& operator<<(std::ostream& out, const HMC_PARA &HMC_para)
 {
   out << "beta: " << HMC_para.beta << std::endl;
   out << "M: " << HMC_para.M << std::endl;
-  out << "betaMM" << HMC_para.betaMM << std::endl;
+  out << "betaMM: " << HMC_para.betaMM << std::endl;
   out << "epsilon: " << HMC_para.epsilon << std::endl;
   out << "innerMC_N: " << HMC_para.innerMC_N << std::endl;
   out << "hb_offset: " << HMC_para.hb_offset << std::endl;

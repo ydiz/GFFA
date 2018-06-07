@@ -27,8 +27,10 @@ class GFAction : public Action<typename Gimpl::GaugeField> {
   virtual RealD S(const GaugeField &U) {
     WilsonGaugeAction<Gimpl> Waction(beta);
     RealD Sw = Waction.S(U);
+	std::cout << "Wilson S: " << Sw << std::endl;
 
     RealD SGF1 = - betaMM * Omega_no_g(U);
+	std::cout << "SGF1: " << SGF1 << std::endl; 
 
     return Sw + SGF1;
   }

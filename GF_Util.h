@@ -3,6 +3,19 @@
 namespace Grid{
 namespace QCD{
 
+
+void readField(LatticeGaugeField &U, const std::string &filename)
+{
+		FieldMetaData header;
+			NerscIO::readConfiguration(U,header,filename);
+}
+
+void writeField(LatticeGaugeField &U, const std::string &filename)
+{
+		NerscIO::writeConfiguration(U,filename,0,0);
+}
+
+
 //assign a complex number to LatticeComplex
 void assign_lc(LatticeComplex &l, const std::complex<double> &s)
 {
@@ -165,38 +178,48 @@ template<class vobj> inline Lattice<vobj> zyd_real(const Lattice<vobj> &lhs){
 //return \sum_{x,\mu} Re\ tr[U_\mu(x)]
 Real Omega_no_g(const LatticeGaugeField &Umu)
 {
-  LatticeColourMatrix s(Umu._grid);
-  s=zero;
+  //LatticeColourMatrix s(Umu._grid);
+  //s=zero;
 
-  std::vector<LatticeColourMatrix> U(4, Umu._grid);
-  for(int mu=0; mu<Nd; mu++)
-    U[mu] = PeekIndex<LorentzIndex>(Umu, mu);
+  //std::vector<LatticeColourMatrix> U(4, Umu._grid);
+  //for(int mu=0; mu<Nd; mu++)
+  //  U[mu] = PeekIndex<LorentzIndex>(Umu, mu);
 
-  for(int mu=0; mu<Nd; mu++)
-    s += U[mu];
+  //for(int mu=0; mu<Nd; mu++)
+  //  s += U[mu];
 
-  Complex p = TensorRemove( sum( trace(s) ));
-  // return - p.real();
-  return p.real();
+  //Complex p = TensorRemove( sum( trace(s) ));
+  //// return - p.real();
+  //return p.real();
+  Real ret;
+  ret = WilsonLoops<PeriodicGimplR>::linkTrace(Umu) * Umu._grid->gSites() * 4.0 * 3.0;
+  return ret;
 }
 
 //return \sum_{x,\mu} Re\ tr[g(x)U_\mu(x)g(x+\hat{\mu})]
 Real Omega_g(const LatticeColourMatrix &g, const LatticeGaugeField &Umu)
 {
-  LatticeColourMatrix s(Umu._grid);
-  s=zero;
+  //LatticeColourMatrix s(Umu._grid);
+  //s=zero;
 
-  std::vector<LatticeColourMatrix> U(4, Umu._grid);
-  for(int mu=0; mu<Nd; mu++)
-    U[mu] = PeekIndex<LorentzIndex>(Umu, mu);
+  //std::vector<LatticeColourMatrix> U(4, Umu._grid);
+  //for(int mu=0; mu<Nd; mu++)
+  //  U[mu] = PeekIndex<LorentzIndex>(Umu, mu);
 
-  for(int mu=0; mu<Nd; mu++)
-    s += g * U[mu] * adj(Cshift(g, mu, 1));
+  //for(int mu=0; mu<Nd; mu++)
+  //  s += g * U[mu] * adj(Cshift(g, mu, 1));
 
-  Complex p = TensorRemove( sum( trace(s) ));
-  // return - p.real();
-  return p.real();
-
+  //Complex p = TensorRemove( sum( trace(s) ));
+  //// return - p.real();
+  //return p.real();
+  Real ret;
+  LatticeGaugeField Utrans(Umu._grid);
+  Utrans = Umu;
+  LatticeColourMatrix gg(g._grid); //in SU3::GaugeTransform, g is passed by non-const reference; FIXME:inefficient
+  gg = g;
+  SU3::GaugeTransform(Utrans, gg);
+  ret = WilsonLoops<PeriodicGimplR>::linkTrace(Utrans) * Utrans._grid->gSites() * 4.0 * 3.0;
+  return ret;
 }
 
 //return \sum_i\{ \sum_{x,\mu} Re\ tr[g(x) i t_i U_\mu(x) g(x+\hat{\mu})^\dagger] \} t_i

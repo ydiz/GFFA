@@ -94,6 +94,8 @@ class GF_HybridMonteCarlo {
     Params.print_parameters();
     TheIntegrator.print_actions();
 
+	LatticeColourMatrix g(Ucur._grid);
+	g = 1.0;
     // Actual updates (evolve a copy Ucopy then copy back eventually)
     unsigned int FinalTrajectory = Params.Trajectories + Params.NoMetropolisUntil + Params.StartTrajectory;
     for (int traj = Params.StartTrajectory; traj < FinalTrajectory; ++traj) {
@@ -112,8 +114,8 @@ class GF_HybridMonteCarlo {
 
       //calculate delta S_GF2
       if(HMC_para.newAction){
-        LatticeColourMatrix g(Ucur._grid);
-        g = 1.0;
+        //LatticeColourMatrix g(Ucur._grid);
+        //g = 1.0;
         GF_heatbath(Ucur, g, HMC_para.hb_offset, HMC_para.betaMM, HMC_para.hb_multi_hit);
 		std::cout << "Omega_g(g, Ucur): "<< Omega_g(g, Ucur) << std::endl;
 		std::cout << "Omega_g(g, Ucopy): "<< Omega_g(g, Ucopy) << std::endl;
