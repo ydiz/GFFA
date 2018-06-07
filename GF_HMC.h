@@ -94,8 +94,8 @@ class GF_HybridMonteCarlo {
     Params.print_parameters();
     TheIntegrator.print_actions();
 
-	LatticeColourMatrix g(Ucur._grid);
-	g = 1.0;
+  	LatticeColourMatrix g(Ucur._grid);
+  	g = 1.0;
     // Actual updates (evolve a copy Ucopy then copy back eventually)
     unsigned int FinalTrajectory = Params.Trajectories + Params.NoMetropolisUntil + Params.StartTrajectory;
     for (int traj = Params.StartTrajectory; traj < FinalTrajectory; ++traj) {
@@ -109,27 +109,27 @@ class GF_HybridMonteCarlo {
 
       DeltaH = evolve_hmc_step(Ucopy, KK);
 
-	  Real tt=0;
-	  Real FinalDeltaH=0;
+  	  Real tt=0;
+  	  Real FinalDeltaH=0;
 
       //calculate delta S_GF2
       if(HMC_para.newAction){
         //LatticeColourMatrix g(Ucur._grid);
         //g = 1.0;
         GF_heatbath(Ucur, g, HMC_para.hb_offset, HMC_para.betaMM, HMC_para.hb_multi_hit);
-		std::cout << "Omega_g(g, Ucur): "<< Omega_g(g, Ucur) << std::endl;
-		std::cout << "Omega_g(g, Ucopy): "<< Omega_g(g, Ucopy) << std::endl;
+    		std::cout << "Omega_g(g, Ucur): "<< Omega_g(g, Ucur) << std::endl;
+    		std::cout << "Omega_g(g, Ucopy): "<< Omega_g(g, Ucopy) << std::endl;
         Real DeltaH_SG2=0;
         for(int i=0; i<HMC_para.innerMC_N; ++i)
         {
-		  tt = DeltaH + HMC_para.betaMM * (Omega_g(g, Ucopy) - Omega_g(g, Ucur));
-		  DeltaH_SG2 += std::exp( tt );
-		  if(i%100==0) std::cout << "DeltaH tt: "<< tt << std::endl;
+    		  tt = DeltaH + HMC_para.betaMM * (Omega_g(g, Ucopy) - Omega_g(g, Ucur));
+    		  DeltaH_SG2 += std::exp( tt );
+    		  if(i%100==0) std::cout << "DeltaH tt: "<< tt << std::endl;
           GF_heatbath(Ucur, g, HMC_para.hb_nsweeps, HMC_para.betaMM, HMC_para.hb_multi_hit);
         }
         FinalDeltaH = std::log(DeltaH_SG2/double(HMC_para.innerMC_N));
         //FinalDeltaH = DeltaH_SG2/double(HMC_para.innerMC_N);
-		std::cout<< GridLogMessage << "Final deltaH: " << FinalDeltaH << std::endl;
+    		std::cout<< GridLogMessage << "Final deltaH: " << FinalDeltaH << std::endl;
       }
 
 

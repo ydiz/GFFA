@@ -30,8 +30,6 @@ void assign_lc(LatticeComplex &l, const std::complex<double> &s)
 	}
 }
 
-
-
 //take eight component with respect to Gell-Mann matrices
 std::vector<Complex> peek_a(const ColourMatrix &m, const std::vector<ColourMatrix> &ta)
 {
@@ -84,77 +82,7 @@ inline std::vector<int> operator%(const std::vector<int> &v1, const std::vector<
 }
 
 
-// std::vector<LatticeComplex> generate_k(GridBase *grid)
-// {
-//   LatticeComplex    coor(grid);
-//   std::vector<LatticeComplex> k(4, grid);
-//   for(int mu=0;mu<4;mu++){
-//     RealD TwoPiL =  M_PI * 2.0/ grid->_fdimensions[mu];
-//     LatticeCoordinate(coor,mu);
-//     k[mu] = TwoPiL * coor;// + kappa; //avoid 0 in denominator k.
-//   }
-//   return k;
-// }
-//
-// std::vector<LatticeComplex> generate_LMinusK(GridBase *grid)
-// {
-//   LatticeComplex    coor(grid);
-//   LatticeComplex    LMinusCoor(grid);
-//   std::vector<LatticeComplex> LMinusK(4, grid);
-//   // std::vector<int> L(4, grid);
-//   for(int mu=0;mu<4;mu++){
-//     RealD TwoPiL =  M_PI * 2.0/ grid->_fdimensions[mu];
-//     LatticeCoordinate(coor,mu);
-//     LMinusCoor = double(grid->_fdimensions[mu]) - coor;
-//     LMinusK[mu] = TwoPiL * LMinusCoor;// + kappa; //avoid 0 in denominator k.
-//   }
-//
-//   iScalar<iScalar<iScalar<Complex> >> t;
-//   t = 0.0;
-//   std::vector<int> x(4);
-//   std::vector<int> dims = grid->_fdimensions;
-//   for(x[0]=0; x[0]<dims[0]; ++x[0])
-//     for(x[1]=0; x[1]<dims[1]; ++x[1])
-//       for(x[2]=0; x[2]<dims[2]; ++x[2])
-//         for(x[3]=0; x[3]<dims[3]; ++x[3])
-//         {
-//           for(int mu = 0; mu<4; ++mu)
-//           {
-//             if(x[mu] == 0)
-//             {
-//               // std::cout << x << std::endl;
-//               pokeSite(t, LMinusK[mu], x);
-//             }
-//           }
-//         }
-//
-//   return LMinusK;
-// }
-
-
-//
-// inline LatticeColourMatrix kDotP_func(std::vector<LatticeComplex> k, LatticeGaugeField &P)
-// {
-//   LatticeColourMatrix kDotP(P._grid);
-//   kDotP = zero;
-//   for(int mu=0;mu<4;mu++){
-//     kDotP += k[mu] * PeekIndex<LorentzIndex>(P, mu);
-//   }
-//   return kDotP;
-// }
-//
-// inline LatticeColourMatrix kDotP_func(std::vector<LatticeComplex> k,   std::vector<LatticeColourMatrix> &P)
-// {
-//   LatticeColourMatrix kDotP(P[0]._grid);
-//   kDotP = zero;
-//   for(int mu=0;mu<4;mu++){
-//     kDotP += k[mu] * P[mu];
-//   }
-//   return kDotP;
-// }
-
-
-// mult iVector<xxx>
+// mult iVector<xxx>; FIXME
 template<class rtype,class vtype,class mtype,int N>
 strong_inline void multVV(iVector<rtype,N> * __restrict__ ret,
                  const iVector<vtype,N> * __restrict__ rhs,
@@ -165,7 +93,7 @@ strong_inline void multVV(iVector<rtype,N> * __restrict__ ret,
 }
 
 
-//real(LatticeComplex) does not work; not idea why
+//real(LatticeComplex) does not work; FIXME
 //LatticeComplex -> LatticeComplex
 template<class vobj> inline Lattice<vobj> zyd_real(const Lattice<vobj> &lhs){
     Lattice<vobj> ret(lhs._grid);
@@ -178,19 +106,6 @@ template<class vobj> inline Lattice<vobj> zyd_real(const Lattice<vobj> &lhs){
 //return \sum_{x,\mu} Re\ tr[U_\mu(x)]
 Real Omega_no_g(const LatticeGaugeField &Umu)
 {
-  //LatticeColourMatrix s(Umu._grid);
-  //s=zero;
-
-  //std::vector<LatticeColourMatrix> U(4, Umu._grid);
-  //for(int mu=0; mu<Nd; mu++)
-  //  U[mu] = PeekIndex<LorentzIndex>(Umu, mu);
-
-  //for(int mu=0; mu<Nd; mu++)
-  //  s += U[mu];
-
-  //Complex p = TensorRemove( sum( trace(s) ));
-  //// return - p.real();
-  //return p.real();
   Real ret;
   ret = WilsonLoops<PeriodicGimplR>::linkTrace(Umu) * Umu._grid->gSites() * 4.0 * 3.0;
   return ret;
@@ -199,30 +114,17 @@ Real Omega_no_g(const LatticeGaugeField &Umu)
 //return \sum_{x,\mu} Re\ tr[g(x)U_\mu(x)g(x+\hat{\mu})]
 Real Omega_g(const LatticeColourMatrix &g, const LatticeGaugeField &Umu)
 {
-  //LatticeColourMatrix s(Umu._grid);
-  //s=zero;
-
-  //std::vector<LatticeColourMatrix> U(4, Umu._grid);
-  //for(int mu=0; mu<Nd; mu++)
-  //  U[mu] = PeekIndex<LorentzIndex>(Umu, mu);
-
-  //for(int mu=0; mu<Nd; mu++)
-  //  s += g * U[mu] * adj(Cshift(g, mu, 1));
-
-  //Complex p = TensorRemove( sum( trace(s) ));
-  //// return - p.real();
-  //return p.real();
   Real ret;
   LatticeGaugeField Utrans(Umu._grid);
   Utrans = Umu;
-  LatticeColourMatrix gg(g._grid); //in SU3::GaugeTransform, g is passed by non-const reference; FIXME:inefficient
+  LatticeColourMatrix gg(g._grid); //in SU3::GaugeTransform, g is passed by non-const reference; FIXME
   gg = g;
   SU3::GaugeTransform(Utrans, gg);
   ret = WilsonLoops<PeriodicGimplR>::linkTrace(Utrans) * Utrans._grid->gSites() * 4.0 * 3.0;
   return ret;
 }
 
-//return \sum_i\{ \sum_{x,\mu} Re\ tr[g(x) i t_i U_\mu(x) g(x+\hat{\mu})^\dagger] \} t_i
+//return Ta(U_\mu(x) g(x+\mu)^\dagger g(x))
 LatticeGaugeField dOmegadU_g(const LatticeColourMatrix &g, const LatticeGaugeField &Umu)
 {
   LatticeGaugeField ret(Umu._grid);
