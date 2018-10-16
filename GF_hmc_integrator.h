@@ -23,7 +23,7 @@ GFIntegrator(GridBase* grid, IntegratorParameters Par,
     else H = - FieldImplementation::FieldSquareNorm(this->P); //minus sign comes from the fact that P is actually timesI(P).
 
     RealD Hterm;
-    std::cout << GridLogMessage << "Momentum action H_p = " << H << "\n";
+    std::cout << GridLogMessage << "Momentum action H_p = "<<  std::setprecision(8)  << H << "\n";
 
     // Actions
     for (int level = 0; level < this->as.size(); ++level) {
@@ -100,6 +100,7 @@ void GF_integrate(Field& U, const Momenta_k &KK) {
     int first_step = (step == 0);
     int last_step = (step == this->Params.MDsteps - 1);
     this->step(U, 0, first_step, last_step, KK);
+	printMem();
   }
 
   // Check the clocks all match on all levels

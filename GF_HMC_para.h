@@ -13,9 +13,10 @@ struct HMC_PARA{
   bool SDGF; // SteepestDescentGaugeFix
   bool UInitEquil; //use equilibrium U
   int hb_multi_hit;
+  std::string UFile;
 
-  HMC_PARA(): beta(5.6), M(3.0), epsilon(0.2), hb_offset(300), innerMC_N(500), hb_nsweeps(1),
-              newHp(false), newAction(true), SDGF(true), UInitEquil(true), hb_multi_hit(10) {} //betaMM is initialzed in GF_init()
+  HMC_PARA(): beta(5.6), M(1.0), epsilon(0.2), hb_offset(1000), innerMC_N(10000), hb_nsweeps(1),
+              newHp(false), newAction(true), SDGF(false), UInitEquil(true), hb_multi_hit(1) {} //betaMM is initialzed in GF_init()
 };
 
 std::ostream& operator<<(std::ostream& out, const HMC_PARA &HMC_para)

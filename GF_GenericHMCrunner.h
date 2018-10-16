@@ -52,7 +52,9 @@ class GF_HMCWrapperTemplate: public HMCWrapperTemplate<Implementation, Integrato
     //read U in equilibrium
     if(HMC_para.UInitEquil){
       FieldMetaData header;
-      std::string file("./U_equilibrium");
+      std::string file(HMC_para.UFile);
+      // std::string file("./U_softly_fixed_4_M0.5");
+      //std::string file("./U_equilibrium");
       NerscIO::readConfiguration(U, header,file);
     }
 

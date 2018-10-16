@@ -91,6 +91,12 @@ void GF_init(int argc, char **argv, int &noMetro, int &traj, int &mdSteps, Real 
     ss.str(arg);
     ss >> HMC_para.hb_multi_hit;
   }
+  if(GridCmdOptionExists(argv, argv+argc, "--UFile")){
+    arg = GridCmdOptionPayload(argv, argv+argc, "--UFile");
+    ss.clear();
+    ss.str(arg);
+    ss >> HMC_para.UFile;
+  }
 
 
   HMC_para.betaMM = HMC_para.beta * HMC_para.M * HMC_para.M;
