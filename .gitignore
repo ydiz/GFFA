@@ -18,3 +18,5 @@ Test*.cc
 
 !Makefile
 !makefile*
+
+.nfs*
