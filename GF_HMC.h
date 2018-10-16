@@ -113,24 +113,26 @@ class GF_HybridMonteCarlo {
   	  Real FinalDeltaH=0;
 
       //calculate delta S_GF2
-      if(HMC_para.newAction){
-        //LatticeColourMatrix g(Ucur._grid);
-        //g = 1.0;
-        GF_heatbath(Ucur, g, HMC_para.hb_offset, HMC_para.betaMM, HMC_para.hb_multi_hit);
-    		std::cout << "Omega_g(g, Ucur): "<< Omega_g(g, Ucur) << std::endl;
-    		std::cout << "Omega_g(g, Ucopy): "<< Omega_g(g, Ucopy) << std::endl;
-        Real DeltaH_SG2=0;
-        for(int i=0; i<HMC_para.innerMC_N; ++i)
-        {
-    		  tt = DeltaH + HMC_para.betaMM * (Omega_g(g, Ucopy) - Omega_g(g, Ucur));
-    		  DeltaH_SG2 += std::exp( tt );
-    		  if(i%100==0) std::cout << "DeltaH tt: "<< tt << std::endl;
-          GF_heatbath(Ucur, g, HMC_para.hb_nsweeps, HMC_para.betaMM, HMC_para.hb_multi_hit);
-        }
-        FinalDeltaH = std::log(DeltaH_SG2/double(HMC_para.innerMC_N));
-        //FinalDeltaH = DeltaH_SG2/double(HMC_para.innerMC_N);
-    		std::cout<< GridLogMessage << "Final deltaH: " << FinalDeltaH << std::endl;
-      }
+      // if(HMC_para.newAction){
+      //   //LatticeColourMatrix g(Ucur._grid);
+      //   //g = 1.0;
+      //   // GF_metro(Ucur, g, HMC_para.hb_offset, HMC_para.betaMM, HMC_para.hb_multi_hit, 0.05);
+      //   GF_heatbath(Ucur, g, HMC_para.hb_offset, HMC_para.betaMM, HMC_para.hb_multi_hit);
+      //   	std::cout << "Omega_g(g, Ucur): "<< Omega_g(g, Ucur) << std::endl;
+      //   	std::cout << "Omega_g(g, Ucopy): "<< Omega_g(g, Ucopy) << std::endl;
+      //   Real DeltaH_SG2=0;
+      //   for(int i=0; i<HMC_para.innerMC_N; ++i)
+      //   {
+      //   	  tt = DeltaH + HMC_para.betaMM * (Omega_g(g, Ucopy) - Omega_g(g, Ucur));
+      //   	  DeltaH_SG2 += std::exp( tt );
+      //   	  if(i%100==0) std::cout << "DeltaH tt: "<< tt << std::endl;
+      //     // GF_metro(Ucur, g, HMC_para.hb_nsweeps, HMC_para.betaMM, HMC_para.hb_multi_hit, 0.05);
+      //     GF_heatbath(Ucur, g, HMC_para.hb_nsweeps, HMC_para.betaMM, HMC_para.hb_multi_hit);
+      //   }
+      //   FinalDeltaH = std::log(DeltaH_SG2/double(HMC_para.innerMC_N));
+      //   //FinalDeltaH = DeltaH_SG2/double(HMC_para.innerMC_N);
+      //   	std::cout<< GridLogMessage << "Final deltaH: " << FinalDeltaH << std::endl;
+      // }
 
 
       // Metropolis-Hastings test

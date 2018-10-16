@@ -1,5 +1,6 @@
 #include <Grid/Grid.h>
 #include <iostream>
+#include <sys/sysinfo.h>
 #include "GF_HMC_para.h"
 #include "GF_init.h"
 #include "GF_assert.h"
@@ -28,12 +29,13 @@ int main(int argc, char **argv) {
   Grid_init(&argc, &argv);
   GridLogLayout();
 
-  int noMetro = 10;
-  int traj = 21; //number of trajectories
+  int noMetro = 200;
+  int traj = 200; //number of trajectories
   int mdSteps = 10;
   Real trajL = 1.0;
 
   HMC_PARA HMC_para;
+  HMC_para.UFile = "U8x8_M1.0_beta5.6";
 
   GF_init(argc, argv, noMetro, traj, mdSteps, trajL, HMC_para);
 
