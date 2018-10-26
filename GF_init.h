@@ -2,7 +2,7 @@ namespace Grid{
 
 // "--noMetro, --traj(n.o. of trajectories), --mdSteps, --trajL, --M, --epsilon, --innerMC_N, --hb_nsweeps, --newHp"
 
-void GF_init(int argc, char **argv, int &noMetro, int &traj, int &mdSteps, Real &trajL, HMC_PARA &HMC_para)
+void GF_init(int argc, char **argv, int &noMetro, int &traj, int &mdSteps, Real &trajL, int &startTrajectory, int &saveInterval, std::string &startingType, HMC_PARA &HMC_para)
 {
   std::string arg;
   std::stringstream ss;
@@ -30,6 +30,25 @@ void GF_init(int argc, char **argv, int &noMetro, int &traj, int &mdSteps, Real 
     ss.clear();
     ss.str(arg);
     ss >> trajL;
+  }
+  if(GridCmdOptionExists(argv, argv+argc, "--startTrajectory")){
+    arg = GridCmdOptionPayload(argv, argv+argc, "--startTrajectory");
+    ss.clear();
+    ss.str(arg);
+    ss >> startTrajectory;
+  }
+  if(GridCmdOptionExists(argv, argv+argc, "--startingType")){
+    arg = GridCmdOptionPayload(argv, argv+argc, "--startingType");
+    ss.clear();
+    ss.str(arg);
+    ss >> startingType;
+  }
+
+  if(GridCmdOptionExists(argv, argv+argc, "--saveInterval")){
+    arg = GridCmdOptionPayload(argv, argv+argc, "--saveInterval");
+    ss.clear();
+    ss.str(arg);
+    ss >> saveInterval;
   }
   if(GridCmdOptionExists(argv, argv+argc, "--M")){
     arg = GridCmdOptionPayload(argv, argv+argc, "--M");

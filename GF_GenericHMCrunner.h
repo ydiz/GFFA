@@ -50,26 +50,25 @@ class GF_HMCWrapperTemplate: public HMCWrapperTemplate<Implementation, Integrato
     Smearing.set_Field(U);
 
     //read U in equilibrium
-    if(HMC_para.UInitEquil){
+    if( !(this->Parameters.StartingType == "CheckpointStart") && HMC_para.UInitEquil ){
       FieldMetaData header;
       std::string file(HMC_para.UFile);
       // std::string file("./U_softly_fixed_4_M0.5");
-      //std::string file("./U_equilibrium");
       NerscIO::readConfiguration(U, header,file);
     }
 
     //SteepestDescentGaugeFix
-    if(HMC_para.SDGF){
-      Real alpha=0.1;
-      // must be false. cannot be true
-      std::cout << "before SDGF dOmegaSquare: " << dOmegaSquare2_no_g(U) << std::endl;
-	  LatticeColourMatrix g(U._grid);
-  	  g = 1.0;
-	  GF_heatbath(U, g, 50, HMC_para.betaMM, HMC_para.hb_multi_hit);
-	  SU3::GaugeTransform(U, g);
-      //FourierAcceleratedGaugeFixer<PeriodicGimplR>::SteepestDescentGaugeFix(U,alpha,100,1.0e-12, 1.0e-12,false);
-      std::cout << "after SDGF dOmegaSquare: " << dOmegaSquare2_no_g(U) << std::endl;
-    }
+    //if(HMC_para.SDGF){
+    //  Real alpha=0.1;
+    //  // must be false. cannot be true
+    //  std::cout << "before SDGF dOmegaSquare: " << dOmegaSquare2_no_g(U) << std::endl;
+	//  LatticeColourMatrix g(U._grid);
+  	//  g = 1.0;
+	//  GF_heatbath(U, g, 50, HMC_para.betaMM, HMC_para.hb_multi_hit);
+	//  SU3::GaugeTransform(U, g);
+    //  //FourierAcceleratedGaugeFixer<PeriodicGimplR>::SteepestDescentGaugeFix(U,alpha,100,1.0e-12, 1.0e-12,false);
+    //  std::cout << "after SDGF dOmegaSquare: " << dOmegaSquare2_no_g(U) << std::endl;
+    //}
 
     GF_HybridMonteCarlo<TheIntegrator> HMC(this->Parameters, MDynamics,
                                         this->Resources.GetSerialRNG(),

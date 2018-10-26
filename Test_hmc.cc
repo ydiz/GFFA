@@ -32,12 +32,15 @@ int main(int argc, char **argv) {
   int noMetro = 200;
   int traj = 200; //number of trajectories
   int mdSteps = 10;
+  int startTrajectory = 0;
+  int saveInterval = 5;
   Real trajL = 1.0;
+  std::string startingType("ColdStart");
 
   HMC_PARA HMC_para;
   HMC_para.UFile = "U8x8_M1.0_beta5.6";
 
-  GF_init(argc, argv, noMetro, traj, mdSteps, trajL, HMC_para);
+  GF_init(argc, argv, noMetro, traj, mdSteps, trajL, startTrajectory, saveInterval, startingType, HMC_para);
 
   // typedef GF_GenericHMCRunner<GFMinimumNorm2> HMCWrapper;
   typedef GF_GenericHMCRunner<GFLeapFrog> HMCWrapper;  // Uses the default minimum norm
@@ -49,7 +52,7 @@ int main(int argc, char **argv) {
   CheckpointerParameters CPparams;
   CPparams.config_prefix = "ckpoint_lat";
   CPparams.rng_prefix = "ckpoint_rng";
-  CPparams.saveInterval = 30;
+  CPparams.saveInterval = saveInterval;
   CPparams.format = "IEEE64BIG";
 
   TheHMC.Resources.LoadNerscCheckpointer(CPparams);
@@ -81,7 +84,7 @@ int main(int argc, char **argv) {
   TheHMC.Parameters.Trajectories = traj;
   TheHMC.Parameters.MD.MDsteps = mdSteps;
   TheHMC.Parameters.MD.trajL   = trajL;
-  // TheHMC.Parameters.StartingType = "ColdStart";
+  TheHMC.Parameters.StartingType = startingType;
 
   TheHMC.ReadCommandLine(argc, argv);
 
