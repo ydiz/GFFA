@@ -3,22 +3,30 @@
 namespace Grid{
 namespace QCD{
 
-//betaMM; use pRNG, sRNG outside
+// FIXME: "one" and "mask" can be defined outside and generated only once.
 void GF_heatbath(const LatticeGaugeField &Umu, LatticeColourMatrix &g,
                 int nsweeps, Real _betaMM, int multi_hit,
                 LatticeGaugeField *dSGF2dU=NULL,
-                LatticeGaugeField (*ForceFunc)(const LatticeColourMatrix &, const std::vector<LatticeColourMatrix> &)=NULL)//, bool verbose=0)
+                LatticeGaugeField (* const ForceFunc)(const LatticeColourMatrix &, const std::vector<LatticeColourMatrix> &)=NULL)//, bool verbose=0)
 {
-  GridRedBlackCartesian rbGrid(Umu._grid);
-
-  int seed = 1;
+  static bool initialized = false;
+  static GridParallelRNG  pRNG(Umu._grid);
+  static GridSerialRNG    sRNG;
+  if (!initialized) {
+   initialized = true;
+   // std::cout << "*************************" << "\n";
+   pRNG.SeedFixedIntegers(std::vector<int>{1,2,3,4});
+   sRNG.SeedFixedIntegers(std::vector<int>{5,6,7,8});
+   // do the initialization part
+}
+  // int seed = 1;
   // int seed = std::chrono::system_clock::now().time_since_epoch().count();
-  //FIXME: seeds are the same for each step
-  GridParallelRNG  pRNG(Umu._grid); pRNG.SeedFixedIntegers(std::vector<int>{seed});
-  GridSerialRNG    sRNG;       sRNG.SeedFixedIntegers(std::vector<int>{seed});
+  // GridParallelRNG  pRNG(Umu._grid); pRNG.SeedFixedIntegers(std::vector<int>{seed});
+  // GridSerialRNG    sRNG;       sRNG.SeedFixedIntegers(std::vector<int>{seed});
 
   Real betaMM = _betaMM * 3; //In heatbath routine, the coefficient is beta/Nc
 
+  GridRedBlackCartesian rbGrid(Umu._grid);
   int subsets[2] = {Even, Odd};
   LatticeInteger one(&rbGrid);  one = 1; // fill with ones
   LatticeInteger mask(Umu._grid);
