@@ -144,8 +144,7 @@ LatticeGaugeField dOmegadU_g(const LatticeColourMatrix &g, const LatticeGaugeFie
   LatticeColourMatrix s(Umu._grid);
 
   std::vector<LatticeColourMatrix> U(4, Umu._grid);
-  for(int mu=0; mu<Nd; mu++)
-  {
+  for(int mu=0; mu<Nd; mu++) {
     U[mu] = PeekIndex<LorentzIndex>(Umu, mu);
 		s = U[mu] * adj(Cshift(g, mu, 1)) * g;
     PokeIndex<LorentzIndex>(ret, s, mu);
@@ -154,6 +153,24 @@ LatticeGaugeField dOmegadU_g(const LatticeColourMatrix &g, const LatticeGaugeFie
   ret = Ta(ret);
   return ret;
 }
+
+//return Ta(U_\mu(x) g(x+\mu)^\dagger g(x))
+LatticeGaugeField dOmegadU_g(const LatticeColourMatrix &g, const std::vector<LatticeColourMatrix> &Umu)
+{
+  LatticeGaugeField ret(g._grid);
+  ret = zero;
+
+  LatticeColourMatrix s(g._grid);
+
+  for(int mu=0; mu<Nd; mu++) {
+		s = Umu[mu] * adj(Cshift(g, mu, 1)) * g;
+    PokeIndex<LorentzIndex>(ret, s, mu);
+  }
+
+  ret = Ta(ret);
+  return ret;
+}
+
 
 
 Real dOmegaSquare2_no_g(const LatticeGaugeField &Umu)

@@ -16,7 +16,4 @@ ckpoint*
 Test*.cc
 !Test_hmc.cc
 
-!Makefile
-!makefile*
-
 .nfs*
