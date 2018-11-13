@@ -17,3 +17,8 @@ Test*.cc
 !Test_hmc.cc
 
 .nfs*
+
+run.sh
+submit.sh
+Makefile
+makefile
