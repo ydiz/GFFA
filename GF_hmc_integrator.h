@@ -100,7 +100,7 @@ void GF_integrate(Field& U, const Momenta_k &KK) {
     int first_step = (step == 0);
     int last_step = (step == this->Params.MDsteps - 1);
     this->step(U, 0, first_step, last_step, KK);
-	printMem();
+  	// printMem();
   }
 
   // Check the clocks all match on all levels

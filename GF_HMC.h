@@ -109,8 +109,11 @@ class GF_HybridMonteCarlo {
 
       DeltaH = evolve_hmc_step(Ucopy, KK);
 
-  	  Real tt=0;
-  	  Real FinalDeltaH=0;
+      // no Metropolis, always accept.
+      Ucur = Ucopy;
+
+  	  // Real tt=0;
+  	  // Real FinalDeltaH=0;
 
       //calculate delta S_GF2
       // if(HMC_para.newAction){
@@ -134,22 +137,20 @@ class GF_HybridMonteCarlo {
       //   	std::cout<< GridLogMessage << "Final deltaH: " << FinalDeltaH << std::endl;
       // }
 
-
       // Metropolis-Hastings test
-      bool accept = true;
-      if (traj >= Params.StartTrajectory + Params.NoMetropolisUntil) {
-        //accept = metropolis_test(DeltaH);
-        accept = metropolis_test(FinalDeltaH);
-      } else {
-      	std::cout << GridLogMessage << "Skipping Metropolis test" << std::endl;
-      }
-
-      if (accept)
-        Ucur = Ucopy;
+      // bool accept = true;
+      // if (traj >= Params.StartTrajectory + Params.NoMetropolisUntil) {
+      //   //accept = metropolis_test(DeltaH);
+      //   accept = metropolis_test(FinalDeltaH);
+      // } else {
+      // 	std::cout << GridLogMessage << "Skipping Metropolis test" << std::endl;
+      // }
+      //
+      // if (accept)
+      //   Ucur = Ucopy;
 
       double t1=usecond();
       std::cout << GridLogMessage << "Total time for trajectory (s): " << (t1-t0)/1e6 << std::endl;
-
 
       for (int obs = 0; obs < Observables.size(); obs++) {
       	std::cout << GridLogDebug << "Observables # " << obs << std::endl;

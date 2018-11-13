@@ -1,19 +1,28 @@
 #include <cmath>
 
 namespace Grid{
-namespace QCD{
 
-void printMem()
+template<class rtype,class ltype, int N>
+strong_inline auto operator*(const iVector<rtype, N> &rhs, const iVector<ltype, N> &lhs) -> iVector<decltype(rhs(0)*lhs(0)), N>
 {
-	struct sysinfo myinfo;
-	sysinfo(&myinfo); // there is a struct called sysinfo and a function called sysinfo as well
-	double total_mem = myinfo.mem_unit * myinfo.totalram;
-	total_mem /= (1024.*1024.);
-	double free_mem = myinfo.mem_unit * myinfo.freeram;
-	free_mem /= (1024.*1024.);
-
-	printf("printMem node d: Memory: total: %.2f MB, avail: %.2f MB, used %.2f MB\n", total_mem, free_mem, total_mem-free_mem);
+	iVector<decltype(rhs(0)*lhs(0)), 4> ret;
+	for(int c1=0;c1<N;c1++){
+			mult(&ret._internal[c1],&rhs._internal[c1],&lhs._internal[c1]);
+	}
 }
+
+namespace QCD{
+// void printMem()
+// {
+// 	struct sysinfo myinfo;
+// 	sysinfo(&myinfo); // there is a struct called sysinfo and a function called sysinfo as well
+// 	double total_mem = myinfo.mem_unit * myinfo.totalram;
+// 	total_mem /= (1024.*1024.);
+// 	double free_mem = myinfo.mem_unit * myinfo.freeram;
+// 	free_mem /= (1024.*1024.);
+//
+// 	printf("printMem node d: Memory: total: %.2f MB, avail: %.2f MB, used %.2f MB\n", total_mem, free_mem, total_mem-free_mem);
+// }
 
 void readField(LatticeGaugeField &U, const std::string &filename)
 {
@@ -144,8 +153,7 @@ LatticeGaugeField dOmegadU_g(const LatticeColourMatrix &g, const LatticeGaugeFie
   LatticeColourMatrix s(Umu._grid);
 
   std::vector<LatticeColourMatrix> U(4, Umu._grid);
-  for(int mu=0; mu<Nd; mu++)
-  {
+  for(int mu=0; mu<Nd; mu++) {
     U[mu] = PeekIndex<LorentzIndex>(Umu, mu);
 		s = U[mu] * adj(Cshift(g, mu, 1)) * g;
     PokeIndex<LorentzIndex>(ret, s, mu);
@@ -154,6 +162,24 @@ LatticeGaugeField dOmegadU_g(const LatticeColourMatrix &g, const LatticeGaugeFie
   ret = Ta(ret);
   return ret;
 }
+
+//return Ta(U_\mu(x) g(x+\mu)^\dagger g(x))
+LatticeGaugeField dOmegadU_g(const LatticeColourMatrix &g, const std::vector<LatticeColourMatrix> &Umu)
+{
+  LatticeGaugeField ret(g._grid);
+  ret = zero;
+
+  LatticeColourMatrix s(g._grid);
+
+  for(int mu=0; mu<Nd; mu++) {
+		s = Umu[mu] * adj(Cshift(g, mu, 1)) * g;
+    PokeIndex<LorentzIndex>(ret, s, mu);
+  }
+
+  ret = Ta(ret);
+  return ret;
+}
+
 
 
 Real dOmegaSquare2_no_g(const LatticeGaugeField &Umu)

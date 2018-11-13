@@ -9,7 +9,9 @@ class GFAction : public Action<typename Gimpl::GaugeField> {
   INHERIT_GIMPL_TYPES(Gimpl);
 
   /////////////////////////// constructors
-  explicit GFAction(RealD beta_, RealD betaMM_, int innerMC_N_, int hb_offset_, int hb_nsweeps_, int hb_multi_hit_): beta(beta_), betaMM(betaMM_), innerMC_N(innerMC_N_), hb_offset(hb_offset_), hb_nsweeps(hb_nsweeps_), hb_multi_hit(hb_multi_hit_){}
+  explicit GFAction(RealD beta_, RealD betaMM_, int innerMC_N_, int hb_offset_, int hb_nsweeps_, int hb_multi_hit_)
+  : beta(beta_), betaMM(betaMM_), innerMC_N(innerMC_N_), hb_offset(hb_offset_), hb_nsweeps(hb_nsweeps_),
+  hb_multi_hit(hb_multi_hit_){}
 
   virtual std::string action_name() {return "GFAction";}
 
@@ -49,16 +51,14 @@ class GFAction : public Action<typename Gimpl::GaugeField> {
     dSGF2dU = zero;
     LatticeColourMatrix g(U._grid);
     g = 1.0;
-	// GF_heatbath(U, g, hb_offset, betaMM, hb_multi_hit, 1);
     GF_heatbath(U, g, hb_offset, betaMM, hb_multi_hit); //hb_nsweeps before calculate equilibrium value
 
-    //???maybe error here is large;(if dSGF2dU is large)
-    for(int i=0; i<innerMC_N; ++i)
-    {
-      dSGF2dU += dOmegadU_g(g, U);
-	  // GF_heatbath(U, g, hb_offset, betaMM, hb_multi_hit, 1);
-      GF_heatbath(U, g, hb_nsweeps, betaMM, hb_multi_hit);
-    }
+    GF_heatbath(U, g, innerMC_N, betaMM, hb_multi_hit, &dSGF2dU, dOmegadU_g); // calculate dSGF2dU
+    // for(int i=0; i<innerMC_N; ++i)
+    // {
+    //   dSGF2dU += dOmegadU_g(g, U);
+    //   GF_heatbath(U, g, hb_nsweeps, betaMM, hb_multi_hit);
+    // }
 
     dSGF2dU = factor *  (1.0 / double(innerMC_N)) * dSGF2dU;
 
