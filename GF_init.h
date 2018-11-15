@@ -1,124 +1,47 @@
-namespace Grid{
+// g++ GF_para.cc -lboost_program_options
+#include <stdlib.h>
+#include <boost/program_options.hpp>
 
-// "--noMetro, --traj(n.o. of trajectories), --mdSteps, --trajL, --M, --epsilon, --innerMC_N, --hb_nsweeps, --newHp"
+namespace po = boost::program_options;
 
-void GF_init(int argc, char **argv, int &noMetro, int &traj, int &mdSteps, Real &trajL, int &startTrajectory, int &saveInterval, std::string &startingType, HMC_PARA &HMC_para)
+namespace Grid {
+
+void init(int argc, char **argv, HMC_PARA &hmc_para)
 {
-  std::string arg;
-  std::stringstream ss;
+  po::options_description desc("GFFA options");
+  desc.add_options()("help", "help message")
+                    ("StartingType", po::value<std::string>(&hmc_para.StartingType)->default_value("ColdStart"), "Stariing configuration. It can be HotStart, ColdStart, TepidStart, or CheckpointStart.")
+                    ("StartingTrajectory", po::value<int>(&hmc_para.StartingTrajectory), "If StartingType is CheckpointStart, ckpoint_lat.xx and ckpoint_rng.xx corresponding to StartingTrajectory will be loaded.")
+                    ("Thermalizations", po::value<int>(&hmc_para.Thermalizations)->default_value(200), "Number of trajectories without Metropolis test.")
+                    ("Trajectories", po::value<int>(&hmc_para.Trajectories)->default_value(0), "Number of trajectories after those without Metropolis test. p.s. At the moment Metropolis is disabled")
+                    ("mdSteps", po::value<int>(&hmc_para.mdSteps)->default_value(20), "Number of MD steps within each trajectory.")
+                    ("trajL", po::value<double>(&hmc_para.trajL)->default_value(1.0), "Trajectory length.")
+                    ("saveInterval", po::value<int>(&hmc_para.saveInterval)->default_value(50), "Save interval for checker pointers.")
+                    ("newAction", po::value<bool>(&hmc_para.newAction)->default_value(true), "Determine whether use gauge-fixing action.")
+                    ("newHp", po::value<bool>(&hmc_para.newHp)->default_value(false), "Determine whether use Fourier-accelerated kinetic energy term.")
+                    ("beta", po::value<double>(&hmc_para.beta)->default_value(5.6), "beta")
+                    ("M", po::value<double>(&hmc_para.M)->default_value(1.0), "M for soft gauge-fixing.")
+                    ("epsilon", po::value<double>(&hmc_para.epsilon)->default_value(0.2), "Infrared regulator")
+                    ("hb_offset", po::value<int>(&hmc_para.hb_offset)->default_value(100), "number of heatbath sweeps to reach equilibrium")
+                    ("innerMC_N", po::value<int>(&hmc_para.innerMC_N)->default_value(100), "number of heatbath sweeps to calculated inner Monte Carlo")
+                    // ("hb_nsweeps", po::value<int>(&hmc_para.hb_nsweeps)->default_value(1), "number of heatbath sweeps for within each innerMC_N")
+                    ("hb_multi_hit", po::value<int>(&hmc_para.hb_multi_hit)->default_value(1),"heatbath multiple hits")
+                    // ("UInitEquil", po::value<bool>(),"") // delete this parameter, replace it with !UFileName.empty();
+                    ("UFileName", po::value<std::string>(&hmc_para.UFile), "If starting type if not CheckpointStart and UFileName is not empty, gauge configuration with corresponding filename with be loaded")
+                    ;
 
-  if(GridCmdOptionExists(argv, argv+argc, "--noMetro")){
-    arg = GridCmdOptionPayload(argv, argv+argc, "--noMetro");
-    ss.clear();
-    ss.str(arg);
-    ss >> noMetro;
-  }
-  if(GridCmdOptionExists(argv, argv+argc, "--traj")){
-    arg = GridCmdOptionPayload(argv, argv+argc, "--traj");
-    ss.clear();
-    ss.str(arg);
-    ss >> traj;
-  }
-  if(GridCmdOptionExists(argv, argv+argc, "--mdSteps")){
-    arg = GridCmdOptionPayload(argv, argv+argc, "--mdSteps");
-    ss.clear();
-    ss.str(arg);
-    ss >> mdSteps;
-  }
-  if(GridCmdOptionExists(argv, argv+argc, "--trajL")){
-    arg = GridCmdOptionPayload(argv, argv+argc, "--trajL");
-    ss.clear();
-    ss.str(arg);
-    ss >> trajL;
-  }
-  if(GridCmdOptionExists(argv, argv+argc, "--startTrajectory")){
-    arg = GridCmdOptionPayload(argv, argv+argc, "--startTrajectory");
-    ss.clear();
-    ss.str(arg);
-    ss >> startTrajectory;
-  }
-  if(GridCmdOptionExists(argv, argv+argc, "--startingType")){
-    arg = GridCmdOptionPayload(argv, argv+argc, "--startingType");
-    ss.clear();
-    ss.str(arg);
-    ss >> startingType;
+  po::variables_map vm;
+  // po::store(po::parse_command_line(argc, argv, desc), vm); // command line options have higher priority
+  po::store(po::command_line_parser(argc, argv).options(desc).allow_unregistered().run(), vm); // allow additional command line options
+  po::store(po::parse_config_file<char>("GFFA.ini", desc), vm);
+  po::notify(vm);
+
+  if(vm.count("help")) {
+    std::cout << desc << std::endl;
+    exit(0);
   }
 
-  if(GridCmdOptionExists(argv, argv+argc, "--saveInterval")){
-    arg = GridCmdOptionPayload(argv, argv+argc, "--saveInterval");
-    ss.clear();
-    ss.str(arg);
-    ss >> saveInterval;
-  }
-  if(GridCmdOptionExists(argv, argv+argc, "--M")){
-    arg = GridCmdOptionPayload(argv, argv+argc, "--M");
-    ss.clear();
-    ss.str(arg);
-    ss >> HMC_para.M;
-  }
-  if(GridCmdOptionExists(argv, argv+argc, "--epsilon")){
-    arg = GridCmdOptionPayload(argv, argv+argc, "--epsilon");
-    ss.clear();
-    ss.str(arg);
-    ss >> HMC_para.epsilon;
-  }
-  if(GridCmdOptionExists(argv, argv+argc, "--hb_offset")){
-    arg = GridCmdOptionPayload(argv, argv+argc, "--hb_offset");
-    ss.clear();
-    ss.str(arg);
-    ss >> HMC_para.hb_offset;
-  }
-  if(GridCmdOptionExists(argv, argv+argc, "--hb_nsweeps")){
-    arg = GridCmdOptionPayload(argv, argv+argc, "--hb_nsweeps");
-    ss.clear();
-    ss.str(arg);
-    ss >> HMC_para.hb_nsweeps;
-  }
-  if(GridCmdOptionExists(argv, argv+argc, "--innerMC_N")){
-    arg = GridCmdOptionPayload(argv, argv+argc, "--innerMC_N");
-    ss.clear();
-    ss.str(arg);
-    ss >> HMC_para.innerMC_N;
-  }
-  if(GridCmdOptionExists(argv, argv+argc, "--newHp")){
-    arg = GridCmdOptionPayload(argv, argv+argc, "--newHp");
-    ss.clear();
-    ss.str(arg);
-    ss >> HMC_para.newHp;
-  }
-  if(GridCmdOptionExists(argv, argv+argc, "--newAction")){
-    arg = GridCmdOptionPayload(argv, argv+argc, "--newAction");
-    ss.clear();
-    ss.str(arg);
-    ss >> HMC_para.newAction;
-  }
-  if(GridCmdOptionExists(argv, argv+argc, "--SDGF")){
-    arg = GridCmdOptionPayload(argv, argv+argc, "--SDGF");
-    ss.clear();
-    ss.str(arg);
-    ss >> HMC_para.SDGF;
-  }
-  if(GridCmdOptionExists(argv, argv+argc, "--UInitEquil")){
-    arg = GridCmdOptionPayload(argv, argv+argc, "--UInitEquil");
-    ss.clear();
-    ss.str(arg);
-    ss >> HMC_para.UInitEquil;
-  }
-  if(GridCmdOptionExists(argv, argv+argc, "--hb_multi_hit")){
-    arg = GridCmdOptionPayload(argv, argv+argc, "--hb_multi_hit");
-    ss.clear();
-    ss.str(arg);
-    ss >> HMC_para.hb_multi_hit;
-  }
-  if(GridCmdOptionExists(argv, argv+argc, "--UFile")){
-    arg = GridCmdOptionPayload(argv, argv+argc, "--UFile");
-    ss.clear();
-    ss.str(arg);
-    ss >> HMC_para.UFile;
-  }
-
-
-  HMC_para.betaMM = HMC_para.beta * HMC_para.M * HMC_para.M;
+  hmc_para.betaMM = hmc_para.beta * hmc_para.M * hmc_para.M;
 }
 
 }
