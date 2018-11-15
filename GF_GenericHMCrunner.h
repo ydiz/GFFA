@@ -50,7 +50,7 @@ class GF_HMCWrapperTemplate: public HMCWrapperTemplate<Implementation, Integrato
     Smearing.set_Field(U);
 
     //read U in equilibrium
-    if( !(this->Parameters.StartingType == "CheckpointStart") && HMC_para.UInitEquil ){
+    if( !(this->Parameters.StartingType == "CheckpointStart") && !HMC_para.UFile.empty() ){
 
       this->Resources.SeedFixedIntegers(); // this is enough!
       FieldMetaData header;

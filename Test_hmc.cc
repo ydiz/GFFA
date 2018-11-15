@@ -3,6 +3,7 @@
 #include <sys/sysinfo.h>
 #include "GF_HMC_para.h"
 #include "GF_init.h"
+// #include "GF"
 #include "GF_assert.h"
 #include "GF_Util.h"
 #include "GF_init_k.h"
@@ -29,18 +30,8 @@ int main(int argc, char **argv) {
   Grid_init(&argc, &argv);
   GridLogLayout();
 
-  int noMetro = 200;
-  int traj = 200; //number of trajectories
-  int mdSteps = 10;
-  int startTrajectory = 0;
-  int saveInterval = 5;
-  Real trajL = 1.0;
-  std::string startingType("ColdStart");
-
-  HMC_PARA HMC_para;
-  HMC_para.UFile = "U8x8_M1.0_beta5.6";
-
-  GF_init(argc, argv, noMetro, traj, mdSteps, trajL, startTrajectory, saveInterval, startingType, HMC_para);
+  HMC_PARA hmc_para {};  // initialize each data member to default value
+  init(argc, argv, hmc_para);
 
   // typedef GF_GenericHMCRunner<GFMinimumNorm2> HMCWrapper;
   typedef GF_GenericHMCRunner<GFLeapFrog> HMCWrapper;  // Uses the default minimum norm
@@ -52,9 +43,8 @@ int main(int argc, char **argv) {
   CheckpointerParameters CPparams;
   CPparams.config_prefix = "ckpoint_lat";
   CPparams.rng_prefix = "ckpoint_rng";
-  CPparams.saveInterval = saveInterval;
+  CPparams.saveInterval = hmc_para.saveInterval;
   CPparams.format = "IEEE64BIG";
-
   TheHMC.Resources.LoadNerscCheckpointer(CPparams);
 
   RNGModuleParameters RNGpar;
@@ -67,11 +57,11 @@ int main(int argc, char **argv) {
 
   ActionLevel<HMCWrapper::Field> Level1(1);
 
-  GFActionR Gaction(HMC_para.beta, HMC_para.betaMM, HMC_para.innerMC_N, HMC_para.hb_offset, HMC_para.hb_nsweeps, HMC_para.hb_multi_hit);
-  WilsonGaugeActionR Waction(HMC_para.beta);
+  GFActionR Gaction(hmc_para.beta, hmc_para.betaMM, hmc_para.innerMC_N, hmc_para.hb_offset, hmc_para.hb_multi_hit);
+  WilsonGaugeActionR Waction(hmc_para.beta);
 
   //cannot define action inside if statement
-  if(HMC_para.newAction){
+  if(hmc_para.newAction){
     Level1.push_back(&Gaction);
   }
   else{
@@ -80,17 +70,18 @@ int main(int argc, char **argv) {
 
   TheHMC.TheAction.push_back(Level1);
 
-  TheHMC.Parameters.NoMetropolisUntil = noMetro;
-  TheHMC.Parameters.Trajectories = traj;
-  TheHMC.Parameters.MD.MDsteps = mdSteps;
-  TheHMC.Parameters.MD.trajL   = trajL;
-  TheHMC.Parameters.StartingType = startingType;
+  TheHMC.Parameters.NoMetropolisUntil = hmc_para.Thermalizations;
+  TheHMC.Parameters.Trajectories = hmc_para.Trajectories;
+  TheHMC.Parameters.MD.MDsteps = hmc_para.mdSteps;
+  TheHMC.Parameters.MD.trajL   = hmc_para.trajL;
+  TheHMC.Parameters.StartingType = hmc_para.StartingType;
+  TheHMC.Parameters.StartTrajectory = hmc_para.StartingTrajectory;
 
-  TheHMC.ReadCommandLine(argc, argv);
+  // TheHMC.ReadCommandLine(argc, argv);
 
-  cout << HMC_para << endl;
+  cout << hmc_para << endl;
 
-  TheHMC.Run(HMC_para);
+  TheHMC.Run(hmc_para);
 
   Grid_finalize();
 
