@@ -30,16 +30,19 @@ void GF_generate_P(LatticeGaugeField& P, GridParallelRNG& pRNG, const Momenta_k 
 
   std::vector<int> gdims = P._grid->_gdimensions;
 
-  parallel_for(int ss=0;ss<P._grid->gSites();ss++){
+// If use parallel_for, it will generate an error; do not know why
+  for(int ss=0; ss<P._grid->lSites(); ss++){
     LorentzColourMatrix m;
-    std::vector<int> coor;
-    P._grid->GlobalIndexToGlobalCoor(ss, coor);
-    peekSite(m, newP, coor);
-    coor = gdims - coor; //zyd: do not need to modulo L. This is done in pokeSite.
-    std::cout << coor << std::endl;
-    pokeSite(m, newP_Minus, coor);
+    std::vector<int> lcoor(4);
+    P._grid->LocalIndexToLocalCoor(ss, lcoor);
+    std::vector<int> gcoor(4);
+    std::vector<int> processor_coor = P._grid->ThisProcessorCoor();
+    P._grid->ProcessorCoorLocalCoorToGlobalCoor(processor_coor, lcoor, gcoor);
+    peekSite(m, newP, gcoor);
+    gcoor = gdims - gcoor; //zyd: do not need to modulo L. This is done in pokeSite.
+    // std::cout << gcoor << std::endl;
+    pokeSite(m, newP_Minus, gcoor);
   }
-
   // P_\mu(k) = \frac{1}{\sqrt{2}} (P_\mu(k) + P^\dagger_\mu(-k))
   LatticeGaugeField Pk(P._grid);
   Pk = newP + adj(newP_Minus);
