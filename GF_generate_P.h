@@ -31,17 +31,27 @@ void GF_generate_P(LatticeGaugeField& P, GridParallelRNG& pRNG, const Momenta_k 
   std::vector<int> gdims = P._grid->_gdimensions;
 
 // If use parallel_for, it will generate an error; do not know why
-  for(int ss=0; ss<P._grid->lSites(); ss++){
-    LorentzColourMatrix m;
-    std::vector<int> lcoor(4);
-    P._grid->LocalIndexToLocalCoor(ss, lcoor);
-    std::vector<int> gcoor(4);
-    std::vector<int> processor_coor = P._grid->ThisProcessorCoor();
-    P._grid->ProcessorCoorLocalCoorToGlobalCoor(processor_coor, lcoor, gcoor);
-    peekSite(m, newP, gcoor);
-    gcoor = gdims - gcoor; //zyd: do not need to modulo L. This is done in pokeSite.
-    // std::cout << gcoor << std::endl;
-    pokeSite(m, newP_Minus, gcoor);
+  for(int node=0; node<P._grid->_Nprocessors; ++node){
+	for(int ss=0; ss<P._grid->lSites(); ss++){
+		LorentzColourMatrix m;
+		std::vector<int> lcoor(4);
+		P._grid->LocalIndexToLocalCoor(ss, lcoor);
+		std::vector<int> gcoor(4);
+		std::vector<int> processor_coor;
+		P._grid->ProcessorCoorFromRank(node, processor_coor); // to use peekSite, all nodes must put in the same coor
+		P._grid->ProcessorCoorLocalCoorToGlobalCoor(processor_coor, lcoor, gcoor);
+		//std::cout << processor_coor << lcoor << gcoor << std::endl;
+		std::vector<int> new_gcoor(4);
+		new_gcoor = gdims - gcoor;
+		peekSite(m, newP, new_gcoor);
+		//gcoor = gdims - gcoor; //zyd: do not need to modulo L. This is done in pokeSite.
+		// std::cout << gcoor << std::endl;
+		if(P._grid->ThisRank()==node) {
+			pokeLocalSite(m, newP_Minus, lcoor);
+		}
+	}
+	MPI_Barrier(P._grid->communicator_world);
+
   }
   // P_\mu(k) = \frac{1}{\sqrt{2}} (P_\mu(k) + P^\dagger_\mu(-k))
   LatticeGaugeField Pk(P._grid);
