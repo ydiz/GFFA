@@ -7,7 +7,7 @@ void GF_generate_P(LatticeGaugeField& P, GridParallelRNG& pRNG, const Momenta_k 
   LatticeGaugeField P0(P._grid);
   LatticeColourMatrix P0mu(P._grid);
   SU3::LatticeAlgebraVector P0_a(P._grid);   //Lattice<iScalar<iScalar<iVector<vComplex, SU3::AdjointDimension> > > >
-  for (int mu = 0; mu < Nd; mu++) {
+  for(int mu = 0; mu < Nd; mu++) {
     gaussian(pRNG, P0_a); //P0_a's real and imaginary part both ~ N(0,1)
     SU3::FundamentalLieAlgebraMatrix(P0_a, P0mu);
     pokeLorentz(P0, P0mu, mu);
@@ -29,12 +29,14 @@ void GF_generate_P(LatticeGaugeField& P, GridParallelRNG& pRNG, const Momenta_k 
   LatticeGaugeField newP_Minus(P._grid);
 
   std::vector<int> gdims = P._grid->_gdimensions;
-  LorentzColourMatrix m;
-  std::vector<int> coor;
+
   parallel_for(int ss=0;ss<P._grid->gSites();ss++){
+    LorentzColourMatrix m;
+    std::vector<int> coor;
     P._grid->GlobalIndexToGlobalCoor(ss, coor);
     peekSite(m, newP, coor);
     coor = gdims - coor; //zyd: do not need to modulo L. This is done in pokeSite.
+    std::cout << coor << std::endl;
     pokeSite(m, newP_Minus, coor);
   }
 
