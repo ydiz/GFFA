@@ -10,7 +10,8 @@ struct HMC_PARA{
   int saveInterval;
 
   bool newHp;
-  bool newAction;
+  // bool newAction;
+  std::string action;
   double beta;
   double M;
   double betaMM;
@@ -22,6 +23,14 @@ struct HMC_PARA{
   // bool SDGF; // SteepestDescentGaugeFix
   // bool UInitEquil; //use equilibrium U
   std::string UFile;
+
+  // Topological Charge
+  int TC_interval;
+  bool TC_do_smearing;
+  int TC_Smearing_steps;
+  double TC_Smearing_step_size;
+  int TC_Smearing_meas_interval;
+  double TC_Smearing_maxTau;
 
   // HMC_PARA(): beta(5.6), M(1.0), epsilon(0.2), hb_offset(1000), innerMC_N(10000), hb_nsweeps(1),
   //             newHp(false), newAction(true), SDGF(false), UInitEquil(true), hb_multi_hit(1) {} //betaMM is initialzed in GF_init()
@@ -39,7 +48,8 @@ std::ostream& operator<<(std::ostream& out, const HMC_PARA &HMC_para)
   out << "===================================================" << std::endl;
 
   out << "newHp: " << std::boolalpha << HMC_para.newHp << std::endl;
-  out << "newAction: " << HMC_para.newAction << std::endl;
+  // out << "newAction: " << HMC_para.newAction << std::endl;
+  out << "action: " << HMC_para.action << std::endl;
   out << "beta: " << HMC_para.beta << std::endl;
   out << "M: " << HMC_para.M << std::endl;
   out << "betaMM: " << HMC_para.betaMM << std::endl;
@@ -50,6 +60,15 @@ std::ostream& operator<<(std::ostream& out, const HMC_PARA &HMC_para)
   // out << "SDGF: " << HMC_para.SDGF << std::endl;
   // out << "UInitEquil: " << HMC_para.UInitEquil << std::endl;
   out << "hb_multi_hit: " << HMC_para.hb_multi_hit << std::endl;
+
+  out << "================ Topological Charge ===============" << std::endl;
+  out << "TC_interval: " << HMC_para.TC_interval << std::endl;
+  out << "TC_do_smearing: " << HMC_para.TC_do_smearing << std::endl;
+  out << "TC_Smearing_steps: " << HMC_para.TC_Smearing_steps << std::endl;
+  out << "TC_Smearing_step_size: " << HMC_para.TC_Smearing_step_size << std::endl;
+  out << "TC_Smearing_meas_interval: " << HMC_para.TC_Smearing_meas_interval << std::endl;
+  out << "TC_Smearing_maxTau: " << HMC_para.TC_Smearing_maxTau << std::endl;
+
   return out;
 }
 

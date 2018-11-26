@@ -52,24 +52,51 @@ int main(int argc, char **argv) {
   RNGpar.parallel_seeds = "6 7 8 9 10";
   TheHMC.Resources.SetRNGSeeds(RNGpar);
 
+  // observables
   typedef PlaquetteMod<HMCWrapper::ImplPolicy> PlaqObs;
   TheHMC.Resources.AddObservable<PlaqObs>();
 
+  typedef TopologicalChargeMod<HMCWrapper::ImplPolicy> QObs;
+  TopologyObsParameters TopParams;
+  TopParams.interval = hmc_para.TC_interval;
+  TopParams.do_smearing = hmc_para.TC_do_smearing;
+  TopParams.Smearing.steps = hmc_para.TC_Smearing_steps;
+  TopParams.Smearing.step_size = hmc_para.TC_Smearing_step_size;
+  TopParams.Smearing.meas_interval = hmc_para.TC_Smearing_meas_interval;
+  TopParams.Smearing.maxTau = hmc_para.TC_Smearing_maxTau;
+  // TopParams.interval = 5;
+  // TopParams.do_smearing = true;
+  // TopParams.Smearing.steps = 200;
+  // TopParams.Smearing.step_size = 0.01;
+  // TopParams.Smearing.meas_interval = 50;
+  // TopParams.Smearing.maxTau = 2.0;
+  TheHMC.Resources.AddObservable<QObs>(TopParams);
+
+
+  // action
   ActionLevel<HMCWrapper::Field> Level1(1);
 
-  GFActionR Gaction(hmc_para.beta, hmc_para.betaMM, hmc_para.innerMC_N, hmc_para.hb_offset, hmc_para.hb_multi_hit);
-  WilsonGaugeActionR Waction(hmc_para.beta);
+  WilsonGaugeActionR Wilson_action(hmc_para.beta);
+  DBW2GaugeAction<PeriodicGimplR> DBW2_action(hmc_para.beta);
+  GFActionR GF_Wilson_action(hmc_para.beta, hmc_para.betaMM, hmc_para.innerMC_N, hmc_para.hb_offset, hmc_para.hb_multi_hit);
 
-  //cannot define action inside if statement
-  if(hmc_para.newAction){
-    Level1.push_back(&Gaction);
+  if(hmc_para.action == "Wilson"){
+    Level1.push_back(&Wilson_action);
   }
-  else{
-    Level1.push_back(&Waction);
+  else if(hmc_para.action == "GF_Wilson"){
+    Level1.push_back(&GF_Wilson_action);
+  }
+  else if(hmc_para.action == "DBW2"){
+    Level1.push_back(&DBW2_action);
+  }
+  else {
+    std::cout << "Action not available" << std::endl;
+    return 0;
   }
 
   TheHMC.TheAction.push_back(Level1);
 
+  // HMC
   TheHMC.Parameters.NoMetropolisUntil = hmc_para.Thermalizations;
   TheHMC.Parameters.Trajectories = hmc_para.Trajectories;
   TheHMC.Parameters.MD.MDsteps = hmc_para.mdSteps;

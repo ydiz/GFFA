@@ -50,8 +50,9 @@ void GF_generate_P(LatticeGaugeField& P, GridParallelRNG& pRNG, const Momenta_k 
 			pokeLocalSite(m, newP_Minus, lcoor);
 		}
 	}
+#ifndef GRID_COMMS_NONE
 	MPI_Barrier(P._grid->communicator_world);
-
+#endif
   }
   // P_\mu(k) = \frac{1}{\sqrt{2}} (P_\mu(k) + P^\dagger_\mu(-k))
   LatticeGaugeField Pk(P._grid);
