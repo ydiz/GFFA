@@ -34,7 +34,8 @@ int main(int argc, char **argv) {
   init(argc, argv, hmc_para);
 
   // typedef GF_GenericHMCRunner<GFMinimumNorm2> HMCWrapper;
-  typedef GF_GenericHMCRunner<GFLeapFrog> HMCWrapper;  // Uses the default minimum norm
+  // typedef GF_GenericHMCRunner<GFLeapFrog> HMCWrapper;
+  typedef GF_GenericHMCRunner<GFForceGradient> HMCWrapper;
   HMCWrapper TheHMC;
 
   TheHMC.Resources.AddFourDimGrid("gauge");
@@ -57,10 +58,11 @@ int main(int argc, char **argv) {
   TheHMC.Resources.AddObservable<PlaqObs>();
 
   typedef TopologicalChargeMod<HMCWrapper::ImplPolicy> QObs;
-  TopologyObsParameters TopParams;
+  TopologyObsParameters TopParams {};
   TopParams.interval = hmc_para.TC_interval;
   TopParams.do_smearing = hmc_para.TC_do_smearing;
-  TopParams.Smearing.steps = hmc_para.TC_Smearing_steps;
+  // TopParams.Smearing.steps = hmc_para.TC_Smearing_steps; //
+  // TopParams.Smearing.steps = 9999; // this number does not matter
   TopParams.Smearing.step_size = hmc_para.TC_Smearing_step_size;
   TopParams.Smearing.meas_interval = hmc_para.TC_Smearing_meas_interval;
   TopParams.Smearing.maxTau = hmc_para.TC_Smearing_maxTau;

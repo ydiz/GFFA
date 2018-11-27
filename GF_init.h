@@ -31,9 +31,9 @@ void init(int argc, char **argv, HMC_PARA &hmc_para)
                     ("UFileName", po::value<std::string>(&hmc_para.UFile), "If starting type if not CheckpointStart and UFileName is not empty, gauge configuration with corresponding filename with be loaded")
                     ("TC.interval", po::value<int>(&hmc_para.TC_interval)->default_value(5), "Trajectory interval for calculating topological charge.")
                     ("TC.do_smearing", po::value<bool>(&hmc_para.TC_do_smearing)->default_value(true), "Wheter do smearing or not")
-                    ("TC.Smearing_steps", po::value<int>(&hmc_para.TC_Smearing_steps)->default_value(200), "parameter for smearing")
+                    // ("TC.Smearing_steps", po::value<int>(&hmc_para.TC_Smearing_steps)->default_value(200), "parameter for smearing")
                     ("TC.Smearing_step_size", po::value<double>(&hmc_para.TC_Smearing_step_size)->default_value(1.0), "parameter for smearing")
-                    ("TC.Smearing_meas_interval", po::value<int>(&hmc_para.TC_Smearing_meas_interval)->default_value(50), "parameter for smearing")
+                    ("TC.Smearing_meas_interval", po::value<int>(&hmc_para.TC_Smearing_meas_interval)->default_value(50), "Wilson flow integration steps for calculating topological charge")
                     ("TC.Smearing_maxTau", po::value<double>(&hmc_para.TC_Smearing_maxTau)->default_value(2.0), "parameter for smearing")
                     ;
 

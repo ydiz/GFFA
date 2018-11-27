@@ -27,7 +27,7 @@ struct HMC_PARA{
   // Topological Charge
   int TC_interval;
   bool TC_do_smearing;
-  int TC_Smearing_steps;
+  // int TC_Smearing_steps; // does not matter
   double TC_Smearing_step_size;
   int TC_Smearing_meas_interval;
   double TC_Smearing_maxTau;
@@ -64,7 +64,7 @@ std::ostream& operator<<(std::ostream& out, const HMC_PARA &HMC_para)
   out << "================ Topological Charge ===============" << std::endl;
   out << "TC_interval: " << HMC_para.TC_interval << std::endl;
   out << "TC_do_smearing: " << HMC_para.TC_do_smearing << std::endl;
-  out << "TC_Smearing_steps: " << HMC_para.TC_Smearing_steps << std::endl;
+  // out << "TC_Smearing_steps: " << HMC_para.TC_Smearing_steps << std::endl;
   out << "TC_Smearing_step_size: " << HMC_para.TC_Smearing_step_size << std::endl;
   out << "TC_Smearing_meas_interval: " << HMC_para.TC_Smearing_meas_interval << std::endl;
   out << "TC_Smearing_maxTau: " << HMC_para.TC_Smearing_maxTau << std::endl;
