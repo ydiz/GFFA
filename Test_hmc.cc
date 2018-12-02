@@ -34,8 +34,8 @@ int main(int argc, char **argv) {
   init(argc, argv, hmc_para);
 
   // typedef GF_GenericHMCRunner<GFMinimumNorm2> HMCWrapper;
-  // typedef GF_GenericHMCRunner<GFLeapFrog> HMCWrapper;
-  typedef GF_GenericHMCRunner<GFForceGradient> HMCWrapper;
+  typedef GF_GenericHMCRunner<GFLeapFrog> HMCWrapper;
+  // typedef GF_GenericHMCRunner<GFForceGradient> HMCWrapper;
   HMCWrapper TheHMC;
 
   TheHMC.Resources.AddFourDimGrid("gauge");
@@ -79,8 +79,9 @@ int main(int argc, char **argv) {
   ActionLevel<HMCWrapper::Field> Level1(1);
 
   WilsonGaugeActionR Wilson_action(hmc_para.beta);
-  DBW2GaugeAction<PeriodicGimplR> DBW2_action(hmc_para.beta);
   GFActionR GF_Wilson_action(hmc_para.beta, hmc_para.betaMM, hmc_para.innerMC_N, hmc_para.hb_offset, hmc_para.hb_multi_hit);
+  DBW2GaugeAction<PeriodicGimplR> DBW2_action(hmc_para.beta);
+  GF_DBW2ActionR GF_DBW2_action(hmc_para.beta, hmc_para.betaMM, hmc_para.innerMC_N, hmc_para.hb_offset, hmc_para.hb_multi_hit);
 
   if(hmc_para.action == "Wilson"){
     Level1.push_back(&Wilson_action);
@@ -90,6 +91,9 @@ int main(int argc, char **argv) {
   }
   else if(hmc_para.action == "DBW2"){
     Level1.push_back(&DBW2_action);
+  }
+  else if(hmc_para.action == "GF_DBW2"){
+    Level1.push_back(&GF_DBW2_action);
   }
   else {
     std::cout << "Action not available" << std::endl;
