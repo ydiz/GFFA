@@ -3,10 +3,10 @@
 #include <sys/sysinfo.h>
 #include "GF_HMC_para.h"
 #include "GF_init.h"
-// #include "GF"
 #include "GF_assert.h"
 #include "GF_Util.h"
 #include "GF_init_k.h"
+#include "subgroup_hb.h"
 #include "GF_heatbath_Util.h"
 #include "GF_generate_P.h"
 #include "GF_Action.h"

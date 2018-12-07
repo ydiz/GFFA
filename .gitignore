@@ -20,5 +20,7 @@ Test*.cc
 
 run.sh
 submit.sh
+nohup.out
+GFFA.ini
 Makefile
 makefile
