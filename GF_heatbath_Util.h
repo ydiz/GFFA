@@ -44,7 +44,7 @@ void GF_heatbath(const LatticeGaugeField &Umu, LatticeColourMatrix &g,
 
   LatticeColourMatrix staple(Umu._grid);
   // added by zyd
-  std::vector<LatticeColourMatrix> UMinusShift(4);
+  std::vector<LatticeColourMatrix> UMinusShift(4, Umu._grid);
   for(int mu=0; mu<Nd; ++mu) UMinusShift[mu] = Cshift(U[mu], mu, -1);
 
   for(int sweep=0; sweep<nsweeps; sweep++){
@@ -60,11 +60,11 @@ void GF_heatbath(const LatticeGaugeField &Umu, LatticeColourMatrix &g,
         // staple += U[mu] * adj(Cshift(g,mu,1))
         //           + adj( Cshift(g, mu, -1) * Cshift(U[mu], mu, -1) );
         staple += U[mu] * adj(Cshift(g,mu,1))
-                  + adj( Cshift(g, mu, -1) * UMinusShift[mu];
+                  + adj( Cshift(g, mu, -1) * UMinusShift[mu]);
       }
       for(int subgroup=0;subgroup<SU3::su2subgroups();subgroup++) {
         // SU3::SubGroupHeatBath(sRNG,pRNG,betaMM,g,staple,subgroup,multi_hit,mask);
-        GF_SubGroupHeatBath(sRNG, pRNG, betaMM, g, staple, subgroup, multi_hit, mask_EvenOdd[cbs]);
+        GF_SubGroupHeatBath(sRNG, pRNG, betaMM, g, staple, subgroup, multi_hit, mask_EvenOdd[cb]);
       }
       //reunitarise
     }
