@@ -103,7 +103,7 @@ void GF_SubGroupHeatBath(
      u = 0.5 * u * pow(xi, -1.0);  //  u   = 1/2xi [ Sig - Sig^dag  + 1 Tr Sigdag]
 
      // Debug test for sanity
-     // uinv = adj(u);
+     uinv = adj(u); //do not comment this line
      // b = u * uinv - 1.0;
      // assert(norm2(b) < 1.0e-4);
 

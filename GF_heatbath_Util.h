@@ -63,13 +63,14 @@ void GF_heatbath(const LatticeGaugeField &Umu, LatticeColourMatrix &g,
                   + adj( Cshift(g, mu, -1) * UMinusShift[mu]);
       }
       for(int subgroup=0;subgroup<SU3::su2subgroups();subgroup++) {
-        // SU3::SubGroupHeatBath(sRNG,pRNG,betaMM,g,staple,subgroup,multi_hit,mask);
+        // SU3::SubGroupHeatBath(sRNG,pRNG,betaMM,g,staple,subgroup,multi_hit,mask_EvenOdd[cb]);
         GF_SubGroupHeatBath(sRNG, pRNG, betaMM, g, staple, subgroup, multi_hit, mask_EvenOdd[cb]);
       }
       //reunitarise
+	  ProjectOnGroup(g);
     }
 
-    if(sweep%10==9) ProjectOnGroup(g); // project on group every 10 sweeps
+    // if(sweep%10==9) ProjectOnGroup(g); // project on group every 10 sweeps
 
     if(dSGF2dU!=NULL) (*dSGF2dU) += ForceFunc(g, U);
 
