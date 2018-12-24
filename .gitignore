@@ -7,6 +7,8 @@
 # ignore all dirs
 */
 */*
+!test/*.cc
+!test/makefile
 
 
 ckpoint*

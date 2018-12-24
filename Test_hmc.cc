@@ -6,6 +6,8 @@
 #include "GF_assert.h"
 #include "GF_Util.h"
 #include "GF_init_k.h"
+// #include "subgroup_hb_rbgrid.h"
+// #include "GF_heatbath_Util_rbgrid.h"
 #include "subgroup_hb.h"
 #include "GF_heatbath_Util.h"
 #include "GF_generate_P.h"
