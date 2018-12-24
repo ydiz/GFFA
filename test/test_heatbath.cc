@@ -1,6 +1,6 @@
 #include <Grid/Grid.h>
-#include "../subgroup_hb_rbgrid.h"
-// #include "../subgroup_hb.h"
+// #include "../subgroup_hb_rbgrid.h"
+#include "../subgroup_hb.h"
 
 using namespace std;
 using namespace Grid;
@@ -72,22 +72,9 @@ int main (int argc, char ** argv)
       	//reunitarise link;
       	// ProjectOnGroup(Umu);
       }
-
-
-
     }
 
-
-
   }
-
-  // std::cout << Umu << std::endl;
-  // assert(0);
-
-
-
-
-
 
   Grid_finalize();
 }

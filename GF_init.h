@@ -43,6 +43,13 @@ void init(int argc, char **argv, HMC_PARA &hmc_para)
   po::store(po::parse_config_file<char>("GFFA.ini", desc), vm);
   po::notify(vm);
 
+
+  std::cout << "zyd Warning: there is a discrepancy in evolution time between cps and old version Grid." << std::endl;
+  std::cout << "In terms of cps, your trajectory length is " <<  hmc_para.trajL << std::endl;
+
+  hmc_para.trajL = hmc_para.trajL * std::sqrt(2);
+  std::cout << "In terms of old version Grid, your trajectory length is " <<  hmc_para.trajL << std::endl;
+
   if(vm.count("help")) {
     std::cout << desc << std::endl;
     exit(0);

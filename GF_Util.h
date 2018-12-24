@@ -9,6 +9,7 @@ strong_inline auto operator*(const iVector<rtype, N> &rhs, const iVector<ltype, 
 	for(int c1=0;c1<N;c1++){
 			mult(&ret._internal[c1],&rhs._internal[c1],&lhs._internal[c1]);
 	}
+	return ret;
 }
 
 namespace QCD{

@@ -58,7 +58,7 @@ void GF_generate_P(LatticeGaugeField& P, GridParallelRNG& pRNG, const Momenta_k 
   LatticeGaugeField Pk(P._grid);
   Pk = newP + adj(newP_Minus);
   // Pk = Pk * (1.0/sqrt(2));
-  Pk = Pk * 0.5;  //???? why
+  Pk = Pk * 0.5;  //FIXME: ???? why
 
   //step 4.
   FFT theFFT((Grid::GridCartesian *)P._grid);

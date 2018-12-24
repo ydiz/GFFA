@@ -33,7 +33,7 @@ public:
       coor0000[mu] =  grid->_fdimensions[mu] / 2;
       RealD TwoPiL =  M_PI * 2.0/ grid->_fdimensions[mu];
       LatticeCoordinate(coor,mu);
-	  assign_lc(tt,  std::complex<double>(coor0000[mu],0)); 
+	  assign_lc(tt,  std::complex<double>(coor0000[mu],0));
 	  //coor2 = coor - tt;//std::complex<double>(coor0000[mu],0);
       k[mu] = TwoPiL * (coor - tt);//(coor - std::complex<double>(coor0000[mu],0));
       sinK[mu] = sin(k[mu] * 0.5);
@@ -72,9 +72,9 @@ public:
     vol = 1.0;
     for(int d=0; d<Nd; ++d)   vol = vol * grid->_fdimensions[d];
 
-    std::cout << __func__ << ": M = " << M << std::endl;
-    std::cout << __func__ << ": epsi = " << epsi << std::endl;
-    std::cout << __func__ << ": newHp = " << newHp << std::endl;
+    // std::cout << __func__ << ": M = " << M << std::endl;
+    // std::cout << __func__ << ": epsi = " << epsi << std::endl;
+    // std::cout << __func__ << ": newHp = " << newHp << std::endl;
 
   }
 
