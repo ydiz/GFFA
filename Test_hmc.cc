@@ -36,8 +36,8 @@ int main(int argc, char **argv) {
   init(argc, argv, hmc_para);
 
   // typedef GF_GenericHMCRunner<GFMinimumNorm2> HMCWrapper;
-  typedef GF_GenericHMCRunner<GFLeapFrog> HMCWrapper;
-  // typedef GF_GenericHMCRunner<GFForceGradient> HMCWrapper;
+  // typedef GF_GenericHMCRunner<GFLeapFrog> HMCWrapper;
+  typedef GF_GenericHMCRunner<GFForceGradient> HMCWrapper;
   HMCWrapper TheHMC;
 
   TheHMC.Resources.AddFourDimGrid("gauge");
