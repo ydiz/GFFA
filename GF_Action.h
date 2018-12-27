@@ -53,16 +53,15 @@ class GFAction : public Action<typename Gimpl::GaugeField> {
 
     GaugeField dSGF2dU(U._grid);
     dSGF2dU = zero;
-    LatticeColourMatrix g(U._grid);
-    g = 1.0;
-    GF_heatbath(U, g, hb_offset, betaMM, hb_multi_hit); //hb_nsweeps before calculate equilibrium value
+    static LatticeColourMatrix g(U._grid);
+    static bool g_initialized = false;
+    if(! g_initialized) {
+      g = 1.0;
+      g_initialized = true;
+    }
 
+    GF_heatbath(U, g, hb_offset, betaMM, hb_multi_hit); //hb_nsweeps before calculate equilibrium value
     GF_heatbath(U, g, innerMC_N, betaMM, hb_multi_hit, &dSGF2dU, dOmegadU_g); // calculate dSGF2dU
-    // for(int i=0; i<innerMC_N; ++i)
-    // {
-    //   dSGF2dU += dOmegadU_g(g, U);
-    //   GF_heatbath(U, g, hb_nsweeps, betaMM, hb_multi_hit);
-    // }
 
     dSGF2dU = factor *  (1.0 / double(innerMC_N)) * dSGF2dU;
 
