@@ -1,6 +1,7 @@
 #include <Grid/Grid.h>
-// #include "../subgroup_hb_rbgrid.h"
+#include "../Integral_table.h"
 #include "../subgroup_hb.h"
+#include "../GF_Util.h"
 
 using namespace std;
 using namespace Grid;
@@ -11,8 +12,7 @@ int main (int argc, char ** argv)
 {
   Grid_init(&argc,&argv);
 
-  std::vector<int> latt({8,8,8,8});
-  GridCartesian * grid = SpaceTimeGrid::makeFourDimGrid(latt,
+  GridCartesian * grid = SpaceTimeGrid::makeFourDimGrid(GridDefaultLatt(),
 							GridDefaultSimd(Nd,vComplex::Nsimd()),
 							GridDefaultMpi());
 
@@ -22,7 +22,11 @@ int main (int argc, char ** argv)
   // Configuration of known size
   ///////////////////////////////
   LatticeGaugeField Umu(grid);
-  Umu=1.0; // Cold start
+  // readField(Umu, "./U_wilson_equilbrium_8888");
+  // readField(Umu, "./a0.2M3e0.2_ckpoint_lat");
+  // Umu=1.0; // Cold start
+  GridParallelRNG  pRNG_full(grid); pRNG_full.SeedFixedIntegers(std::vector<int>{1,2,3,4});
+  SU3::HotConfiguration(pRNG_full, Umu);
 
   // RNG set up for test
   std::vector<int> pseeds({5,6,7,8,9}); // once I caught a fish alive
@@ -35,7 +39,11 @@ int main (int argc, char ** argv)
   LatticeColourMatrix staple(grid);
 
   // Apply heatbath to the link
-  RealD beta=5.6;
+  // RealD beta=5.6;
+  RealD beta = 6.0;
+  RealD k_bar = 4.0;
+  RealD coeff = beta / 3.0;
+  std::string table_path = "/home/yz/GFFA/jupyter/numerical_integration/lookup_table_beta6.0";
 
   LatticeColourMatrix staple_half(rbGrid);
   LatticeColourMatrix U_half(rbGrid);
@@ -57,16 +65,12 @@ int main (int argc, char ** argv)
         pickCheckerboard(cb, U_half, link);
 
       	for( int subgroup=0;subgroup<SU3::su2subgroups();subgroup++ ) {
-      	  // update Even checkerboard
-          GF_SubGroupHeatBath(sRNG,pRNG,beta,U_half,staple_half,subgroup,1, cb);
-          // GF_SubGroupHeatBath(sRNG,pRNG,beta,U_half,staple_half,subgroup,20, cb);
-          // assert(0);
+
+          GF_SubGroupHeatBath(sRNG, pRNG, coeff, U_half, staple_half, subgroup, 1, cb, table_path);
+
       	}
 
-        // std::cout << "U_half checkerboard: " << U_half.checkerboard << "\n";
-
         setCheckerboard(link, U_half);
-
 
       	PokeIndex<LorentzIndex>(Umu,link,mu);
       	//reunitarise link;

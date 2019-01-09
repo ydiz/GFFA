@@ -233,6 +233,55 @@ Real dOmegaSquare2(const LatticeColourMatrix &g,const LatticeGaugeField &Umu)
   return TensorRemove(sum(s2));
 }
 
+template <class T>
+void printRB(const Lattice<T> &lat) {
+  for(int i=0; i<lat._odata.size(); ++i) {
+    std::cout << lat[i] << std::endl;
+  }
+}
+
+double maxLattice(const LatticeReal& lat) {
+
+  typedef typename std::remove_reference<decltype(lat)>::type::scalar_type scalar_type;
+
+  double max_val = *((scalar_type *)& lat[0]()()());
+  #pragma omp parallel for reduction(max : max_val)
+  for(int ss=0;ss<lat._grid->oSites();ss++)
+  {
+    scalar_type *sobj = (scalar_type *)& lat[ss]()()();
+    for(int idx=0; idx<lat._grid->Nsimd(); ++idx)
+      if(*(sobj + idx) > max_val)
+          max_val = *(sobj + idx);
+  }
+
+  #ifndef GRID_COMMS_NONE
+  MPI_Allreduce(MPI_IN_PLACE, &max_val, 1, MPI_DOUBLE, MPI_MAX, lat._grid->communicator);
+  #endif
+
+  return max_val;
+}
+
+double minLattice(const LatticeReal& lat) {
+
+  typedef typename std::remove_reference<decltype(lat)>::type::scalar_type scalar_type;
+
+  double min_val = *((scalar_type *)& lat[0]()()());
+  #pragma omp parallel for reduction(min : min_val)
+  for(int ss=0;ss<lat._grid->oSites();ss++)
+  {
+    scalar_type *sobj = (scalar_type *)& lat[ss]()()();
+    for(int idx=0; idx<lat._grid->Nsimd(); ++idx)
+      if(*(sobj + idx) < min_val)
+          min_val = *(sobj + idx);
+  }
+
+  #ifndef GRID_COMMS_NONE
+  MPI_Allreduce(MPI_IN_PLACE, &min_val, 1, MPI_DOUBLE, MPI_MIN, lat._grid->communicator);
+  #endif
+
+  return min_val;
+}
+
 
 
 }}

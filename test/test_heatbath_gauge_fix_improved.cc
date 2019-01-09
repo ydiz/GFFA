@@ -1,5 +1,6 @@
 #include <Grid/Grid.h>
 // #include "../subgroup_hb_rbgrid.h"
+#include "../Integral_table.h"
 #include "../subgroup_hb.h"
 #include "../GF_Util.h"
 
@@ -12,8 +13,7 @@ int main (int argc, char ** argv)
 {
   Grid_init(&argc,&argv);
 
-  std::vector<int> latt({8,8,8,8});
-  GridCartesian * grid = SpaceTimeGrid::makeFourDimGrid(latt,
+  GridCartesian * grid = SpaceTimeGrid::makeFourDimGrid(GridDefaultLatt(),
 							GridDefaultSimd(Nd,vComplex::Nsimd()),
 							GridDefaultMpi());
 
@@ -22,9 +22,13 @@ int main (int argc, char ** argv)
   ///////////////////////////////
   // Configuration of known size
   ///////////////////////////////
-  GridParallelRNG  pRNG_full(grid); pRNG_full.SeedFixedIntegers(std::vector<int>{1,2,3,4});
   LatticeGaugeField Umu(grid);
-  SU3::HotConfiguration(pRNG_full, Umu);
+  // readField(Umu, "./a0.2M3e0.2_ckpoint_lat");
+  readField(Umu, "./U_wilson_equilbrium_8888");
+
+  // GridParallelRNG  pRNG_full(grid); pRNG_full.SeedFixedIntegers(std::vector<int>{1,2,3,4});
+  // LatticeGaugeField Umu(grid);
+  // SU3::HotConfiguration(pRNG_full, Umu);
 
   // RNG set up for test
   std::vector<int> pseeds({5,6,7,8,9}); // once I caught a fish alive
@@ -38,7 +42,12 @@ int main (int argc, char ** argv)
   // LatticeColourMatrix staple(grid);
 
   // Apply heatbath to the link
-  RealD beta=5.6;
+  // RealD k_bar = 6.457;
+  // RealD beta = 6.0;
+  RealD beta = 0.7796;
+  RealD M = 4.0;
+  RealD coeff = beta * M * M;
+  std::string table_path = "/home/yz/GFFA/jupyter/numerical_integration/lookup_table_M4_beta0.7796";
 
   // LatticeColourMatrix g_half(rbGrid);
   std::vector<LatticeColourMatrix> g_oe(2, rbGrid);
@@ -59,7 +68,10 @@ int main (int argc, char ** argv)
 
   LatticeColourMatrix staple_half(rbGrid);
   for(int sweep=0;sweep<40;sweep++){
-    // std::cout<<GridLogMessage<<"sweep "<<sweep<<" S: "<<GF_S(g, Umu)<<std::endl;
+    setCheckerboard(g, g_oe[Odd]);
+    setCheckerboard(g, g_oe[Even]);
+    std::cout<<GridLogMessage<<"sweep: "<< sweep <<" Omega_g: "<< Omega_g(g, Umu) << std::endl;
+    std::cout<<GridLogMessage<<"sweep: "<<sweep<<" dOmegaSquare2: "<< dOmegaSquare2(g, Umu) << std::endl;
     for( int cb=0;cb<2;cb++ ) {
       staple_half = zero;
       staple_half.checkerboard = cb;
@@ -67,20 +79,13 @@ int main (int argc, char ** argv)
       //if we choose the sign of S_GF1 to be postive, sign of staple should be negative
       for(int mu=0; mu<Nd; ++mu) {
         // staple += U[mu] * adj(Cshift(g,mu,1)) + adj( Cshift(g, mu, -1) * UMinusShift[mu]);
-      staple_half = staple_half + U_oe[mu][cb] * adj(Cshift(g_oe[cb_inverse],mu,1))
-                      + adj( Cshift(g_oe[cb_inverse], mu, -1) * UMinusShift_oe[mu][cb]);
+        staple_half = staple_half + U_oe[mu][cb] * adj(Cshift(g_oe[cb_inverse],mu,1))
+                        + adj( Cshift(g_oe[cb_inverse], mu, -1) * UMinusShift_oe[mu][cb]);
       }
 
     	for( int subgroup=0;subgroup<SU3::su2subgroups();subgroup++ ) {
-        GF_SubGroupHeatBath(sRNG, pRNG, beta, g_oe[cb], staple_half, subgroup, 1, cb);
+        GF_SubGroupHeatBath(sRNG, pRNG, coeff, g_oe[cb], staple_half, subgroup, 1, cb, table_path);
     	}
-    }
-
-    if(sweep == 2) {
-      setCheckerboard(g, g_oe[Odd]);
-      setCheckerboard(g, g_oe[Even]);
-      cout << g << endl;
-      assert(0);
     }
 
   }

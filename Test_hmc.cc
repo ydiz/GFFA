@@ -6,8 +6,7 @@
 #include "GF_assert.h"
 #include "GF_Util.h"
 #include "GF_init_k.h"
-// #include "subgroup_hb_rbgrid.h"
-// #include "GF_heatbath_Util_rbgrid.h"
+#include "Integral_table.h"
 #include "subgroup_hb.h"
 #include "GF_heatbath_Util.h"
 #include "GF_generate_P.h"
@@ -59,31 +58,31 @@ int main(int argc, char **argv) {
   typedef PlaquetteMod<HMCWrapper::ImplPolicy> PlaqObs;
   TheHMC.Resources.AddObservable<PlaqObs>();
 
-  typedef TopologicalChargeMod<HMCWrapper::ImplPolicy> QObs;
-  TopologyObsParameters TopParams {};
-  TopParams.interval = hmc_para.TC_interval;
-  TopParams.do_smearing = hmc_para.TC_do_smearing;
-  // TopParams.Smearing.steps = hmc_para.TC_Smearing_steps; //
-  // TopParams.Smearing.steps = 9999; // this number does not matter
-  TopParams.Smearing.step_size = hmc_para.TC_Smearing_step_size;
-  TopParams.Smearing.meas_interval = hmc_para.TC_Smearing_meas_interval;
-  TopParams.Smearing.maxTau = hmc_para.TC_Smearing_maxTau;
-  // TopParams.interval = 5;
-  // TopParams.do_smearing = true;
-  // TopParams.Smearing.steps = 200;
-  // TopParams.Smearing.step_size = 0.01;
-  // TopParams.Smearing.meas_interval = 50;
-  // TopParams.Smearing.maxTau = 2.0;
-  TheHMC.Resources.AddObservable<QObs>(TopParams);
+  // typedef TopologicalChargeMod<HMCWrapper::ImplPolicy> QObs;
+  // TopologyObsParameters TopParams {};
+  // TopParams.interval = hmc_para.TC_interval;
+  // TopParams.do_smearing = hmc_para.TC_do_smearing;
+  // // TopParams.Smearing.steps = hmc_para.TC_Smearing_steps; //
+  // // TopParams.Smearing.steps = 9999; // this number does not matter
+  // TopParams.Smearing.step_size = hmc_para.TC_Smearing_step_size;
+  // TopParams.Smearing.meas_interval = hmc_para.TC_Smearing_meas_interval;
+  // TopParams.Smearing.maxTau = hmc_para.TC_Smearing_maxTau;
+  // // TopParams.interval = 5;
+  // // TopParams.do_smearing = true;
+  // // TopParams.Smearing.steps = 200;
+  // // TopParams.Smearing.step_size = 0.01;
+  // // TopParams.Smearing.meas_interval = 50;
+  // // TopParams.Smearing.maxTau = 2.0;
+  // TheHMC.Resources.AddObservable<QObs>(TopParams);
 
 
   // action
   ActionLevel<HMCWrapper::Field> Level1(1);
 
   WilsonGaugeActionR Wilson_action(hmc_para.beta);
-  GFActionR GF_Wilson_action(hmc_para.beta, hmc_para.betaMM, hmc_para.innerMC_N, hmc_para.hb_offset, hmc_para.hb_multi_hit);
+  GFActionR GF_Wilson_action(hmc_para.beta, hmc_para.betaMM, hmc_para.innerMC_N, hmc_para.hb_offset, hmc_para.table_path);
   DBW2GaugeAction<PeriodicGimplR> DBW2_action(hmc_para.beta);
-  GF_DBW2ActionR GF_DBW2_action(hmc_para.beta, hmc_para.betaMM, hmc_para.innerMC_N, hmc_para.hb_offset, hmc_para.hb_multi_hit);
+  GF_DBW2ActionR GF_DBW2_action(hmc_para.beta, hmc_para.betaMM, hmc_para.innerMC_N, hmc_para.hb_offset, hmc_para.table_path);
 
   if(hmc_para.action == "Wilson"){
     Level1.push_back(&Wilson_action);

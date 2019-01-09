@@ -8,14 +8,8 @@ class GFAction : public Action<typename Gimpl::GaugeField> {
  public:
   INHERIT_GIMPL_TYPES(Gimpl);
 
-  /////////////////////////// constructors
-  // explicit GFAction(RealD beta_, RealD betaMM_, int innerMC_N_, int hb_offset_, int hb_nsweeps_, int hb_multi_hit_)
-  // : beta(beta_), betaMM(betaMM_), innerMC_N(innerMC_N_), hb_offset(hb_offset_), hb_nsweeps(hb_nsweeps_),
-  // hb_multi_hit(hb_multi_hit_){}
-  /////////////////////////// constructors
-  explicit GFAction(RealD beta_, RealD betaMM_, int innerMC_N_, int hb_offset_, int hb_multi_hit_)
-  : beta(beta_), betaMM(betaMM_), innerMC_N(innerMC_N_), hb_offset(hb_offset_),
-  hb_multi_hit(hb_multi_hit_){}
+  explicit GFAction(RealD beta_, RealD betaMM_, int innerMC_N_, int hb_offset_, const std::string& table_path_)
+  : beta(beta_), betaMM(betaMM_), innerMC_N(innerMC_N_), hb_offset(hb_offset_), table_path(table_path_){}
 
   virtual std::string action_name() {return "GFAction";}
 
@@ -60,8 +54,8 @@ class GFAction : public Action<typename Gimpl::GaugeField> {
       g_initialized = true;
     }
 
-    GF_heatbath(U, g, hb_offset, betaMM, hb_multi_hit); //hb_nsweeps before calculate equilibrium value
-    GF_heatbath(U, g, innerMC_N, betaMM, hb_multi_hit, &dSGF2dU, dOmegadU_g); // calculate dSGF2dU
+    GF_heatbath(U, g, hb_offset, betaMM, table_path); //hb_nsweeps before calculate equilibrium value
+    GF_heatbath(U, g, innerMC_N, betaMM, table_path, &dSGF2dU, dOmegadU_g); // calculate dSGF2dU
 
     dSGF2dU = factor *  (1.0 / double(innerMC_N)) * dSGF2dU;
 
@@ -73,8 +67,7 @@ private:
   RealD betaMM;
   int innerMC_N;
   int hb_offset;
-  // int hb_nsweeps;
-  int hb_multi_hit;
+  std::string table_path;
 };
 
 
@@ -83,9 +76,8 @@ class GF_DBW2Action : public Action<typename Gimpl::GaugeField> {
  public:
   INHERIT_GIMPL_TYPES(Gimpl);
 
-  explicit GF_DBW2Action(RealD beta_, RealD betaMM_, int innerMC_N_, int hb_offset_, int hb_multi_hit_)
-  : beta(beta_), betaMM(betaMM_), innerMC_N(innerMC_N_), hb_offset(hb_offset_),
-  hb_multi_hit(hb_multi_hit_){}
+  explicit GF_DBW2Action(RealD beta_, RealD betaMM_, int innerMC_N_, int hb_offset_, const std::string& table_path_)
+  : beta(beta_), betaMM(betaMM_), innerMC_N(innerMC_N_), hb_offset(hb_offset_), table_path(table_path_){}
 
   virtual std::string action_name() {return "GF_DBW2Action";}
 
@@ -102,8 +94,7 @@ class GF_DBW2Action : public Action<typename Gimpl::GaugeField> {
   //delta S_GF2 is calculated in GF_HMC.h: evolve();
   virtual RealD S(const GaugeField &U) {
     DBW2GaugeAction<Gimpl> DBW2_action(beta);
-    // WilsonGaugeAction<Gimpl> Waction(beta);
-    // RealD Sw = Waction.S(U);
+
     RealD Sw = DBW2_action.S(U);
   	std::cout  << "DBW2 S: " <<  std::setprecision(15) << Sw << std::endl;
 
@@ -114,7 +105,7 @@ class GF_DBW2Action : public Action<typename Gimpl::GaugeField> {
   }
 
   virtual void deriv(const GaugeField &U, GaugeField &dSdU) {
-    // WilsonGaugeAction<Gimpl> Waction(beta);
+    
     DBW2GaugeAction<Gimpl> DBW2_action(beta);
     GaugeField dSwdU(U._grid);
     DBW2_action.deriv(U, dSwdU);
@@ -128,14 +119,9 @@ class GF_DBW2Action : public Action<typename Gimpl::GaugeField> {
     dSGF2dU = zero;
     LatticeColourMatrix g(U._grid);
     g = 1.0;
-    GF_heatbath(U, g, hb_offset, betaMM, hb_multi_hit); //hb_nsweeps before calculate equilibrium value
+    GF_heatbath(U, g, hb_offset, betaMM, table_path); //hb_nsweeps before calculate equilibrium value
 
-    GF_heatbath(U, g, innerMC_N, betaMM, hb_multi_hit, &dSGF2dU, dOmegadU_g); // calculate dSGF2dU
-    // for(int i=0; i<innerMC_N; ++i)
-    // {
-    //   dSGF2dU += dOmegadU_g(g, U);
-    //   GF_heatbath(U, g, hb_nsweeps, betaMM, hb_multi_hit);
-    // }
+    GF_heatbath(U, g, innerMC_N, betaMM, table_path, &dSGF2dU, dOmegadU_g); // calculate dSGF2dU
 
     dSGF2dU = factor *  (1.0 / double(innerMC_N)) * dSGF2dU;
 
@@ -147,8 +133,7 @@ private:
   RealD betaMM;
   int innerMC_N;
   int hb_offset;
-  // int hb_nsweeps;
-  int hb_multi_hit;
+  std::string table_path;
 };
 
 typedef GFAction<PeriodicGimplR>          GFActionR;

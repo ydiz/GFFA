@@ -10,7 +10,6 @@ struct HMC_PARA{
   int saveInterval;
 
   bool newHp;
-  // bool newAction;
   std::string action;
   double beta;
   double M;
@@ -18,10 +17,7 @@ struct HMC_PARA{
   double epsilon;
   int innerMC_N;
   int hb_offset;
-  // int hb_nsweeps;
-  int hb_multi_hit;
-  // bool SDGF; // SteepestDescentGaugeFix
-  // bool UInitEquil; //use equilibrium U
+  std::string table_path;
   std::string UFile;
 
   // Topological Charge
@@ -48,7 +44,6 @@ std::ostream& operator<<(std::ostream& out, const HMC_PARA &HMC_para)
   out << "===================================================" << std::endl;
 
   out << "newHp: " << std::boolalpha << HMC_para.newHp << std::endl;
-  // out << "newAction: " << HMC_para.newAction << std::endl;
   out << "action: " << HMC_para.action << std::endl;
   out << "beta: " << HMC_para.beta << std::endl;
   out << "M: " << HMC_para.M << std::endl;
@@ -56,10 +51,7 @@ std::ostream& operator<<(std::ostream& out, const HMC_PARA &HMC_para)
   out << "epsilon: " << HMC_para.epsilon << std::endl;
   out << "innerMC_N: " << HMC_para.innerMC_N << std::endl;
   out << "hb_offset: " << HMC_para.hb_offset << std::endl;
-  // out << "hb_nsweeps: " << HMC_para.hb_nsweeps << std::endl; //inteval
-  // out << "SDGF: " << HMC_para.SDGF << std::endl;
-  // out << "UInitEquil: " << HMC_para.UInitEquil << std::endl;
-  out << "hb_multi_hit: " << HMC_para.hb_multi_hit << std::endl;
+  out << "table_path: " << HMC_para.table_path << std::endl;
 
   out << "================ Topological Charge ===============" << std::endl;
   out << "TC_interval: " << HMC_para.TC_interval << std::endl;
