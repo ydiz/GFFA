@@ -17,31 +17,31 @@ GFIntegrator(GridBase* grid, IntegratorParameters Par,
     : Integrator<FieldImplementation, SmearingPolicy, RepresentationPolicy>(
           grid, Par, Aset, Sm) {};
 
-  RealD GF_S(Field& U, const Momenta_k &KK) {
-    RealD H;
-    if(KK.newHp) H = Hp(this->P, KK);
-    else H = - FieldImplementation::FieldSquareNorm(this->P); //minus sign comes from the fact that P is actually timesI(P).
-
-    RealD Hterm;
-    std::cout << GridLogMessage << "Momentum action H_p = "<<  std::setprecision(8)  << H << "\n";
-
-    // Actions
-    for (int level = 0; level < this->as.size(); ++level) {
-      for (int actionID = 0; actionID < this->as[level].actions.size(); ++actionID) {
-        // get gauge field from the SmearingPolicy and
-        // based on the boolean is_smeared in actionID
-        Field& Us =
-            this->Smearer.get_U(this->as[level].actions.at(actionID)->is_smeared);
-        Hterm = this->as[level].actions.at(actionID)->S(Us);
-        std::cout << GridLogMessage << "S Level " << level << " term "
-                  << actionID << " H = " << Hterm << std::endl;
-        H += Hterm;
-      }
-      this->as[level].apply(this->S_hireps, this->Representations, level, H);
-    }
-
-    return H;
-  }
+  // RealD GF_S(Field& U, const Momenta_k &KK) {
+  //   RealD H;
+  //   if(KK.newHp) H = Hp(this->P, KK);
+  //   else H = - FieldImplementation::FieldSquareNorm(this->P); //minus sign comes from the fact that P is actually timesI(P).
+  //
+  //   RealD Hterm;
+  //   std::cout << GridLogMessage << "Momentum action H_p = "<<  std::setprecision(8)  << H << "\n";
+  //
+  //   // Actions
+  //   for (int level = 0; level < this->as.size(); ++level) {
+  //     for (int actionID = 0; actionID < this->as[level].actions.size(); ++actionID) {
+  //       // get gauge field from the SmearingPolicy and
+  //       // based on the boolean is_smeared in actionID
+  //       Field& Us =
+  //           this->Smearer.get_U(this->as[level].actions.at(actionID)->is_smeared);
+  //       Hterm = this->as[level].actions.at(actionID)->S(Us);
+  //       std::cout << GridLogMessage << "S Level " << level << " term "
+  //                 << actionID << " H = " << Hterm << std::endl;
+  //       H += Hterm;
+  //     }
+  //     this->as[level].apply(this->S_hireps, this->Representations, level, H);
+  //   }
+  //
+  //   return H;
+  // }
 
 
 

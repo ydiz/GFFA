@@ -39,8 +39,16 @@ void GF_heatbath(const LatticeGaugeField &Umu, LatticeColourMatrix &g,
   }
 
   LatticeColourMatrix staple_half(&rbGrid);
-  // FIXME: can be optimized; only calculate staple_half!!!
-  // most straightforard way: pickCheckerboard(Cshift(g,mu,1), cb)
+  std::vector<std::vector<LatticeColourMatrix>> dSGF2dU_oe(4, std::vector<LatticeColourMatrix>(2, &rbGrid));
+  if(dSGF2dU!=NULL) {
+    for(int cb=0;cb<2;cb++) {
+      for(int mu=0;mu<4;mu++) {
+        dSGF2dU_oe[mu][cb] = zero;
+        dSGF2dU_oe[mu][cb].checkerboard = cb;
+      }
+    }
+  }
+
   for(int sweep=0; sweep<nsweeps; sweep++){
   // std::cout<<GridLogMessage<<"sweep "<<sweep<<" S: "<<GF_S(g, Umu)<<std::endl;
     for(int cb=0;cb<2;cb++) {
@@ -60,13 +68,33 @@ void GF_heatbath(const LatticeGaugeField &Umu, LatticeColourMatrix &g,
       }
 
     }
-    setCheckerboard(g, g_oe[Odd]);
-    setCheckerboard(g, g_oe[Even]);  // FIXME: change ForceFunc so that we can operate only on g_oe.
 
-    if(sweep%10==9) ProjectOnGroup(g); // project on group every 10 sweeps
+    // I found that project on group has almost no effect. at least on a small lattice
+    // if(sweep%10==9) {ProjectOnGroup(g_oe[Odd]); ProjectOnGroup(g_oe[Even]);}// project on group every 10 sweeps
 
-    if(dSGF2dU!=NULL) (*dSGF2dU) += ForceFunc(g, U); // FIXME: is it better to have an inteval between added samples
+    if(dSGF2dU!=NULL) {
+      for(int cb=0;cb<2;cb++) {
+        int cb_inverse = (cb==1) ? 0 : 1;
+        for(int mu=0; mu<Nd; ++mu) {
+          dSGF2dU_oe[mu][cb] += U_oe[mu][cb] * adj(Cshift(g_oe[cb_inverse], mu, 1)) * g_oe[cb]; //FIXME: if calculate force every sweep, I can save Csfhit g
+        }
+  	  }
+  	}
 
+    // if(dSGF2dU!=NULL) (*dSGF2dU) += ForceFunc(g, U); // FIXME: is it better to have an inteval between added samples
+  } // end of sweeps loop
+
+  setCheckerboard(g, g_oe[Odd]);
+  setCheckerboard(g, g_oe[Even]);
+
+  if(dSGF2dU!=NULL) {
+    LatticeColourMatrix tmp(Umu._grid);
+    for(int mu=0;mu<4;mu++) {
+        setCheckerboard(tmp, dSGF2dU_oe[mu][Odd]);
+        setCheckerboard(tmp, dSGF2dU_oe[mu][Even]);
+        PokeIndex<LorentzIndex>(*dSGF2dU, tmp, mu);
+    }
+    *dSGF2dU = Ta(*dSGF2dU);
   }
 
 

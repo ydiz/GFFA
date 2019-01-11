@@ -66,6 +66,7 @@ class GF_HMCWrapperTemplate: public HMCWrapperTemplate<Implementation, Integrato
 
     // Run it
     std::cout << "-------GF evolve--------" << std::endl;
+    std::cout << "Integrator name: " << MDynamics.integrator_name() << std::endl;
     HMC.evolve(HMC_para);
   }
 };

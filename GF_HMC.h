@@ -53,23 +53,24 @@ class GF_HybridMonteCarlo {
   RealD evolve_hmc_step(Field &U, const Momenta_k &KK) {
     TheIntegrator.GF_refresh(U, pRNG, KK);  // set U and initialize P and phi's
 
-    RealD H0 = TheIntegrator.GF_S(U, KK);  // initial state action
-
-    std::streamsize current_precision = std::cout.precision();
-    std::cout.precision(15);
-    std::cout << GridLogMessage << "Total H before trajectory = " << H0 << "\n";
-    std::cout.precision(current_precision);
+    // RealD H0 = TheIntegrator.GF_S(U, KK);  // initial state action
+    //
+    // std::streamsize current_precision = std::cout.precision();
+    // std::cout.precision(15);
+    // std::cout << GridLogMessage << "Total H before trajectory = " << H0 << "\n";
+    // std::cout.precision(current_precision);
 
     TheIntegrator.GF_integrate(U, KK);
 
-    RealD H1 = TheIntegrator.GF_S(U, KK);  // updated state action
+    // RealD H1 = TheIntegrator.GF_S(U, KK);  // updated state action
+    //
+    // std::cout.precision(15);
+    // std::cout << GridLogMessage << "Total H after trajectory  = " << H1
+	  //     << "  dH = " << H1 - H0 << "\n";
+    // std::cout.precision(current_precision);
 
-    std::cout.precision(15);
-    std::cout << GridLogMessage << "Total H after trajectory  = " << H1
-	      << "  dH = " << H1 - H0 << "\n";
-    std::cout.precision(current_precision);
-
-    return (H1 - H0);
+    // return (H1 - H0);
+    return 0;
   }
 
 
