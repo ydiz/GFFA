@@ -48,7 +48,7 @@ int main (int argc, char ** argv)
   LatticeColourMatrix staple_half(rbGrid);
   LatticeColourMatrix U_half(rbGrid);
 
-  for(int sweep=0;sweep<40;sweep++){
+  for(int sweep=0;sweep<10;sweep++){
 
     RealD plaq = ColourWilsonLoops::avgPlaquette(Umu);
 
@@ -66,7 +66,7 @@ int main (int argc, char ** argv)
 
       	for( int subgroup=0;subgroup<SU3::su2subgroups();subgroup++ ) {
 
-          GF_SubGroupHeatBath(sRNG, pRNG, coeff, U_half, staple_half, subgroup, 1, cb, table_path);
+          GF_SubGroupHeatBath(sRNG, pRNG, coeff, U_half, staple_half, subgroup, cb, table_path);
 
       	}
 

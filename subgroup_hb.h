@@ -4,36 +4,93 @@ namespace QCD{
 
 // FIXME: change name: grid -> rbGrid
 
+template <class vcplx>
+strong_inline vcplx matrix_mult_elem(const SU3::iSUnMatrix<vcplx> &m, const SU3::iSUnMatrix<vcplx> &n, int i0, int i1) {
+  return m()()(i0, 0) * n()()(0, i1) + m()()(i0, 1) * n()()(1, i1) + m()()(i0, 2) * n()()(2, i1);
+}
+
+template <class vcplx>
+void my_su2Extract(Lattice<iSinglet<vcplx> > &Determinant,
+                       Lattice<SU3::iSU2Matrix<vcplx> > &subgroup,
+                       const Lattice<SU3::iSUnMatrix<vcplx> > &link,
+                       const Lattice<SU3::iSUnMatrix<vcplx> > &staple,
+                       int su2_index) {
+  GridBase *grid(link._grid);
+
+  static int subgroup_index[3][2] = {{0, 1}, {0, 2}, {1, 2}};
+  int i0 = subgroup_index[su2_index][0];
+  int i1 = subgroup_index[su2_index][1];
+
+  parallel_for (int ss = 0; ss < grid->oSites(); ss++) {
+    subgroup._odata[ss]()()(0, 0) = matrix_mult_elem(link[ss], staple[ss], i0, i0);
+    subgroup._odata[ss]()()(0, 1) = matrix_mult_elem(link[ss], staple[ss], i0, i1);
+    subgroup._odata[ss]()()(1, 0) = matrix_mult_elem(link[ss], staple[ss], i1, i0);
+    subgroup._odata[ss]()()(1, 1) = matrix_mult_elem(link[ss], staple[ss], i1, i1);
+
+    subgroup._odata[ss] = 0.5 * (subgroup._odata[ss] - adj(subgroup._odata[ss]) + trace(adj(subgroup._odata[ss])));
+
+    Determinant._odata[ss] = subgroup._odata[ss]()()(0, 0) * subgroup._odata[ss]()()(1, 1)
+                            - subgroup._odata[ss]()()(0, 1) * subgroup._odata[ss]()()(1, 0);
+  }
+}
+
+template <class vcplx>
+void my_su2Insert(const Lattice<SU3::iSU2Matrix<vcplx> > &subgroup,
+                      Lattice<SU3::iSUnMatrix<vcplx> > &link, int su2_index) {
+  GridBase *grid(link._grid);
+
+  static int subgroup_index[3][2] = {{0, 1}, {0, 2}, {1, 2}};
+  int i0 = subgroup_index[su2_index][0];
+  int i1 = subgroup_index[su2_index][1];
+
+  parallel_for (int ss = 0; ss < grid->oSites(); ss++) {
+    vcplx link_elem[2][3];
+    for(int i=0; i<3; ++i) {link_elem[0][i] = link._odata[ss]()()(i0, i); link_elem[1][i] = link._odata[ss]()()(i1, i);}
+
+    link._odata[ss]()()(i0, 0) = subgroup._odata[ss]()()(0, 0) * link_elem[0][0] + subgroup._odata[ss]()()(0, 1) * link_elem[1][0];
+    link._odata[ss]()()(i0, 1) = subgroup._odata[ss]()()(0, 0) * link_elem[0][1] + subgroup._odata[ss]()()(0, 1) * link_elem[1][1];
+    link._odata[ss]()()(i0, 2) = subgroup._odata[ss]()()(0, 0) * link_elem[0][2] + subgroup._odata[ss]()()(0, 1) * link_elem[1][2];
+    link._odata[ss]()()(i1, 0) = subgroup._odata[ss]()()(1, 0) * link_elem[0][0] + subgroup._odata[ss]()()(1, 1) * link_elem[1][0];
+    link._odata[ss]()()(i1, 1) = subgroup._odata[ss]()()(1, 0) * link_elem[0][1] + subgroup._odata[ss]()()(1, 1) * link_elem[1][1];
+    link._odata[ss]()()(i1, 2) = subgroup._odata[ss]()()(1, 0) * link_elem[0][2] + subgroup._odata[ss]()()(1, 1) * link_elem[1][2];
+  }
+}
+
+class i_Sigmas {
+public:
+  SU3::SU2Matrix ident;
+  SU3::SU2Matrix pauli1;
+  SU3::SU2Matrix pauli2;
+  SU3::SU2Matrix pauli3;
+  i_Sigmas() {
+    ident = Complex(1.0);
+    SU<2>::generator(0, pauli1);
+    SU<2>::generator(1, pauli2);
+    SU<2>::generator(2, pauli3);
+    pauli1 = timesI(pauli1) * 2.0;
+    pauli2 = timesI(pauli2) * 2.0;
+    pauli3 = timesI(pauli3) * 2.0;
+  }
+};
+
 void GF_SubGroupHeatBath(
        GridSerialRNG &sRNG, GridParallelRNG &pRNG,
        RealD coeff,  // coeff multiplying Re Tr(field * staple) in action; for Wilson: beta / 3.0; for S_GF1: beta * M^2
        LatticeColourMatrix &link,
        const LatticeColourMatrix &staple,  // multiplied by action coeffs so th
        int su2_subgroup, int cb, const std::string &table_path) {
-     GridBase *grid = link._grid;
+     GridBase *rbGrid = link._grid;
 
      // static Integral_table integral_table("/home/yz/GFFA/jupyter/numerical_integration/lookup_table_M4_beta0.7796");
      static Integral_table integral_table(coeff, table_path);
 
-     LatticeColourMatrix V(grid); V.checkerboard = cb;
-     V = link * staple;
-
      // Subgroup manipulation in the lie algebra space
-     SU3::LatticeSU2Matrix u(grid);  u.checkerboard = cb;// Kennedy pendleton "u" real projected normalised Sigma
-     SU3::LatticeSU2Matrix uinv(grid); uinv.checkerboard = cb;
-     SU3::LatticeSU2Matrix ua(grid);  ua.checkerboard = cb;// a in pauli form
-     SU3::LatticeSU2Matrix b(grid);   b.checkerboard = cb;// rotated matrix after hb
+     SU3::LatticeSU2Matrix u(rbGrid);  u.checkerboard = cb;// Kennedy pendleton "u" real projected normalised Sigma
+     SU3::LatticeSU2Matrix uinv(rbGrid); uinv.checkerboard = cb;
+     SU3::LatticeSU2Matrix ua(rbGrid);  ua.checkerboard = cb;// a in pauli form
+     LatticeComplex udet(rbGrid);  udet.checkerboard = cb;// determinant of real(staple)
 
-     LatticeComplex udet(grid);  udet.checkerboard = cb;// determinant of real(staple)
-
-     // Real part of Pauli decomposition
-     // Note a subgroup can project to zero in cold start
-
-     SU3::su2Extract(udet, u, V, su2_subgroup); // u = link * staple; udet = det(link * staple) = det(staple)
-     u = u * 0.5; // FIXME: Grid defines su2Extract in a strange way!!!!
-     udet = udet * 0.25; // FIXME: Grid defines su2Extract in a strange way!!!!
-
-     // std::cout << u[0]<< "\t" << u[23]<< "\t"<< u[56] << std::endl; assert(0);
+     my_su2Extract(udet, u, link, staple, su2_subgroup);
 
      // FIXME: maybe this is necessary
      // LatticeComplex cone(grid); cone.checkerboard = cb;
@@ -49,42 +106,20 @@ void GF_SubGroupHeatBath(
      // u = where(tmp_int, u, lident);
      // udet = where(tmp_int, udet, cone);
 
-     LatticeComplex sqrt_udet(grid); sqrt_udet.checkerboard = cb;
+     LatticeComplex sqrt_udet(rbGrid); sqrt_udet.checkerboard = cb;
      sqrt_udet = sqrt(udet);
 
      u = u * pow(sqrt_udet, -1.0);  //  u = link * staple / sqrt(det(staple)); // u is old X
      uinv = adj(u);
 
-     LatticeReal k(grid); k.checkerboard = cb;
+     LatticeReal k(rbGrid); k.checkerboard = cb;
      k = toReal(sqrt_udet); // FIXME: Wilson only; k = \sqrt{\det[staple]}
 
-     // uncomment the following to print out average k.
-     // static double k_sum = 0;
-     // static double k_num = 0;
-     // {
-       // std::cout << k[0]<< "\t" << k[23]<< "\t"<< k[56] << "\t" << k[34]<< "\t"
-       //  << k[3]<< "\t" << k[35]<< "\t"<< k[58] << "\t" << k[32]<< "\t" << std::endl;
-       // printRB(k);
+     std::vector<LatticeReal> a(4, rbGrid); for(auto &x: a) x.checkerboard = cb;
 
-       // std::cout << "max: " << maxLattice(k) << " min: " << minLattice(k) << std::endl;
-
-        // double tmp_sum = sum(k)()()();
-        // std::cout << "average: " << tmp_sum  / k._grid->gSites()<< std::endl;
-
-        // k_sum += tmp_sum;
-        // k_num += k._grid->gSites();
-        // std::cout << "overall average: " << k_sum / k_num << std::endl;
-        // assert(0);
-     // }
-
-     // LatticeReal a0_old(grid); a0_old.checkerboard = cb;
-     // a0_old = toReal(0.5 * trace(u)); // old a0
-
-     std::vector<LatticeReal> a(4, grid); for(auto &x: a) x.checkerboard = cb;
-
-     LatticeReal tmp(grid); tmp.checkerboard = cb;
+     LatticeReal tmp(rbGrid); tmp.checkerboard = cb;
      random(pRNG, tmp);
-     parallel_for(int ss=0; ss<tmp._odata.size(); ++ss){ // ! cannot use grid->lSites() because of simd; use oSites()
+     parallel_for(int ss=0; ss<tmp._grid->oSites(); ++ss){ // ! cannot use grid->lSites() because of simd; use oSites()
        double *tmp_ptr = (double *)&tmp[ss];
        double *a0_ptr = (double *)&a[0][ss];
        double *k_ptr = (double *)&k[ss];
@@ -93,40 +128,16 @@ void GF_SubGroupHeatBath(
          *(a0_ptr + idx + 1) = *(a0_ptr + idx);
        }
      }
-      // std::cout << tmp[0]<< "\t" << a[0][0] <<  "\n"<< tmp[23]<< "\t"<< a[0][23] << "\n"<< tmp[46]<< "\t"<< a[0][46] <<std::endl;
-      // assert(0);
-
-     // LatticeReal metropolis_random(grid); metropolis_random.checkerboard = cb;
-     // random(pRNG, metropolis_random);
-     //
-     // LatticeReal thresh(grid); thresh.checkerboard = cb;
-     // thresh = exp(2.0 * coeff * (k - k_bar) * (a[0] - a0_old));
-     //
-     // LatticeInteger Accepted(grid); Accepted.checkerboard = cb;
-     // Accepted = metropolis_random < thresh;
-     //
-     // // uncomment this to print out number of Accepted sites
-     // {
-     //   double numAccepted;
-     //   LatticeReal rones(grid); rones.checkerboard = cb;
-     //   rones = 1.0;
-     //   LatticeReal rzeros(grid);rzeros.checkerboard = cb;
-     //   rzeros = zero;
-     //   LatticeReal rtmp(grid); rtmp.checkerboard = cb;
-     //   rtmp = where(Accepted, rones, rzeros);
-     //   numAccepted = sum(rtmp);
-     //   std::cout << "numAccepted: " << numAccepted << std::endl;
-     // }
 
      //////////////////////////////////////////
      //    ii) generate a_i uniform on two sphere radius (1-a0^2)^0.5
      //////////////////////////////////////////
-     LatticeReal a123mag(grid); a123mag.checkerboard = cb;
+     LatticeReal a123mag(rbGrid); a123mag.checkerboard = cb;
      a123mag = sqrt(abs(1.0 - a[0] * a[0]));
 
-     LatticeReal cos_theta(grid); cos_theta.checkerboard = cb;
-     LatticeReal sin_theta(grid); sin_theta.checkerboard = cb;
-     LatticeReal phi(grid); phi.checkerboard = cb;
+     LatticeReal cos_theta(rbGrid); cos_theta.checkerboard = cb;
+     LatticeReal sin_theta(rbGrid); sin_theta.checkerboard = cb;
+     LatticeReal phi(rbGrid); phi.checkerboard = cb;
 
      random(pRNG, phi);
      const RealD twopi = 2.0 * M_PI;
@@ -139,30 +150,31 @@ void GF_SubGroupHeatBath(
      a[2] = a123mag * sin_theta * sin(phi);
      a[3] = a123mag * cos_theta;
 
-     // these can be collected and moved to a static object.
-     SU3::SU2Matrix ident = Complex(1.0);
-     SU3::SU2Matrix pauli1;
-     SU<2>::generator(0, pauli1);
-     SU3::SU2Matrix pauli2;
-     SU<2>::generator(1, pauli2);
-     SU3::SU2Matrix pauli3;
-     SU<2>::generator(2, pauli3);
-     pauli1 = timesI(pauli1) * 2.0;
-     pauli2 = timesI(pauli2) * 2.0;
-     pauli3 = timesI(pauli3) * 2.0;
-     // std::cout << pauli1 << std::endl;
-     // std::cout << pauli2 << std::endl;
-     // std::cout << pauli3 << std::endl;
-     // assert(0);
+     // // these can be collected and moved to a static object.
+     // SU3::SU2Matrix ident = Complex(1.0);
+     // SU3::SU2Matrix pauli1;
+     // SU<2>::generator(0, pauli1);
+     // SU3::SU2Matrix pauli2;
+     // SU<2>::generator(1, pauli2);
+     // SU3::SU2Matrix pauli3;
+     // SU<2>::generator(2, pauli3);
+     // pauli1 = timesI(pauli1) * 2.0;
+     // pauli2 = timesI(pauli2) * 2.0;
+     // pauli3 = timesI(pauli3) * 2.0;
+     // // std::cout << pauli1 << std::endl;
+     // // std::cout << pauli2 << std::endl;
+     // // std::cout << pauli3 << std::endl;
+     // // assert(0);
+     static i_Sigmas i_sigmas;
 
-     ua = toComplex(a[0]) * ident + toComplex(a[1]) * pauli1 +
-          toComplex(a[2]) * pauli2 + toComplex(a[3]) * pauli3;
+     ua = toComplex(a[0]) * i_sigmas.ident + toComplex(a[1]) * i_sigmas.pauli1 +
+          toComplex(a[2]) * i_sigmas.pauli2 + toComplex(a[3]) * i_sigmas.pauli3;
 
-     b = uinv * ua;
-     SU3::su2Insert(b, V, su2_subgroup);
+     SU3::LatticeSU2Matrix new_su2(rbGrid);   new_su2.checkerboard = cb;// rotated matrix after hb
+     new_su2 = uinv * ua; // new su2 can be both uinv * ua or ua * uinv; they are both the same distribution.
 
-     // link = where(Accepted, V * link, link);
-     link = V * link;
+     my_su2Insert(new_su2, link, su2_subgroup);
+
 
    }
 
