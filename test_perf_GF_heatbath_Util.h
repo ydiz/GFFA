@@ -53,6 +53,7 @@ void GF_heatbath(const LatticeGaugeField &Umu, LatticeColourMatrix &g,
   // std::cout<<GridLogMessage<<"sweep "<<sweep<<" S: "<<GF_S(g, Umu)<<std::endl;
     for(int cb=0;cb<2;cb++) {
 
+	 std::cout << GridLogMessage << "before calculating staple" << std::endl;
       staple_half = zero;
       staple_half.checkerboard = cb;
       int cb_inverse = (cb==1) ? 0 : 1;
@@ -62,16 +63,21 @@ void GF_heatbath(const LatticeGaugeField &Umu, LatticeColourMatrix &g,
         staple_half += U_oe[mu][cb] * adj(Cshift(g_oe[cb_inverse],mu,1))
                         + adj( Cshift(g_oe[cb_inverse], mu, -1) * UMinusShift_oe[mu][cb]);
       }
+	 std::cout << GridLogMessage << "after calulating staple" << std::endl;
 
+
+	 std::cout << GridLogMessage << "before 3 subgroup" << std::endl;
       for(int subgroup=0;subgroup<SU3::su2subgroups();subgroup++) {
         GF_SubGroupHeatBath(sRNG, pRNG, coeff, g_oe[cb], staple_half, subgroup, cb, table_path);
       }
+	 std::cout << GridLogMessage << "after 3 subgroup" << std::endl;
 
     }
 
     // I found that project on group has almost no effect. at least on a small lattice
     // if(sweep%10==9) {ProjectOnGroup(g_oe[Odd]); ProjectOnGroup(g_oe[Even]);}// project on group every 10 sweeps
 
+	std::cout << GridLogMessage << "before force" << std::endl;
     if(dSGF2dU!=NULL) {
       for(int cb=0;cb<2;cb++) {
         int cb_inverse = (cb==1) ? 0 : 1;
@@ -80,6 +86,8 @@ void GF_heatbath(const LatticeGaugeField &Umu, LatticeColourMatrix &g,
         }
   	  }
   	}
+	std::cout << GridLogMessage << "after force" << std::endl;
+	std::cout << GridLogMessage << "=========================================" << std::endl;
 
     // if(dSGF2dU!=NULL) (*dSGF2dU) += ForceFunc(g, U); // FIXME: is it better to have an inteval between added samples
   } // end of sweeps loop

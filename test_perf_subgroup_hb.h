@@ -88,6 +88,7 @@ void GF_SubGroupHeatBath(
        const LatticeColourMatrix &staple,  // multiplied by action coeffs so th
        int su2_subgroup, int cb, const std::string &table_path) {
      GridBase *rbGrid = link._grid;
+	 std::cout << GridLogMessage << "subgroup heat bath begins" << std::endl;
 
      static Integral_table integral_table(coeff, table_path);
 
@@ -118,6 +119,7 @@ void GF_SubGroupHeatBath(
 
      LatticeReal k(rbGrid); k.checkerboard = cb;
      k = toReal(sqrt_udet); // FIXME: Wilson only; k = \sqrt{\det[staple]}
+	 std::cout << GridLogMessage << "end of calculating k" << std::endl;
 
      std::vector<LatticeReal> a(4, rbGrid); for(auto &x: a) x.checkerboard = cb;
 
@@ -132,6 +134,7 @@ void GF_SubGroupHeatBath(
          *(a0_ptr + idx + 1) = *(a0_ptr + idx);
        }
      }
+	 std::cout << GridLogMessage << "end of a0" << std::endl;
 
      //////////////////////////////////////////
      //    ii) generate a_i uniform on two sphere radius (1-a0^2)^0.5
@@ -151,24 +154,30 @@ void GF_SubGroupHeatBath(
      cos_theta = (cos_theta * 2.0) - 1.0;  // uniform in [-1,1]
      // sin_theta = sqrt(abs(1.0 - cos_theta * cos_theta));
      sin_theta = sqrt(1.0 - cos_theta * cos_theta);
+	 std::cout << GridLogMessage << "end of cos sin theta" << std::endl;
 
      a[1] = a123mag * sin_theta * cos(phi);
      a[2] = a123mag * sin_theta * sin(phi);
      a[3] = a123mag * cos_theta;
+	 std::cout << GridLogMessage << "end of a1 a2 a3" << std::endl;
 
      static i_Sigmas i_sigmas;
 
      ua = toComplex(a[0]) * i_sigmas.ident + toComplex(a[1]) * i_sigmas.pauli1 +
           toComplex(a[2]) * i_sigmas.pauli2 + toComplex(a[3]) * i_sigmas.pauli3;
 
+	 std::cout << GridLogMessage << "before pow()" << std::endl;
      SU3::LatticeSU2Matrix uinv(rbGrid); uinv.checkerboard = cb;
      // uinv = adj(u * pow(sqrt_udet, -1.0));
      uinv = adj(u * invCplx(sqrt_udet) ); // pow(, -1.0) is slow to calcualte
+	 std::cout << GridLogMessage << "after pow()" << std::endl;
 
      SU3::LatticeSU2Matrix new_su2(rbGrid);   new_su2.checkerboard = cb;// rotated matrix after hb
      new_su2 = uinv * ua; // new su2 can be both uinv * ua or ua * uinv; they are both the same distribution.
 
      my_su2Insert(new_su2, link, su2_subgroup);
+	 std::cout << GridLogMessage << "end of subgroup heat bath" << std::endl;
+
 
    }
 
