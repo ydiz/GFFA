@@ -1,8 +1,5 @@
-
 namespace Grid{
 namespace QCD{
-
-// FIXME: change name: grid -> rbGrid
 
 template <class vcplx>
 strong_inline vcplx matrix_mult_elem(const SU3::iSUnMatrix<vcplx> &m, const SU3::iSUnMatrix<vcplx> &n, int i0, int i1) {
@@ -86,13 +83,13 @@ void GF_SubGroupHeatBath(
 
      // Subgroup manipulation in the lie algebra space
      SU3::LatticeSU2Matrix u(rbGrid);  u.checkerboard = cb;// Kennedy pendleton "u" real projected normalised Sigma
-     SU3::LatticeSU2Matrix uinv(rbGrid); uinv.checkerboard = cb;
      SU3::LatticeSU2Matrix ua(rbGrid);  ua.checkerboard = cb;// a in pauli form
      LatticeComplex udet(rbGrid);  udet.checkerboard = cb;// determinant of real(staple)
 
      my_su2Extract(udet, u, link, staple, su2_subgroup);
 
-     // FIXME: maybe this is necessary
+     // // FIXME: maybe this is necessary
+     // // from the book:In the rare case that det A vanishes, any random link variable is accepted
      // LatticeComplex cone(grid); cone.checkerboard = cb;
      // LatticeReal adet(grid); adet.checkerboard = cb;
      // SU3::LatticeSU2Matrix lident(grid); lident.checkerboard = cb;
@@ -108,9 +105,6 @@ void GF_SubGroupHeatBath(
 
      LatticeComplex sqrt_udet(rbGrid); sqrt_udet.checkerboard = cb;
      sqrt_udet = sqrt(udet);
-
-     u = u * pow(sqrt_udet, -1.0);  //  u = link * staple / sqrt(det(staple)); // u is old X
-     uinv = adj(u);
 
      LatticeReal k(rbGrid); k.checkerboard = cb;
      k = toReal(sqrt_udet); // FIXME: Wilson only; k = \sqrt{\det[staple]}
@@ -150,25 +144,14 @@ void GF_SubGroupHeatBath(
      a[2] = a123mag * sin_theta * sin(phi);
      a[3] = a123mag * cos_theta;
 
-     // // these can be collected and moved to a static object.
-     // SU3::SU2Matrix ident = Complex(1.0);
-     // SU3::SU2Matrix pauli1;
-     // SU<2>::generator(0, pauli1);
-     // SU3::SU2Matrix pauli2;
-     // SU<2>::generator(1, pauli2);
-     // SU3::SU2Matrix pauli3;
-     // SU<2>::generator(2, pauli3);
-     // pauli1 = timesI(pauli1) * 2.0;
-     // pauli2 = timesI(pauli2) * 2.0;
-     // pauli3 = timesI(pauli3) * 2.0;
-     // // std::cout << pauli1 << std::endl;
-     // // std::cout << pauli2 << std::endl;
-     // // std::cout << pauli3 << std::endl;
-     // // assert(0);
      static i_Sigmas i_sigmas;
 
      ua = toComplex(a[0]) * i_sigmas.ident + toComplex(a[1]) * i_sigmas.pauli1 +
           toComplex(a[2]) * i_sigmas.pauli2 + toComplex(a[3]) * i_sigmas.pauli3;
+
+     // u = u * pow(sqrt_udet, -1.0);  //  u = link * staple / sqrt(det(staple)); // u is old X
+     SU3::LatticeSU2Matrix uinv(rbGrid); uinv.checkerboard = cb;
+     uinv = adj(u * pow(sqrt_udet, -1.0));
 
      SU3::LatticeSU2Matrix new_su2(rbGrid);   new_su2.checkerboard = cb;// rotated matrix after hb
      new_su2 = uinv * ua; // new su2 can be both uinv * ua or ua * uinv; they are both the same distribution.

@@ -48,7 +48,7 @@ int main (int argc, char ** argv)
   LatticeColourMatrix staple_half(rbGrid);
   LatticeColourMatrix U_half(rbGrid);
 
-  for(int sweep=0;sweep<10;sweep++){
+  for(int sweep=0;sweep<40;sweep++){
 
     RealD plaq = ColourWilsonLoops::avgPlaquette(Umu);
 
