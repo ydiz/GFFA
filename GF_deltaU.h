@@ -62,7 +62,9 @@ LatticeGaugeField dHdP(LatticeGaugeField &P, const Momenta_k &KK)
     pokeLorentz(ret, dHdP2mu, mu);
   }
 
-  ret = ret + KK.one / KK.sinKEpsilonSquare * Pk;
+  // ret = ret + KK.one / KK.sinKEpsilonSquare * Pk;
+  ret = ret + Pk;
+
   theFFT.FFT_all_dim(ret, ret, FFT::backward);
   ret = timesI(ret); // because realP = -timesI(P);
   return ret;

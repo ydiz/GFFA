@@ -20,7 +20,8 @@ void GF_generate_P(LatticeGaugeField& P, GridParallelRNG& pRNG, const Momenta_k 
   LatticeGaugeField newP(P._grid);
   LatticeColourMatrix Pmu(P._grid);
   for(int mu=0;mu<4;mu++){
-  	Pmu = KK.sinKNgExp[mu] * KK.Ck_SqrtInvD * sinKExpDotP0 + KK.sinKEpsilon * peekLorentz(P0, mu);
+  	// Pmu = KK.sinKNgExp[mu] * KK.Ck_SqrtInvD * sinKExpDotP0 + KK.sinKEpsilon * peekLorentz(P0, mu);
+  	Pmu = KK.sinKNgExp[mu] * KK.Ck_SqrtInvD * sinKExpDotP0 + peekLorentz(P0, mu);
   	pokeLorentz(newP, Pmu, mu);
   }
 
