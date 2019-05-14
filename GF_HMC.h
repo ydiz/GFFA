@@ -86,7 +86,8 @@ class GF_HybridMonteCarlo {
 
   void evolve(const HMC_PARA &HMC_para) {
 
-    const Momenta_k KK(Ucur._grid, HMC_para.M, HMC_para.epsilon, HMC_para.newHp);
+    // const Momenta_k KK(Ucur._grid, HMC_para.M, HMC_para.epsilon, HMC_para.newHp);
+    const Momenta_k KK(Ucur._grid, HMC_para.ML, HMC_para.epsilon, HMC_para.newHp);
 
     Real DeltaH;
 

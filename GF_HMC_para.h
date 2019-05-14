@@ -28,12 +28,17 @@ struct HMC_PARA{
   int TC_Smearing_meas_interval;
   double TC_Smearing_maxTau;
 
+  double ML;
+
   // HMC_PARA(): beta(5.6), M(1.0), epsilon(0.2), hb_offset(1000), innerMC_N(10000), hb_nsweeps(1),
   //             newHp(false), newAction(true), SDGF(false), UInitEquil(true), hb_multi_hit(1) {} //betaMM is initialzed in GF_init()
 };
 
 std::ostream& operator<<(std::ostream& out, const HMC_PARA &HMC_para)
 {
+  out << "This git branch tests ML" << std::endl;
+  out << "ML: " << HMC_para.ML << std::endl;
+  out << "===================================================" << std::endl;
   out << "StartingType: " << HMC_para.StartingType << std::endl;
   out << "StartingTrajectory: " << HMC_para.StartingTrajectory << std::endl;
   out << "Thermalizations: " << HMC_para.Thermalizations << std::endl;

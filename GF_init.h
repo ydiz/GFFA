@@ -32,6 +32,7 @@ void init(int argc, char **argv, HMC_PARA &hmc_para)
                     ("TC.Smearing_step_size", po::value<double>(&hmc_para.TC_Smearing_step_size)->default_value(1.0), "parameter for smearing")
                     ("TC.Smearing_meas_interval", po::value<int>(&hmc_para.TC_Smearing_meas_interval)->default_value(50), "Wilson flow integration steps for calculating topological charge")
                     ("TC.Smearing_maxTau", po::value<double>(&hmc_para.TC_Smearing_maxTau)->default_value(2.0), "parameter for smearing")
+                    ("ML", po::value<double>(&hmc_para.ML)->default_value(1.0), "ML")
                     ;
 
   po::variables_map vm;
