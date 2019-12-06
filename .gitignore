@@ -17,6 +17,7 @@ ckpoint*
 
 Test*.cc
 !Test_hmc.cc
+!Test_gauge_force.cc
 
 .nfs*
 
@@ -26,3 +27,7 @@ nohup.out
 GFFA.ini
 Makefile
 makefile
+
+*.cobaltlog
+*.log
+*.error
