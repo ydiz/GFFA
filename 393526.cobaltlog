@@ -1,0 +1,30 @@
+Jobid: 393526
+qsub --mode script -t 00:30:00 -n 4 --attrs mcdram=cache:numa=quad -A CSC249ADSE03 -o output-$COBALT_JOBID.log -q debug-flat-quad submit_debug.sh
+Tue Dec 03 20:08:12 2019 +0000 (UTC) submitted with cwd set to: /lus/theta-fs0/projects/CSC249ADSE03/yidizhao/GFFA
+jobid 393526 submitted from terminal /dev/pts/11
+2019-12-03 20:08:46,546 INFO: Starting Resource_Prologue
+2019-12-03 20:08:46,559 DEBUG: no enabling attribute found
+2019-12-03 20:08:46,559 INFO: Resource_Prologue finished with exit code 0
+Tue Dec 03 20:09:06 2019 +0000 (UTC) 
+Tue Dec 03 20:09:06 2019 +0000 (UTC) Command: '/lus/theta-fs0/projects/CSC249ADSE03/yidizhao/GFFA/submit_debug.sh'
+Tue Dec 03 20:09:06 2019 +0000 (UTC) 
+Tue Dec 03 20:09:06 2019 +0000 (UTC) Environment:
+Tue Dec 03 20:09:06 2019 +0000 (UTC) COBALT_PARTCORES=64
+Tue Dec 03 20:09:06 2019 +0000 (UTC) SHELL=/bin/bash
+Tue Dec 03 20:09:06 2019 +0000 (UTC) COBALT_PROJECT=CSC249ADSE03
+Tue Dec 03 20:09:06 2019 +0000 (UTC) COBALT_PARTNAME=0-2,11
+Tue Dec 03 20:09:06 2019 +0000 (UTC) COBALT_JOBID=393526
+Tue Dec 03 20:09:06 2019 +0000 (UTC) COBALT_STARTTIME=1575403713
+Tue Dec 03 20:09:06 2019 +0000 (UTC) LOGNAME=yidizhao
+Tue Dec 03 20:09:06 2019 +0000 (UTC) USER=yidizhao
+Tue Dec 03 20:09:06 2019 +0000 (UTC) COBALT_ENDTIME=1575405513
+Tue Dec 03 20:09:06 2019 +0000 (UTC) COBALT_PARTSIZE=4
+Tue Dec 03 20:09:06 2019 +0000 (UTC) HOME=/home/yidizhao
+Tue Dec 03 20:09:06 2019 +0000 (UTC) COBALT_JOBSIZE=4
+Tue Dec 03 20:09:06 2019 +0000 (UTC) COBALT_QUEUE=debug-flat-quad
+Tue Dec 03 20:09:06 2019 +0000 (UTC) 
+Tue Dec 03 20:09:06 2019 +0000 (UTC) Info: stdin received from /dev/null
+Tue Dec 03 20:09:06 2019 +0000 (UTC) Info: stdout sent to /lus/theta-fs0/projects/CSC249ADSE03/yidizhao/GFFA/output-393526.log
+Tue Dec 03 20:09:06 2019 +0000 (UTC) Info: stderr sent to /lus/theta-fs0/projects/CSC249ADSE03/yidizhao/GFFA/393526.error
+Tue Dec 03 20:09:06 2019 +0000 (UTC) 
+Tue Dec 03 20:09:45 2019 +0000 (UTC) Info: task completed normally with an exit code of 0; initiating job cleanup and removal

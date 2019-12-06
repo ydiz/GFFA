@@ -1,0 +1,13 @@
+before Grid init
+before Grid init
+before Grid init
+before Grid init
+SharedMemoryAllocate 1073741824 SHMOPEN implementation 
+SharedMemoryAllocate 1073741824 SHMOPEN implementation 
+SharedMemoryAllocate 1073741824 SHMOPEN implementation 
+SharedMemoryAllocate 1073741824 SHMOPEN implementation 
+_pmiu_daemon(SIGCHLD): [NID 00000] [c0-0c0s0n0] [Tue Dec  3 20:09:12 2019] PE RANK 0 exit signal Segmentation fault
+[NID 00000] 2019-12-03 20:09:12 Apid 18796302: initiated application termination
+Application 18796302 exit codes: 139
+Application 18796302 exit signals: Killed
+Application 18796302 resources: utime ~0s, stime ~3s, Rss ~6972, inblocks ~0, outblocks ~0

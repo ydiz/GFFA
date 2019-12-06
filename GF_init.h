@@ -5,6 +5,7 @@
 namespace po = boost::program_options;
 
 namespace Grid {
+namespace QCD {
 
 void init(int argc, char **argv, HMC_PARA &hmc_para)
 {
@@ -26,12 +27,21 @@ void init(int argc, char **argv, HMC_PARA &hmc_para)
                     ("innerMC_N", po::value<int>(&hmc_para.innerMC_N)->default_value(100), "number of heatbath sweeps to calculated inner Monte Carlo")
                     ("table_path", po::value<std::string>(&hmc_para.table_path)->default_value("."),"path of integral look up table")
                     ("UFileName", po::value<std::string>(&hmc_para.UFile), "If starting type if not CheckpointStart and UFileName is not empty, gauge configuration with corresponding filename with be loaded")
-                    ("TC.interval", po::value<int>(&hmc_para.TC_interval)->default_value(5), "Trajectory interval for calculating topological charge.")
-                    ("TC.do_smearing", po::value<bool>(&hmc_para.TC_do_smearing)->default_value(true), "Wheter do smearing or not")
-                    // ("TC.Smearing_steps", po::value<int>(&hmc_para.TC_Smearing_steps)->default_value(200), "parameter for smearing")
-                    ("TC.Smearing_step_size", po::value<double>(&hmc_para.TC_Smearing_step_size)->default_value(1.0), "parameter for smearing")
-                    ("TC.Smearing_meas_interval", po::value<int>(&hmc_para.TC_Smearing_meas_interval)->default_value(50), "Wilson flow integration steps for calculating topological charge")
-                    ("TC.Smearing_maxTau", po::value<double>(&hmc_para.TC_Smearing_maxTau)->default_value(2.0), "parameter for smearing")
+                    ("TC.type", po::value<std::string>(&hmc_para.tc_para.type)->default_value("fixedMaxTau"), "")
+                    ("TC.step_size", po::value<double>(&hmc_para.tc_para.step_size)->default_value(1.0), "")
+                    ("TC.adaptiveErrorTolerance", po::value<double>(&hmc_para.tc_para.adaptiveErrorTolerance)->default_value(2e-6), "")
+                    ("TC.maxTau", po::value<double>(&hmc_para.tc_para.maxTau)->default_value(3.0), "")
+                    ("TC.TrajectoryStart", po::value<int>(&hmc_para.tc_para.TrajectoryStart)->default_value(20))
+                    ("TC.TrajectoryInterval", po::value<int>(&hmc_para.tc_para.TrajectoryInterval)->default_value(1))
+                    ("TC.topoChargeOutFile", po::value<std::string>(&hmc_para.tc_para.topoChargeOutFile)->default_value("topoCharge.txt"))
+                    ("TC.saveSmearField", po::value<bool>(&hmc_para.tc_para.saveSmearField)->default_value(false))
+                    ("TC.smearFieldFilePrefix", po::value<std::string>(&hmc_para.tc_para.smearFieldFilePrefix)->default_value("ckpoint_lat_smear"))
+                    // ("TC.interval", po::value<int>(&hmc_para.TC_interval)->default_value(5), "Trajectory interval for calculating topological charge.")
+                    // ("TC.do_smearing", po::value<bool>(&hmc_para.TC_do_smearing)->default_value(true), "Wheter do smearing or not")
+                    // // ("TC.Smearing_steps", po::value<int>(&hmc_para.TC_Smearing_steps)->default_value(200), "parameter for smearing")
+                    // ("TC.Smearing_step_size", po::value<double>(&hmc_para.TC_Smearing_step_size)->default_value(1.0), "parameter for smearing")
+                    // ("TC.Smearing_meas_interval", po::value<int>(&hmc_para.TC_Smearing_meas_interval)->default_value(50), "Wilson flow integration steps for calculating topological charge")
+                    // ("TC.Smearing_maxTau", po::value<double>(&hmc_para.TC_Smearing_maxTau)->default_value(2.0), "parameter for smearing")
                     ;
 
   po::variables_map vm;
@@ -55,4 +65,4 @@ void init(int argc, char **argv, HMC_PARA &hmc_para)
   hmc_para.betaMM = hmc_para.beta * hmc_para.M * hmc_para.M;
 }
 
-}
+}}

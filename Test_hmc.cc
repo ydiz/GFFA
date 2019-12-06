@@ -1,10 +1,13 @@
 #include <Grid/Grid.h>
 #include <iostream>
 #include <sys/sysinfo.h>
+
+#include "GF_Util.h"
+#include "observable.h"
+
 #include "GF_HMC_para.h"
 #include "GF_init.h"
 #include "GF_assert.h"
-#include "GF_Util.h"
 #include "GF_init_k.h"
 #include "Integral_table.h"
 #include "subgroup_hb.h"
@@ -16,6 +19,8 @@
 #include "GF_hmc_integrator_alg.h"
 #include "GF_HMC.h"
 #include "GF_GenericHMCrunner.h"
+
+
 
 // #include <fenv.h>
 
@@ -54,9 +59,14 @@ int main(int argc, char **argv) {
   RNGpar.parallel_seeds = "6 7 8 9 10";
   TheHMC.Resources.SetRNGSeeds(RNGpar);
 
-  // observables
+  // Construct observables
   typedef PlaquetteMod<HMCWrapper::ImplPolicy> PlaqObs;
   TheHMC.Resources.AddObservable<PlaqObs>();
+  typedef LinkTraceMod<HMCWrapper::ImplPolicy> LTObs;
+  TheHMC.Resources.AddObservable<LTObs>();
+  typedef MyTCMod<HMCWrapper::ImplPolicy> QObs; 
+  TheHMC.Resources.AddObservable<QObs>(hmc_para.tc_para);
+
 
   // typedef TopologicalChargeMod<HMCWrapper::ImplPolicy> QObs;
   // TopologyObsParameters TopParams {};

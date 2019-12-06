@@ -1,0 +1,30 @@
+Jobid: 393794
+qsub --mode script -t 00:30:00 -n 128 --attrs mcdram=cache:numa=quad -A CSC249ADSE03 -o output-$COBALT_JOBID.log submit.sh
+Wed Dec 04 18:37:55 2019 +0000 (UTC) submitted with cwd set to: /lus/theta-fs0/projects/CSC249ADSE03/yidizhao/GFFA
+jobid 393794 submitted from terminal /dev/pts/57
+2019-12-04 21:12:56,143 INFO: Starting Resource_Prologue
+2019-12-04 21:12:56,161 DEBUG: no enabling attribute found
+2019-12-04 21:12:56,161 INFO: Resource_Prologue finished with exit code 0
+Wed Dec 04 21:13:21 2019 +0000 (UTC) 
+Wed Dec 04 21:13:21 2019 +0000 (UTC) Command: '/lus/theta-fs0/projects/CSC249ADSE03/yidizhao/GFFA/submit.sh'
+Wed Dec 04 21:13:21 2019 +0000 (UTC) 
+Wed Dec 04 21:13:21 2019 +0000 (UTC) Environment:
+Wed Dec 04 21:13:21 2019 +0000 (UTC) COBALT_PARTCORES=64
+Wed Dec 04 21:13:21 2019 +0000 (UTC) SHELL=/bin/bash
+Wed Dec 04 21:13:21 2019 +0000 (UTC) COBALT_PROJECT=CSC249ADSE03
+Wed Dec 04 21:13:21 2019 +0000 (UTC) COBALT_PARTNAME=3950,4021,4030,4034,4036,4081-4088,4091-4099,4130-4139,4141-4151,4153-4159,4191,4220-4223,4226,4248-4249,4260,4269-4270,4272,4276-4279,4289,4305,4307-4309,4311,4314-4317,4326,4332-4333,4338,4343,4350,4368,4370-4375,4377-4380,4386,4401,4418-4419,4428-4429,4433-4434,4455,4457,4465-4467,4497,4519,4530,4533,4540-4541,4546,4550,4558-4563,4566-4567,4571,4580,4585-4586,4588-4589
+Wed Dec 04 21:13:21 2019 +0000 (UTC) COBALT_JOBID=393794
+Wed Dec 04 21:13:21 2019 +0000 (UTC) COBALT_STARTTIME=1575493955
+Wed Dec 04 21:13:21 2019 +0000 (UTC) LOGNAME=yidizhao
+Wed Dec 04 21:13:21 2019 +0000 (UTC) USER=yidizhao
+Wed Dec 04 21:13:21 2019 +0000 (UTC) COBALT_ENDTIME=1575495755
+Wed Dec 04 21:13:21 2019 +0000 (UTC) COBALT_PARTSIZE=128
+Wed Dec 04 21:13:21 2019 +0000 (UTC) HOME=/home/yidizhao
+Wed Dec 04 21:13:21 2019 +0000 (UTC) COBALT_JOBSIZE=128
+Wed Dec 04 21:13:21 2019 +0000 (UTC) COBALT_QUEUE=default
+Wed Dec 04 21:13:21 2019 +0000 (UTC) 
+Wed Dec 04 21:13:21 2019 +0000 (UTC) Info: stdin received from /dev/null
+Wed Dec 04 21:13:21 2019 +0000 (UTC) Info: stdout sent to /lus/theta-fs0/projects/CSC249ADSE03/yidizhao/GFFA/output-393794.log
+Wed Dec 04 21:13:21 2019 +0000 (UTC) Info: stderr sent to /lus/theta-fs0/projects/CSC249ADSE03/yidizhao/GFFA/393794.error
+Wed Dec 04 21:13:21 2019 +0000 (UTC) 
+Wed Dec 04 21:14:19 2019 +0000 (UTC) Info: task completed normally with an exit code of 0; initiating job cleanup and removal

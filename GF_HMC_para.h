@@ -1,4 +1,5 @@
 namespace Grid{
+namespace QCD {
 
 struct HMC_PARA{
   std::string StartingType;
@@ -20,13 +21,15 @@ struct HMC_PARA{
   std::string table_path;
   std::string UFile;
 
-  // Topological Charge
-  int TC_interval;
-  bool TC_do_smearing;
-  // int TC_Smearing_steps; // does not matter
-  double TC_Smearing_step_size;
-  int TC_Smearing_meas_interval;
-  double TC_Smearing_maxTau;
+  MyTC_para tc_para;
+
+  // // Topological Charge
+  // int TC_interval;
+  // bool TC_do_smearing;
+  // // int TC_Smearing_steps; // does not matter
+  // double TC_Smearing_step_size;
+  // int TC_Smearing_meas_interval;
+  // double TC_Smearing_maxTau;
 
   // HMC_PARA(): beta(5.6), M(1.0), epsilon(0.2), hb_offset(1000), innerMC_N(10000), hb_nsweeps(1),
   //             newHp(false), newAction(true), SDGF(false), UInitEquil(true), hb_multi_hit(1) {} //betaMM is initialzed in GF_init()
@@ -53,15 +56,17 @@ std::ostream& operator<<(std::ostream& out, const HMC_PARA &HMC_para)
   out << "hb_offset: " << HMC_para.hb_offset << std::endl;
   out << "table_path: " << HMC_para.table_path << std::endl;
 
-  out << "================ Topological Charge ===============" << std::endl;
-  out << "TC_interval: " << HMC_para.TC_interval << std::endl;
-  out << "TC_do_smearing: " << HMC_para.TC_do_smearing << std::endl;
-  // out << "TC_Smearing_steps: " << HMC_para.TC_Smearing_steps << std::endl;
-  out << "TC_Smearing_step_size: " << HMC_para.TC_Smearing_step_size << std::endl;
-  out << "TC_Smearing_meas_interval: " << HMC_para.TC_Smearing_meas_interval << std::endl;
-  out << "TC_Smearing_maxTau: " << HMC_para.TC_Smearing_maxTau << std::endl;
+  // out << "================ Topological Charge ===============" << std::endl;
+  // out << "TC_interval: " << HMC_para.TC_interval << std::endl;
+  // out << "TC_do_smearing: " << HMC_para.TC_do_smearing << std::endl;
+  // // out << "TC_Smearing_steps: " << HMC_para.TC_Smearing_steps << std::endl;
+  // out << "TC_Smearing_step_size: " << HMC_para.TC_Smearing_step_size << std::endl;
+  // out << "TC_Smearing_meas_interval: " << HMC_para.TC_Smearing_meas_interval << std::endl;
+  // out << "TC_Smearing_maxTau: " << HMC_para.TC_Smearing_maxTau << std::endl;
 
   return out;
 }
 
-}
+
+
+}}

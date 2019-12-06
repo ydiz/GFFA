@@ -1,0 +1,9 @@
+SharedMemoryAllocate 1073741824 SHMOPEN implementation 
+SharedMemoryAllocate 1073741824 SHMOPEN implementation 
+SharedMemoryAllocate 1073741824 SHMOPEN implementation 
+SharedMemoryAllocate 1073741824 SHMOPEN implementation 
+_pmiu_daemon(SIGCHLD): [NID 00000] [c0-0c0s0n0] [Tue Dec  3 19:41:01 2019] PE RANK 0 exit signal Segmentation fault
+[NID 00000] 2019-12-03 19:41:01 Apid 18796292: initiated application termination
+Application 18796292 exit codes: 139
+Application 18796292 exit signals: Killed
+Application 18796292 resources: utime ~0s, stime ~4s, Rss ~6612, inblocks ~42, outblocks ~66904
