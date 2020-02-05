@@ -100,6 +100,12 @@ void GF_integrate(Field& U, const Momenta_k &KK) {
     int first_step = (step == 0);
     int last_step = (step == this->Params.MDsteps - 1);
     this->step(U, 0, first_step, last_step, KK);
+
+    // For measureing A
+    std::cout << "step: " << step << std::endl;
+    // double beta = 10., interval = 1., epsilon = 0.2;
+    double beta = 10., epsilon = 0.2;
+    measure_A(U, beta, epsilon);
   	// printMem();
   }
 

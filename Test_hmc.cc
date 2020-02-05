@@ -3,12 +3,18 @@
 #include <sys/sysinfo.h>
 
 #include "GF_Util.h"
-#include "observable.h"
+#include "GF_init_k.h"
 
+
+
+#include "Test_A.h"
+
+
+
+#include "observable.h"
 #include "GF_HMC_para.h"
 #include "GF_init.h"
 #include "GF_assert.h"
-#include "GF_init_k.h"
 #include "Integral_table.h"
 #include "subgroup_hb.h"
 #include "GF_heatbath_Util.h"
@@ -64,8 +70,8 @@ int main(int argc, char **argv) {
   TheHMC.Resources.AddObservable<PlaqObs>();
   typedef LinkTraceMod<HMCWrapper::ImplPolicy> LTObs;
   TheHMC.Resources.AddObservable<LTObs>();
-  typedef MyTCMod<HMCWrapper::ImplPolicy> QObs; 
-  TheHMC.Resources.AddObservable<QObs>(hmc_para.tc_para);
+  // typedef MyTCMod<HMCWrapper::ImplPolicy> QObs; 
+  // TheHMC.Resources.AddObservable<QObs>(hmc_para.tc_para);
 
 
   // typedef TopologicalChargeMod<HMCWrapper::ImplPolicy> QObs;

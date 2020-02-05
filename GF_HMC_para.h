@@ -21,7 +21,7 @@ struct HMC_PARA{
   std::string table_path;
   std::string UFile;
 
-  MyTC_para tc_para;
+  // MyTC_para tc_para;
 
   // // Topological Charge
   // int TC_interval;

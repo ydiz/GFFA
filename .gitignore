@@ -1,33 +1,6 @@
-# Ignore all
 *
 
-# Unignore all with extensions; ignore executables
-!*.*
+!**/*.cc
+!**/*.h
 
-# ignore all dirs
-*/
-*/*
-!test
-!test/*.cc
-
-
-ckpoint*
-*.txt
-*.o
-
-Test*.cc
-!Test_hmc.cc
-!Test_gauge_force.cc
-
-.nfs*
-
-run.sh
-submit.sh
-nohup.out
-GFFA.ini
-Makefile
-makefile
-
-*.cobaltlog
-*.log
-*.error
+!.gitignore
