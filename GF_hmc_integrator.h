@@ -104,9 +104,8 @@ void GF_integrate(Field& U, const Momenta_k &KK) {
     // For measureing A
     std::cout << "step: " << step << std::endl;
     // double beta = 10., interval = 1., epsilon = 0.2;
-    double beta = 10., epsilon = 0.2;
+    double beta = 100., epsilon = 0.2;
     measure_A(U, beta, epsilon);
-  	// printMem();
   }
 
   // Check the clocks all match on all levels

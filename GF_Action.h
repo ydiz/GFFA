@@ -29,7 +29,7 @@ class GFAction : public Action<typename Gimpl::GaugeField> {
     RealD Sw = Waction.S(U);
   	std::cout  << "Wilson S: " <<  std::setprecision(15) << Sw << std::endl;
 
-    RealD SGF1 = - betaMM * Omega_no_g(U);
+    RealD SGF1 = - (1./3.) * betaMM * Omega_no_g(U);
   	std::cout  << "SGF1: " <<  std::setprecision(15) << SGF1 << std::endl;
 
     return Sw + SGF1;
@@ -40,7 +40,7 @@ class GFAction : public Action<typename Gimpl::GaugeField> {
     GaugeField dSwdU(U._grid);
     Waction.deriv(U, dSwdU);
 
-  	RealD factor = 0.5 * betaMM;
+  	RealD factor = 0.5 * (1./3.) * betaMM;
 
     GaugeField dSGF1dU(U._grid);
     dSGF1dU = factor * Ta(U);

@@ -18,7 +18,7 @@ void GF_heatbath(const LatticeGaugeField &Umu, LatticeColourMatrix &g,
    sRNG.SeedFixedIntegers(std::vector<int>{5,6,7,8});
   }
 
-  RealD coeff = _betaMM;
+  RealD coeff = _betaMM * (1./3.);
   // Real betaMM = _betaMM * 3; //In heatbath routine, the coefficient is beta/Nc
 
   std::vector<LatticeColourMatrix> U(4, Umu._grid);

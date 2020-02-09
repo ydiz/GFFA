@@ -68,7 +68,8 @@ void measure_A(const LatticeGaugeField &U, double beta, double epsilon) {
     }
     // std::cout << alg << std::endl;
 
-    for(int i=0; i<=8; ++i) {
+    int T = U._grid->_fdimensions[3];
+    for(int i=0; i<T; ++i) {
       std::cout << "i=" << i << ": ";
       print_grid_field_site(alg, {i,0,0,0});
     }
