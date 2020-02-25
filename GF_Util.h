@@ -1,5 +1,7 @@
 #include <cmath>
 
+
+
 namespace Grid{
 
 template<class rtype,class ltype, int N>
@@ -13,6 +15,22 @@ strong_inline auto operator*(const iVector<rtype, N> &rhs, const iVector<ltype, 
 }
 
 namespace QCD{
+
+
+template <class T>
+std::ostream& operator<<(std::ostream &out, const std::vector<T> &v) {
+  if(v.empty()) {
+    out << "[]";
+    return out;
+  }
+
+  out << "[";
+  for(size_t i=0; i<v.size()-1; ++i) out << v[i] << " "; // if v.size()=0, then v.size()-1 is a very large number (v.size() is unsigned!)
+  out << v.back() << "]";
+  return out;
+}
+
+
 // void printMem()
 // {
 // 	struct sysinfo myinfo;

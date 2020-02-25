@@ -1,5 +1,10 @@
+
+
+
 namespace Grid{
 namespace QCD {
+
+
 
 struct HMC_PARA{
   std::string StartingType;
@@ -20,6 +25,12 @@ struct HMC_PARA{
   int hb_offset;
   std::string table_path;
   std::string UFile;
+
+  // Measuring A
+  bool measure_A;
+  std::vector<std::vector<int>> measure_A_coors;
+  // std::vector<int> measure_A_coorsss;
+  
 
   // MyTC_para tc_para;
 
@@ -55,6 +66,10 @@ std::ostream& operator<<(std::ostream& out, const HMC_PARA &HMC_para)
   out << "innerMC_N: " << HMC_para.innerMC_N << std::endl;
   out << "hb_offset: " << HMC_para.hb_offset << std::endl;
   out << "table_path: " << HMC_para.table_path << std::endl;
+
+  out << "================ Measure A ===============" << std::endl;
+  out << "measure_A: " << HMC_para.measure_A << std::endl;
+  out << "measure_A_coors: " << HMC_para.measure_A_coors << std::endl;
 
   // out << "================ Topological Charge ===============" << std::endl;
   // out << "TC_interval: " << HMC_para.TC_interval << std::endl;

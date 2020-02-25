@@ -47,7 +47,7 @@ LatticeGaugeField Log(const LatticeGaugeField &lat) {
 //     get_force_stats(An, interval, epsilon);
 // }
 
-void measure_A(const LatticeGaugeField &U, double beta, double epsilon) {
+void measure_A(const LatticeGaugeField &U, double beta, const std::vector<std::vector<int>> &coors) {
 
     LatticeGaugeField An(U._grid);
     An = timesMinusI(Log(U)) * std::sqrt(6./beta);
@@ -68,10 +68,10 @@ void measure_A(const LatticeGaugeField &U, double beta, double epsilon) {
     }
     // std::cout << alg << std::endl;
 
-    int T = U._grid->_fdimensions[3];
-    for(int i=0; i<T; ++i) {
-      std::cout << "i=" << i << ": ";
-      print_grid_field_site(alg, {i,0,0,0});
+    for(const std::vector<int> &coor : coors) {
+      // std::cout << "coor=" << coor << ": ";
+      std::cout << "coor=";
+      print_grid_field_site(alg, coor);
     }
 
 }

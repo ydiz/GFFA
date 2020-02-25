@@ -5,11 +5,7 @@
 #include "GF_Util.h"
 #include "GF_init_k.h"
 
-
-
 #include "Test_A.h"
-
-
 
 #include "observable.h"
 #include "GF_HMC_para.h"

@@ -98,9 +98,10 @@ std::ostream& operator<<(std::ostream &out, const std::vector<double> &vec) {
 }
 
 template<class T>
-void print_grid_field_site(const T &field, const std::vector<int> coor) {
+void print_grid_field_site(const T &field, const std::vector<int> &coor) {
   using namespace Grid;
-  std::cout << "[ " << coor[0] << " " << coor[1] << " " << coor[2] << " " << coor[3] << " ]" << std::endl;
+  std::cout << coor << std::endl;
+  // std::cout << "[ " << coor[0] << " " << coor[1] << " " << coor[2] << " " << coor[3] << " ]" << std::endl;
   typename T::vector_object::scalar_object site;
   peekSite(site, field, coor);
   std::cout << site << std::endl;

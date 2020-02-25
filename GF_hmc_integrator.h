@@ -89,7 +89,7 @@ void update_U(LatticeGaugeField& Mom, LatticeGaugeField& U, double ep, const Mom
   this->Representations.update(U);  // void functions if fundamental representation
 }
 
-void GF_integrate(Field& U, const Momenta_k &KK) {
+void GF_integrate(Field& U, const Momenta_k &KK, const HMC_PARA &HMC_para) {
   // reset the clocks
   this->t_U = 0;
   for (int level = 0; level < this->as.size(); ++level) {
@@ -102,10 +102,10 @@ void GF_integrate(Field& U, const Momenta_k &KK) {
     this->step(U, 0, first_step, last_step, KK);
 
     // For measureing A
-    std::cout << "step: " << step << std::endl;
-    // double beta = 10., interval = 1., epsilon = 0.2;
-    double beta = 100., epsilon = 0.2;
-    measure_A(U, beta, epsilon);
+    if(HMC_para.measure_A) {
+      std::cout << "step: " << step << std::endl;
+      measure_A(U, HMC_para.beta, HMC_para.measure_A_coors);
+    }
   }
 
   // Check the clocks all match on all levels

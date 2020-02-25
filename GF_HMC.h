@@ -50,7 +50,7 @@ class GF_HybridMonteCarlo {
   /////////////////////////////////////////////////////////
   // Evolution
   /////////////////////////////////////////////////////////
-  RealD evolve_hmc_step(Field &U, const Momenta_k &KK) {
+  RealD evolve_hmc_step(Field &U, const Momenta_k &KK, const HMC_PARA &HMC_para) {
     TheIntegrator.GF_refresh(U, pRNG, KK);  // set U and initialize P and phi's
 
     // RealD H0 = TheIntegrator.GF_S(U, KK);  // initial state action
@@ -60,7 +60,7 @@ class GF_HybridMonteCarlo {
     // std::cout << GridLogMessage << "Total H before trajectory = " << H0 << "\n";
     // std::cout.precision(current_precision);
 
-    TheIntegrator.GF_integrate(U, KK);
+    TheIntegrator.GF_integrate(U, KK, HMC_para);
 
     // RealD H1 = TheIntegrator.GF_S(U, KK);  // updated state action
     //
@@ -108,7 +108,7 @@ class GF_HybridMonteCarlo {
       double t0=usecond();
       Ucopy = Ucur;
 
-      DeltaH = evolve_hmc_step(Ucopy, KK);
+      DeltaH = evolve_hmc_step(Ucopy, KK, HMC_para);
 
       // no Metropolis, always accept.
       Ucur = Ucopy;

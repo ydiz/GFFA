@@ -9,6 +9,7 @@ namespace QCD {
 
 void init(int argc, char **argv, HMC_PARA &hmc_para)
 {
+  std::string measure_A_coor_str;
   po::options_description desc("GFFA options");
   desc.add_options()("help", "help message")
                     ("StartingType", po::value<std::string>(&hmc_para.StartingType)->default_value("ColdStart"), "Stariing configuration. It can be HotStart, ColdStart, TepidStart, or CheckpointStart.")
@@ -27,6 +28,9 @@ void init(int argc, char **argv, HMC_PARA &hmc_para)
                     ("innerMC_N", po::value<int>(&hmc_para.innerMC_N)->default_value(100), "number of heatbath sweeps to calculated inner Monte Carlo")
                     ("table_path", po::value<std::string>(&hmc_para.table_path)->default_value("."),"path of integral look up table")
                     ("UFileName", po::value<std::string>(&hmc_para.UFile), "If starting type if not CheckpointStart and UFileName is not empty, gauge configuration with corresponding filename with be loaded")
+
+                    ("measure_A", po::value<bool>(&hmc_para.measure_A)->default_value(false))
+                    ("measure_A_coors", po::value<std::string>(&measure_A_coor_str)->default_value(""))
                     // ("TC.type", po::value<std::string>(&hmc_para.tc_para.type)->default_value("fixedMaxTau"), "")
                     // ("TC.step_size", po::value<double>(&hmc_para.tc_para.step_size)->default_value(1.0), "")
                     // ("TC.adaptiveErrorTolerance", po::value<double>(&hmc_para.tc_para.adaptiveErrorTolerance)->default_value(2e-6), "")
@@ -50,6 +54,19 @@ void init(int argc, char **argv, HMC_PARA &hmc_para)
   po::store(po::command_line_parser(argc, argv).options(desc).allow_unregistered().run(), vm); // allow additional command line options
   po::store(po::parse_config_file<char>("GFFA.ini", desc), vm);
   po::notify(vm);
+
+
+
+  // meausre_A coors
+  std::stringstream ss(measure_A_coor_str);
+  std::string tmp;
+  while(ss >> tmp) {
+    std::vector<int> vec;
+    GridCmdOptionIntVector(tmp, vec);
+    assert(vec.size()==4);
+    hmc_para.measure_A_coors.push_back(vec);
+  }
+
 
 
   std::cout << "zyd Warning: there is a discrepancy in evolution time between cps and old version Grid." << std::endl;
