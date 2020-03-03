@@ -51,7 +51,7 @@ class GF_HybridMonteCarlo {
   // Evolution
   /////////////////////////////////////////////////////////
   RealD evolve_hmc_step(Field &U, const Momenta_k &KK, const HMC_PARA &HMC_para) {
-    TheIntegrator.GF_refresh(U, pRNG, KK);  // set U and initialize P and phi's
+    TheIntegrator.GF_refresh(U, pRNG, KK, HMC_para);  // set U and initialize P and phi's
 
     // RealD H0 = TheIntegrator.GF_S(U, KK);  // initial state action
     //

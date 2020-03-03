@@ -77,15 +77,18 @@ LatticeGaugeField PL_projection(const LatticeGaugeField &P, double epsilon) {
   static Momenta_k KK(P._grid, 0., epsilon, true);
   
   LatticeColourMatrix sinKExpDotPk(P._grid);
-  sinKExpDotPk = KK.sinKPsExpDotP_func(P);
+  // sinKExpDotPk = KK.sinKPsExpDotP_func(P);
+  sinKExpDotPk = KK.sinKNgExpDotP_func(P);
 
   LatticeColourMatrix PLmu(P._grid);
   for(int mu=0; mu<Nd; ++mu) {
-    PLmu = KK.sinKNgExp[mu] * sinKExpDotPk;
+    // PLmu = KK.sinKNgExp[mu] * sinKExpDotPk;
+    PLmu = KK.sinKPsExp[mu] * sinKExpDotPk;
     pokeLorentz(PL, PLmu, mu);
   }
 
-  PL = KK.one / KK.sinKEpsilonSquare * PL;
+  // PL = KK.one / KK.sinKEpsilonSquare * PL;
+  PL = KK.one / KK.FourSinKSquareEpsilon * PL;
 
   return PL;
 }

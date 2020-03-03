@@ -45,12 +45,37 @@ GFIntegrator(GridBase* grid, IntegratorParameters Par,
 
 
 
-inline void GF_refresh(Field& U, GridParallelRNG& pRNG, const Momenta_k &KK) {
+inline void GF_refresh(Field& U, GridParallelRNG& pRNG, const Momenta_k &KK, const HMC_PARA &HMC_para) {
   assert(this->P._grid == U._grid);
   std::cout << GridLogIntegrator << "Integrator refresh\n";
 
-  if(KK.newHp) GF_generate_P(this->P, pRNG, KK);
-  else FieldImplementation::generate_momenta(this->P, pRNG);
+  if(HMC_para.measure_A) {
+    double fixed_P_k = 0.5;
+    // double fixed_P_k = 0.01;
+    double P_n0 =  fixed_P_k * std::sqrt(KK.vol);
+
+    this->P = 0.;
+    LatticeGaugeField::vector_object::scalar_object P_site0;
+    for (int mu = 0; mu < 4; mu++) {
+      SU3::Matrix tmp; tmp = zero;
+      for(int a=0; a<8; ++a) {
+        SU3::Matrix ta;
+        SU3::generator(a, ta);
+        tmp = tmp + ta * P_n0;
+      }
+      P_site0(mu) = tmp();
+    }
+    pokeSite(timesI(P_site0), this->P, {0,0,0,0});
+
+    // print_grid_field_site(this->P, {0,0,0,0});
+    // All site of Pk should be the same
+    std::cout << "Initial momenta: P_mu(k)^a = " + std::to_string(fixed_P_k) + ", not random" << std::endl;
+  }
+  else {
+    if(KK.newHp) GF_generate_P(this->P, pRNG, KK);
+    else FieldImplementation::generate_momenta(this->P, pRNG);
+    // print_grid_field_site(this->P, {1,2,3,4});
+  }
 
   this->Smearer.set_Field(U);
   this->Representations.update(U);
@@ -104,7 +129,7 @@ void GF_integrate(Field& U, const Momenta_k &KK, const HMC_PARA &HMC_para) {
     // For measureing A
     if(HMC_para.measure_A) {
       std::cout << "step: " << step << std::endl;
-      measure_A(U, HMC_para.beta, HMC_para.measure_A_coors);
+      measure_A(U, HMC_para.measure_A_coors);
     }
   }
 

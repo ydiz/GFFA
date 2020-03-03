@@ -69,11 +69,11 @@ void init(int argc, char **argv, HMC_PARA &hmc_para)
 
 
 
-  std::cout << "zyd Warning: there is a discrepancy in evolution time between cps and old version Grid." << std::endl;
-  std::cout << "In terms of cps, your trajectory length is " <<  hmc_para.trajL << std::endl;
-
-  hmc_para.trajL = hmc_para.trajL * std::sqrt(2);
-  std::cout << "In terms of old version Grid, your trajectory length is " <<  hmc_para.trajL << std::endl;
+  // std::cout << "zyd Warning: there is a discrepancy in evolution time between cps and old version Grid." << std::endl;
+  // std::cout << "In terms of cps, your trajectory length is " <<  hmc_para.trajL << std::endl;
+  //
+  // hmc_para.trajL = hmc_para.trajL * std::sqrt(2);
+  // std::cout << "In terms of old version Grid, your trajectory length is " <<  hmc_para.trajL << std::endl;
 
   if(vm.count("help")) {
     std::cout << desc << std::endl;

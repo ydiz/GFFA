@@ -3,6 +3,7 @@ namespace QCD {
 
 void GF_generate_P(LatticeGaugeField& P, GridParallelRNG& pRNG, const Momenta_k &KK)
 {
+  
   // step 1. generate Gaussian distributed matrix P0.
   LatticeGaugeField P0(P._grid);
   LatticeColourMatrix P0mu(P._grid);
@@ -15,12 +16,14 @@ void GF_generate_P(LatticeGaugeField& P, GridParallelRNG& pRNG, const Momenta_k 
 
   // step 2. transform P0
   LatticeColourMatrix sinKExpDotP0(P._grid);
-  sinKExpDotP0 = KK.sinKPsExpDotP_func(P0);
+  // sinKExpDotP0 = KK.sinKPsExpDotP_func(P0);
+  sinKExpDotP0 = KK.sinKNgExpDotP_func(P0);
 
   LatticeGaugeField newP(P._grid);
   LatticeColourMatrix Pmu(P._grid);
   for(int mu=0;mu<4;mu++){
-  	Pmu = KK.sinKNgExp[mu] * KK.Ck_SqrtInvD * sinKExpDotP0 + KK.sinKEpsilon * peekLorentz(P0, mu);
+  	Pmu = KK.sinKPsExp[mu] * KK.Ck_SqrtInvD * sinKExpDotP0 + KK.SqrtFourSinKSquareEpsilon * peekLorentz(P0, mu);
+  	// Pmu = KK.sinKNgExp[mu] * KK.Ck_SqrtInvD * sinKExpDotP0 + KK.sinKEpsilon * peekLorentz(P0, mu);
   	pokeLorentz(newP, Pmu, mu);
   }
 
