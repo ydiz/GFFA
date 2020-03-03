@@ -45,9 +45,6 @@ class GFAction : public Action<typename Gimpl::GaugeField> {
     GaugeField dSGF1dU(U._grid);
     dSGF1dU = factor * Ta(U);
 
-    // dSdU = dSwdU + dSGF1dU;
-    // dSdU = dSwdU;
-
     GaugeField dSGF2dU(U._grid);
     dSGF2dU = zero;
     static LatticeColourMatrix g(U._grid);

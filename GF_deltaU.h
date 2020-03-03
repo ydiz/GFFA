@@ -25,14 +25,12 @@ Real Hp(const LatticeGaugeField &P, const Momenta_k &KK)
   Pk = Pk * (1.0 / std::sqrt(KK.vol));
 
   LatticeColourMatrix sinKNgExpDotPk(P._grid);
-  // sinKExpDotPk = KK.sinKPsExpDotP_func(Pk);
   sinKNgExpDotPk = KK.sinKNgExpDotP_func(Pk);
 
   Real ret=0;
   LatticeColourMatrix ret1(P._grid);
   LatticeColourMatrix ret2(P._grid);
 
-  // ret1 = multField(adj(Pk) * (KK.one/KK.sinKEpsilonSquare), Pk);
   ret1 = multField(adj(Pk) * (KK.one/KK.FourSinKSquareEpsilon), Pk);
   ret2 = adj(sinKNgExpDotPk) * sinKNgExpDotPk * KK.Ck_D;
   ret = TensorRemove(sum(trace( ret1 + ret2))).real();
@@ -50,17 +48,11 @@ LatticeGaugeField dHdP(LatticeGaugeField &P, const Momenta_k &KK)
   LatticeGaugeField realP(P._grid);
   realP = -timesI(P);  //this is necessary, otherwise nan.
 
-  // std::cout << "P(x): " << std::endl;
-  // print_grid_field_site(realP, {0,0,0,0});
-  // print_grid_field_site(realP, {1,0,0,0});
-  // print_grid_field_site(realP, {2,2,2,2});
-
   LatticeGaugeField Pk(P._grid);
   theFFT.FFT_all_dim(Pk, realP, FFT::forward);
   // Pk = Pk * (1.0 / std::sqrt(KK.vol)); //not necessary
 
   LatticeColourMatrix sinKNgExpDotPk(P._grid);
-  // sinKExpDotPk = KK.sinKPsExpDotP_func(Pk);
   sinKNgExpDotPk = KK.sinKNgExpDotP_func(Pk);
 
   LatticeColourMatrix dHdP2mu(P._grid);
@@ -69,11 +61,6 @@ LatticeGaugeField dHdP(LatticeGaugeField &P, const Momenta_k &KK)
     dHdP2mu = KK.sinKPsExp[mu] * KK.Ck_D * sinKNgExpDotPk;
     pokeLorentz(ret, dHdP2mu, mu);
   }
-
-  // std::cout << "Force 1: " << std::endl;
-  // print_grid_field_site(ret, {0,0,0,0});
-  // print_grid_field_site(ret, {1,0,0,0});
-  // print_grid_field_site(ret, {2,2,2,2});
 
   ret = ret + KK.one / KK.FourSinKSquareEpsilon * Pk;
 

@@ -67,14 +67,12 @@ inline void GF_refresh(Field& U, GridParallelRNG& pRNG, const Momenta_k &KK, con
     }
     pokeSite(timesI(P_site0), this->P, {0,0,0,0});
 
-    // print_grid_field_site(this->P, {0,0,0,0});
     // All site of Pk should be the same
     std::cout << "Initial momenta: P_mu(k)^a = " + std::to_string(fixed_P_k) + ", not random" << std::endl;
   }
   else {
     if(KK.newHp) GF_generate_P(this->P, pRNG, KK);
     else FieldImplementation::generate_momenta(this->P, pRNG);
-    // print_grid_field_site(this->P, {1,2,3,4});
   }
 
   this->Smearer.set_Field(U);
