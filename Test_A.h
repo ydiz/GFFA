@@ -41,8 +41,6 @@ LatticeGaugeField Log(const LatticeGaugeField &lat) {
 
 void measure_A(const LatticeGaugeField &U, const std::vector<std::vector<int>> &coors) {
 
-    // print_grid_field_site(U, {0,0,0,0});
-    // print_grid_field_site(U, {1,0,0,0});
     LatticeGaugeField An(U._grid);
     An = timesMinusI(Log(U));
     // print_grid_field_site(An, {1,0,0,0});
@@ -58,7 +56,8 @@ void measure_A(const LatticeGaugeField &U, const std::vector<std::vector<int>> &
       SU3::LatticeAlgebraVector alg_mu(U._grid);
 
       An_mu = peekLorentz(An, mu);
-      SU3::projectOnAlgebra(alg_mu, An_mu);
+      SU3::projectOnAlgebra(alg_mu, An_mu); // returns -2 i Tr(A t^a) = -i A^a; In Grid Tr(t^a t^b) = 1/2 \delta_{a,b}
+      alg_mu = timesI(alg_mu);
       pokeLorentz(alg, alg_mu, mu);
     }
     // std::cout << alg << std::endl;

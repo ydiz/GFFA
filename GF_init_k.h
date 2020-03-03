@@ -55,11 +55,13 @@ public:
     TComplex zero;
     zero = 0.0;
     Ck_D = one / (sinKNormSquare * (M * M)) - one / (FourSinKSquareEpsilon * sinKNormSquare);
-    pokeSite(zero, Ck_D, coor0000);
+    // pokeSite(zero, Ck_D, coor0000);
+    pokeSite(zero, Ck_D, {0,0,0,0});
 
     //generate Ck_SqrtInvD
     Ck_SqrtInvD = (M-SqrtFourSinKSquareEpsilon)/sinKNormSquare;
-    pokeSite(zero, Ck_SqrtInvD, coor0000);
+    // pokeSite(zero, Ck_SqrtInvD, coor0000);
+    pokeSite(zero, Ck_SqrtInvD, {0,0,0,0});
 
     //volume vol
     vol = 1.0;
