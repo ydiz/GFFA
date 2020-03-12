@@ -64,11 +64,11 @@ LatticeGaugeField dHdP(LatticeGaugeField &P, const Momenta_k &KK)
 
   ret = ret + KK.one / KK.FourSinKSquareEpsilon * Pk;
 
-  // FIXME: set force of 0 mode to be 0
-  std::cout << "I am setting the gauge force of zero mode to 0" << std::endl;
-  typename LatticeGaugeField::vector_object::scalar_object m;
-  m = 0.0;
-  pokeSite(m, ret, {0,0,0,0});
+  // // FIXME: set force of 0 mode to be 0
+  // std::cout << "I am setting the gauge force of zero mode to 0" << std::endl;
+  // typename LatticeGaugeField::vector_object::scalar_object m;
+  // m = 0.0;
+  // pokeSite(m, ret, {0,0,0,0});
 
 
   // std::cout << "Force: " << std::endl;

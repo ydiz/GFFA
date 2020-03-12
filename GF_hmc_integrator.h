@@ -51,7 +51,7 @@ inline void GF_refresh(Field& U, GridParallelRNG& pRNG, const Momenta_k &KK, con
 
   if(HMC_para.measure_A) {
     double fixed_P_k = 0.5;
-    // double fixed_P_k = 0.01;
+    // double fixed_P_k = 0.1;
     double P_n0 =  fixed_P_k * std::sqrt(KK.vol);
 
     this->P = 0.;
