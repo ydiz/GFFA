@@ -63,18 +63,21 @@ LatticeGaugeField dHdP(LatticeGaugeField &P, const Momenta_k &KK)
   }
 
   ret = ret + KK.one / KK.FourSinKSquareEpsilon * Pk;
+  
+  // Must do this when epsilon is 0 ;
+  // set force of 0 mode to be 0 (KK.FourSinKSquareEpsilon = 0 for k=0)
+  if(KK.epsi == 0.) {
+    std::cout << "I am setting the dH/dP of zero mode to 0; must do this when setting epsilon  to 0" << std::endl;
+    typename LatticeGaugeField::vector_object::scalar_object m;
+    m = 0.0;
+    pokeSite(m, ret, {0,0,0,0});
+  }
 
-  // // FIXME: set force of 0 mode to be 0
-  // std::cout << "I am setting the gauge force of zero mode to 0" << std::endl;
-  // typename LatticeGaugeField::vector_object::scalar_object m;
-  // m = 0.0;
-  // pokeSite(m, ret, {0,0,0,0});
 
-
-  // std::cout << "Force: " << std::endl;
-  // print_grid_field_site(ret, {0,0,0,0});
+  // std::cout << "Check dH/dP : " << std::endl;
+  // // print_grid_field_site(ret, {0,0,0,0});
   // print_grid_field_site(ret, {1,0,0,0});
-  // print_grid_field_site(ret, {2,2,2,2});
+  // print_grid_field_site(ret, {1,2,0,0});
 
   theFFT.FFT_all_dim(ret, ret, FFT::backward);
   ret = timesI(ret); // because realP = -timesI(P);
