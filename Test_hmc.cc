@@ -41,6 +41,27 @@ int main(int argc, char **argv) {
   HMC_PARA hmc_para {};  // initialize each data member to default value
   init(argc, argv, hmc_para);
 
+
+  // GridCartesian *grid = SpaceTimeGrid::makeFourDimGrid({4,4,4,4}, GridDefaultSimd(Nd,vComplex::Nsimd()), GridDefaultMpi());
+  // LatticeGaugeField P(grid);
+  // LatticeGaugeField::vector_object::scalar_object P_site0;
+  // P_site0 = 1.;
+  // pokeSite(P_site0, P, {0,0,0,0});
+  // LatticeGaugeField P2(grid);
+  // P2 = 1. / 16.;
+  // P = P - P2;
+  // print_grid_field_site(P, {0,0,0,0});
+  // print_grid_field_site(P, {1,0,0,0});
+  //
+  //
+  // FFT theFFT((Grid::GridCartesian *)P._grid);
+  // theFFT.FFT_all_dim(P, P, FFT::forward);
+  // P = P * (1. / 16.);
+  // print_grid_field_site(P, {0,0,0,0});
+  // print_grid_field_site(P, {1,0,0,0});
+  // assert(0);
+
+
   // typedef GF_GenericHMCRunner<GFMinimumNorm2> HMCWrapper;
   typedef GF_GenericHMCRunner<GFLeapFrog> HMCWrapper;
   // typedef GF_GenericHMCRunner<GFForceGradient> HMCWrapper;

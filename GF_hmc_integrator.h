@@ -52,8 +52,7 @@ inline void GF_refresh(Field& U, GridParallelRNG& pRNG, const Momenta_k &KK, con
   double fixed_P_k = 0.5; // start with P(k)^a = fixed_P_k expect for P(k=0)^a = 0
   // double fixed_P_k = 0.1; // start with P(k)^a = fixed_P_k expect for P(k=0)^a = 0
   if(HMC_para.measure_A) {
-    // double fixed_P_k = 0.5;
-    double P_n0 =  fixed_P_k * std::sqrt(KK.vol);
+    double P_n0 = fixed_P_k * std::sqrt(KK.vol);
 
     this->P = 0.;
     LatticeGaugeField::vector_object::scalar_object P_site0;
@@ -107,9 +106,10 @@ void update_U(LatticeGaugeField& Mom, LatticeGaugeField& U, double ep, const Mom
   if(KK.newHp) deltaU = dHdP(Mom, KK);
   else deltaU = Mom;
 
-  // set zero mode to zero // FIXME: is this right ?
+  // // set zero mode to zero // FIXME: is this right ?
   std::cout << "Setting zero mode dHdP to zero" << std::endl;
   set_zero_mode_to_zero(deltaU);
+  // measure_A(deltaU, {{0,0,0,0}, {1,0,0,0}}, false);
 
 
   parallel_for(int ss=0;ss<Mom._grid->oSites();ss++){

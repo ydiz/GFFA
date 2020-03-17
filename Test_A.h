@@ -45,31 +45,36 @@ void measure_A(const LatticeGaugeField &U, const std::vector<std::vector<int>> &
   if(log) An = timesMinusI(Log(U));
   else An = U;
 
-    FFT theFFT((Grid::GridCartesian *)An._grid);
-    theFFT.FFT_all_dim(An, An, FFT::forward);
-    double vol = 1.0;
-    for(int d=0; d<4; ++d)   vol = vol * U._grid->_fdimensions[d];
-    An = An * (1. / std::sqrt(vol));
+  FFT theFFT((Grid::GridCartesian *)An._grid);
+  // std::cout << "measure_A" << std::endl;
+  // print_grid_field_site(An, {0,0,0,0});
+  // print_grid_field_site(An, {1,1,1,1});
+  theFFT.FFT_all_dim(An, An, FFT::forward);
+  // print_grid_field_site(An, {0,0,0,0});
+  // print_grid_field_site(An, {1,1,1,1});
+  double vol = 1.0;
+  for(int d=0; d<4; ++d)   vol = vol * U._grid->_fdimensions[d];
+  An = An * (1. / std::sqrt(vol));
 
-    Lattice<iVector<iScalar<iVector<vComplex, 8 > >, 4> > alg(U._grid);
+  Lattice<iVector<iScalar<iVector<vComplex, 8 > >, 4> > alg(U._grid);
 
-    for (int mu = 0; mu < Nd; mu++)
-    {
-      LatticeColourMatrix An_mu(An._grid);
-      SU3::LatticeAlgebraVector alg_mu(U._grid);
+  for (int mu = 0; mu < Nd; mu++)
+  {
+    LatticeColourMatrix An_mu(An._grid);
+    SU3::LatticeAlgebraVector alg_mu(U._grid);
 
-      An_mu = peekLorentz(An, mu);
-      SU3::projectOnAlgebra(alg_mu, An_mu); // returns -2 i Tr(A t^a) = -i A^a; In Grid Tr(t^a t^b) = 1/2 \delta_{a,b}
-      alg_mu = timesI(alg_mu);
-      pokeLorentz(alg, alg_mu, mu);
-    }
-    // std::cout << alg << std::endl;
+    An_mu = peekLorentz(An, mu);
+    SU3::projectOnAlgebra(alg_mu, An_mu); // returns -2 i Tr(A t^a) = -i A^a; In Grid Tr(t^a t^b) = 1/2 \delta_{a,b}
+    alg_mu = timesI(alg_mu);
+    pokeLorentz(alg, alg_mu, mu);
+  }
+  // std::cout << alg << std::endl;
 
-    for(const std::vector<int> &coor : coors) {
-      // std::cout << "coor=" << coor << ": ";
-      std::cout << "coor=";
-      print_grid_field_site(alg, coor);
-    }
+  for(const std::vector<int> &coor : coors) {
+    // std::cout << "coor=" << coor << ": ";
+    std::cout << "coor=";
+    print_grid_field_site(alg, coor);
+  }
 }
 
 
@@ -78,6 +83,7 @@ void set_zero_mode_to_zero(LatticeGaugeField &P) {
 
   double V = 1.0;
   for(int d=0; d<4; ++d)   V = V * P._grid->_fdimensions[d];
+  // std::cout << "V: " << V << std::endl;
   
   LatticeColourMatrix P_mu(P._grid);
   for(int mu=0; mu<4; mu++) {
@@ -85,7 +91,7 @@ void set_zero_mode_to_zero(LatticeGaugeField &P) {
 
     typename LatticeColourMatrix::vector_object::scalar_object tmp;
     tmp = sum(P_mu);
-    tmp = tmp * (1./ V);
+    tmp = tmp * (1. / V); 
     
     // P_mu(n) = P_mu(n) - (1./V) * \sum_n' P_\mu(n');
     parallel_for(int ss=0; ss<P._grid->lSites(); ss++) {
@@ -94,7 +100,7 @@ void set_zero_mode_to_zero(LatticeGaugeField &P) {
 
       typename LatticeColourMatrix::vector_object::scalar_object m;
       peekLocalSite(m, P_mu, lcoor);
-      for(int mu = 0; mu < 4; mu++)  m = m - tmp;
+      m = m - tmp;
       pokeLocalSite(m, P_mu, lcoor);
     }
 
