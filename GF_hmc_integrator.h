@@ -43,15 +43,15 @@ GFIntegrator(GridBase* grid, IntegratorParameters Par,
   //   return H;
   // }
 
-
-
 inline void GF_refresh(Field& U, GridParallelRNG& pRNG, const Momenta_k &KK, const HMC_PARA &HMC_para) {
   assert(this->P._grid == U._grid);
   std::cout << GridLogIntegrator << "Integrator refresh\n";
 
-  double fixed_P_k = 0.5; // start with P(k)^a = fixed_P_k expect for P(k=0)^a = 0
-  // double fixed_P_k = 0.1; // start with P(k)^a = fixed_P_k expect for P(k=0)^a = 0
   if(HMC_para.measure_A) {
+    // double fixed_P_k = 0.5; // start with P(k)^a = fixed_P_k expect for P(k=0)^a = 0
+    // double fixed_P_k = 0.1; // start with P(k)^a = fixed_P_k expect for P(k=0)^a = 0
+    double fixed_P_k = HMC_para.fixed_P_k; // start with P(k)^a = fixed_P_k expect for P(k=0)^a = 0
+
     double P_n0 = fixed_P_k * std::sqrt(KK.vol);
 
     this->P = 0.;
@@ -107,10 +107,8 @@ void update_U(LatticeGaugeField& Mom, LatticeGaugeField& U, double ep, const Mom
   else deltaU = Mom;
 
   // // set zero mode to zero // FIXME: is this right ?
-  std::cout << "Setting zero mode dHdP to zero" << std::endl;
   set_zero_mode_to_zero(deltaU);
   // measure_A(deltaU, {{0,0,0,0}, {1,0,0,0}}, false);
-
 
   parallel_for(int ss=0;ss<Mom._grid->oSites();ss++){
    for (int mu = 0; mu < Nd; mu++)

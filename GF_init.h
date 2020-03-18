@@ -30,6 +30,7 @@ void init(int argc, char **argv, HMC_PARA &hmc_para)
                     ("UFileName", po::value<std::string>(&hmc_para.UFile), "If starting type if not CheckpointStart and UFileName is not empty, gauge configuration with corresponding filename with be loaded")
 
                     ("measure_A", po::value<bool>(&hmc_para.measure_A)->default_value(false))
+                    ("fixed_P_k", po::value<double>(&hmc_para.fixed_P_k)->default_value(0.5))
                     ("measure_A_coors", po::value<std::string>(&measure_A_coor_str)->default_value(""))
                     // ("TC.type", po::value<std::string>(&hmc_para.tc_para.type)->default_value("fixedMaxTau"), "")
                     // ("TC.step_size", po::value<double>(&hmc_para.tc_para.step_size)->default_value(1.0), "")

@@ -28,6 +28,7 @@ struct HMC_PARA{
 
   // Measuring A
   bool measure_A;
+  double fixed_P_k;
   std::vector<std::vector<int>> measure_A_coors;
   // std::vector<int> measure_A_coorsss;
   
@@ -69,6 +70,7 @@ std::ostream& operator<<(std::ostream& out, const HMC_PARA &HMC_para)
 
   out << "================ Measure A ===============" << std::endl;
   out << "measure_A: " << HMC_para.measure_A << std::endl;
+  out << "fixed_P_k: " << HMC_para.fixed_P_k << std::endl;
   out << "measure_A_coors: " << HMC_para.measure_A_coors << std::endl;
 
   // out << "================ Topological Charge ===============" << std::endl;
