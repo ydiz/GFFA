@@ -67,7 +67,7 @@ LatticeGaugeField dHdP(LatticeGaugeField &P, const Momenta_k &KK)
   // Must do this when epsilon is 0 ;
   // set force of 0 mode to be 0 (KK.FourSinKSquareEpsilon = 0 for k=0)
   if(KK.epsi == 0.) {
-    std::cout << "I am setting the dH/dP of zero mode to 0; must do this when setting epsilon  to 0" << std::endl;
+    // std::cout << "I am setting the dH/dP of zero mode to 0; must do this when setting epsilon  to 0" << std::endl;
     typename LatticeGaugeField::vector_object::scalar_object m;
     m = 0.0;
     pokeSite(m, ret, {0,0,0,0});

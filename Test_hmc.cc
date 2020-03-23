@@ -87,8 +87,8 @@ int main(int argc, char **argv) {
   TheHMC.Resources.AddObservable<PlaqObs>();
   typedef LinkTraceMod<HMCWrapper::ImplPolicy> LTObs;
   TheHMC.Resources.AddObservable<LTObs>();
-  // typedef MyTCMod<HMCWrapper::ImplPolicy> QObs; 
-  // TheHMC.Resources.AddObservable<QObs>(hmc_para.tc_para);
+  typedef MyTCMod<HMCWrapper::ImplPolicy> QObs; 
+  TheHMC.Resources.AddObservable<QObs>(hmc_para.tc_para);
 
 
   // typedef TopologicalChargeMod<HMCWrapper::ImplPolicy> QObs;
