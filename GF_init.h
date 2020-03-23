@@ -69,6 +69,10 @@ void init(int argc, char **argv, HMC_PARA &hmc_para)
     hmc_para.measure_A_coors.push_back(vec);
   }
 
+  if(hmc_para.measure_A) {
+    hmc_para.Thermalizations = 1; // If measure_A, only run one trajectory
+    hmc_para.tc_para.TrajectoryStart = 999999; // If measure_A, do not peroform Wilson flow and measure Topological charge
+  }
 
 
   // std::cout << "zyd Warning: there is a discrepancy in evolution time between cps and old version Grid." << std::endl;

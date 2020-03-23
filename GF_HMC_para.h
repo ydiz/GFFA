@@ -33,9 +33,9 @@ struct HMC_PARA{
   // std::vector<int> measure_A_coorsss;
   
 
-  // MyTC_para tc_para;
+  MyTC_para tc_para;
 
-  // // Topological Charge
+  // Topological Charge
   // int TC_interval;
   // bool TC_do_smearing;
   // // int TC_Smearing_steps; // does not matter
