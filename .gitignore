@@ -3,4 +3,6 @@
 !**/*.cc
 !**/*.h
 
+!WilsonFlow/*
+
 !.gitignore
