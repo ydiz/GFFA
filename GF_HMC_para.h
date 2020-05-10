@@ -1,9 +1,22 @@
-
-
+#pragma once
 
 namespace Grid{
 namespace QCD {
 
+// class MyTC_para {
+// public:
+//   std::string type;
+//   double step_size;
+//   double adaptiveErrorTolerance;
+//   double maxTau;
+//
+//   int TrajectoryStart;
+//   int TrajectoryInterval;
+//
+//   bool saveSmearField;
+//   std::string smearFieldFilePrefix;
+//   std::string topoChargeOutFile;
+// };
 
 
 struct HMC_PARA{

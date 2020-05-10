@@ -36,6 +36,10 @@ void aggregate(const LatticeGaugeField &force, std::vector<double> &sums, std::v
   sums.resize(int(max_r / interval)+1);
   counts.resize(int(max_r / interval)+1);
   // std::cout << "rst size: " << rst.size() << std::endl;
+  
+  
+  // FIXME: this is wrong!!!! Will be data race in parallel for; need to use "reduction" in "parallel for"
+  // https://stackoverflow.com/questions/43168661/openmp-and-reduction-on-stdvector
   parallel_for(int ss=0; ss<force._grid->lSites(); ss++) {
     std::vector<int> lcoor, gcoor;
     localIndexToLocalGlobalCoor(force._grid, ss, lcoor, gcoor);
