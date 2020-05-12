@@ -16,6 +16,7 @@ strong_inline auto operator*(const iVector<rtype, N> &rhs, const iVector<ltype, 
 
 namespace QCD{
 
+using LatticeGaugeFieldSite = typename LatticeGaugeField::vector_object::scalar_object;
 
 template <class T>
 std::ostream& operator<<(std::ostream &out, const std::vector<T> &v) {
