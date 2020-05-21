@@ -50,13 +50,14 @@ public:
   std::string type;
   double step_size;
   double adaptiveErrorTolerance;
-  double maxTau;
+  // double maxTau;
+  std::vector<double> meas_taus;
 
   int TrajectoryStart;
   int TrajectoryInterval;
 
-  bool saveSmearField;
-  std::string smearFieldFilePrefix;
+  // bool saveSmearField;
+  // std::string smearFieldFilePrefix;
   std::string topoChargeOutFile;
 };
 
@@ -67,10 +68,8 @@ std::ostream& operator<<(std::ostream &out, const MyTC_para &p) {
   out << "TrajectoryInterval: " << p.TrajectoryInterval << std::endl;
   out << "step_size: " << p.step_size << std::endl;
   out << "adaptiveErrorTolerance: " << p.adaptiveErrorTolerance << std::endl;
-  out << "maxTau: " << p.maxTau << std::endl;
+  out << "meas_taus: " << p.meas_taus << std::endl;
   out << "topoChargeOutFile: " << p.topoChargeOutFile << std::endl;
-  out << "saveSmearField: " << p.saveSmearField << std::endl;
-  out << "smearFieldFilePrefix: " << p.smearFieldFilePrefix << std::endl;
   return out;
 }
 
@@ -89,46 +88,19 @@ public:
                           GridSerialRNG &sRNG,
                           GridParallelRNG &pRNG) {
 
-    MyWilsonFlow<PeriodicGimplR> WF(Par.step_size, Par.adaptiveErrorTolerance, Par.maxTau);
+    MyWilsonFlow<PeriodicGimplR> WF(Par.step_size, Par.adaptiveErrorTolerance, Par.meas_taus, Par.topoChargeOutFile, traj);
 
     if(traj > Par.TrajectoryStart && traj % Par.TrajectoryInterval == 0)
     {
       LatticeGaugeField Uflow(U._grid);
 
-      if(Par.type=="fixedMaxTau") WF.smear_adaptive_fixed_tau(Uflow, U);
-      else if(Par.type=="tSquaredE0.3") WF.smear_adaptive(Uflow, U);
+      if(Par.type=="fixed_taus") WF.smear_adaptive_fixed_tau(Uflow, U);
+      else if(Par.type=="tSquaredE0.3") WF.smear_adaptive_fixed0p3(Uflow, U);
       else assert(0);
-
-      if(Par.saveSmearField) writeField(Uflow, Par.smearFieldFilePrefix + "." + std::to_string(traj));
-
-      std::vector<double> topoCharge = timeSliceTopologicalCharge(Uflow);
-      writeVector(topoCharge, traj, Par.topoChargeOutFile, U._grid->ThisRank());
-
-      int def_prec = std::cout.precision();
-      std::cout << GridLogMessage << std::setprecision(std::numeric_limits<Real>::digits10 + 1)
-        << "TC: [ " << traj << " ] : ";
-      for(double x: topoCharge) std::cout << x << " ";
-      std::cout << std::endl;
-
-      std::cout.precision(def_prec);
 
     }
   }
 };
-
-
-// template < class Impl >
-// class MyTCMod: public ObservableModule<MyTC<Impl>, MyTC_para>{
-//   typedef ObservableModule<MyTC<Impl>, MyTC_para> ObsBase;
-//   using ObsBase::ObsBase; // for constructors
-//
-//   // acquire resource
-//   virtual void initialize(){
-//     this->ObservablePtr.reset(new MyTC<Impl>());
-//   }
-//   public:
-//   MyTCMod(): ObsBase(NoParameters()){}
-// };
 
 
 template < class Impl >

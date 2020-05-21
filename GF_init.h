@@ -4,12 +4,28 @@
 
 namespace po = boost::program_options;
 
+
+template<typename T>
+void str2vector(const std::string &str, std::vector<T> &vec)
+{
+  vec.clear();
+  std::stringstream ss(str);
+  int i;
+  while (ss >> i){
+    vec.push_back(i);
+    if(std::ispunct(ss.peek()))
+      ss.ignore();
+  }
+  return;
+}
+
+
 namespace Grid {
 namespace QCD {
 
 void init(int argc, char **argv, HMC_PARA &hmc_para)
 {
-  std::string measure_A_coor_str;
+  std::string measure_A_coor_str, meas_taus_str;
   po::options_description desc("GFFA options");
   desc.add_options()("help", "help message")
                     ("StartingType", po::value<std::string>(&hmc_para.StartingType)->default_value("ColdStart"), "Stariing configuration. It can be HotStart, ColdStart, TepidStart, or CheckpointStart.")
@@ -33,22 +49,13 @@ void init(int argc, char **argv, HMC_PARA &hmc_para)
                     ("fixed_P_k", po::value<double>(&hmc_para.fixed_P_k)->default_value(0.5))
                     ("measure_A_coors", po::value<std::string>(&measure_A_coor_str)->default_value(""))
 
-                    ("TC.type", po::value<std::string>(&hmc_para.tc_para.type)->default_value("fixedMaxTau"), "")
+                    ("TC.type", po::value<std::string>(&hmc_para.tc_para.type)->default_value("fixed_taus"), "")
                     ("TC.step_size", po::value<double>(&hmc_para.tc_para.step_size)->default_value(1.0), "")
                     ("TC.adaptiveErrorTolerance", po::value<double>(&hmc_para.tc_para.adaptiveErrorTolerance)->default_value(2e-6), "")
-                    ("TC.maxTau", po::value<double>(&hmc_para.tc_para.maxTau)->default_value(3.0), "")
+                    ("TC.meas_taus", po::value<std::string>(&meas_taus_str)->default_value(""), "")
                     ("TC.TrajectoryStart", po::value<int>(&hmc_para.tc_para.TrajectoryStart)->default_value(20))
                     ("TC.TrajectoryInterval", po::value<int>(&hmc_para.tc_para.TrajectoryInterval)->default_value(1))
                     ("TC.topoChargeOutFile", po::value<std::string>(&hmc_para.tc_para.topoChargeOutFile)->default_value("topoCharge.txt"))
-                    ("TC.saveSmearField", po::value<bool>(&hmc_para.tc_para.saveSmearField)->default_value(false))
-                    ("TC.smearFieldFilePrefix", po::value<std::string>(&hmc_para.tc_para.smearFieldFilePrefix)->default_value("ckpoint_lat_smear"))
-
-                    // ("TC.interval", po::value<int>(&hmc_para.TC_interval)->default_value(5), "Trajectory interval for calculating topological charge.")
-                    // ("TC.do_smearing", po::value<bool>(&hmc_para.TC_do_smearing)->default_value(true), "Wheter do smearing or not")
-                    // // ("TC.Smearing_steps", po::value<int>(&hmc_para.TC_Smearing_steps)->default_value(200), "parameter for smearing")
-                    // ("TC.Smearing_step_size", po::value<double>(&hmc_para.TC_Smearing_step_size)->default_value(1.0), "parameter for smearing")
-                    // ("TC.Smearing_meas_interval", po::value<int>(&hmc_para.TC_Smearing_meas_interval)->default_value(50), "Wilson flow integration steps for calculating topological charge")
-                    // ("TC.Smearing_maxTau", po::value<double>(&hmc_para.TC_Smearing_maxTau)->default_value(2.0), "parameter for smearing")
                     ;
 
   po::variables_map vm;
@@ -57,7 +64,8 @@ void init(int argc, char **argv, HMC_PARA &hmc_para)
   po::store(po::parse_config_file<char>("GFFA.ini", desc), vm);
   po::notify(vm);
 
-
+  // Wison flow times to measure energy
+  str2vector(meas_taus_str, hmc_para.tc_para.meas_taus);
 
   // meausre_A coors
   std::stringstream ss(measure_A_coor_str);

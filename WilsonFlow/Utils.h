@@ -53,10 +53,10 @@ double maxNorm(const LatticeGaugeField& U) {
 
 
 template<class T>
-void writeVector(const std::vector<T> &vec, int traj, const std::string &filename, int rank) {
+void writeVector(const std::vector<T> &vec, int traj, double tau, const std::string &filename, int rank) {
   if(rank == 0) {
     std::ofstream outFile(filename, std::ofstream::app);
-    outFile << "traj " << traj << ": ";
+    outFile << "traj " << traj << " tau " << tau << ": ";
     for(const T& x : vec) outFile << x << " ";
     outFile << "\n";
     outFile.close();
