@@ -47,7 +47,7 @@ std::ostream& operator<<(std::ostream &out, const std::vector<T> &v) {
 void readField(LatticeGaugeField &U, const std::string &filename)
 {
 		FieldMetaData header;
-			NerscIO::readConfiguration(U,header,filename);
+    NerscIO::readConfiguration(U,header,filename);
 }
 
 void writeField(LatticeGaugeField &U, const std::string &filename)
