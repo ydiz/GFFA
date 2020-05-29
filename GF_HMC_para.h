@@ -45,6 +45,7 @@ struct HMC_PARA{
   std::vector<std::vector<int>> measure_A_coors;
   // std::vector<int> measure_A_coorsss;
   
+  bool isGFFA;
 
   MyTC_para tc_para;
 
@@ -73,6 +74,7 @@ std::ostream& operator<<(std::ostream& out, const HMC_PARA &HMC_para)
 
   out << "newHp: " << std::boolalpha << HMC_para.newHp << std::endl;
   out << "action: " << HMC_para.action << std::endl;
+  out << "isGFFA: " << HMC_para.isGFFA << std::endl;
   out << "beta: " << HMC_para.beta << std::endl;
   out << "M: " << HMC_para.M << std::endl;
   out << "betaMM: " << HMC_para.betaMM << std::endl;

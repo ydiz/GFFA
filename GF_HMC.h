@@ -53,24 +53,30 @@ class GF_HybridMonteCarlo {
   RealD evolve_hmc_step(Field &U, const Momenta_k &KK, const HMC_PARA &HMC_para) {
     TheIntegrator.GF_refresh(U, pRNG, KK, HMC_para);  // set U and initialize P and phi's
 
-    // RealD H0 = TheIntegrator.GF_S(U, KK);  // initial state action
-    //
-    // std::streamsize current_precision = std::cout.precision();
-    // std::cout.precision(15);
-    // std::cout << GridLogMessage << "Total H before trajectory = " << H0 << "\n";
-    // std::cout.precision(current_precision);
+    double H0;
+    if(!HMC_para.isGFFA) {
+      H0 = TheIntegrator.GF_S(U, KK);  // initial state action
+
+      std::streamsize current_precision = std::cout.precision();
+      std::cout.precision(15);
+      std::cout << GridLogMessage << "Total H before trajectory = " << H0 << "\n";
+      std::cout.precision(current_precision);
+    }
 
     TheIntegrator.GF_integrate(U, KK, HMC_para);
 
-    // RealD H1 = TheIntegrator.GF_S(U, KK);  // updated state action
-    //
-    // std::cout.precision(15);
-    // std::cout << GridLogMessage << "Total H after trajectory  = " << H1
-	  //     << "  dH = " << H1 - H0 << "\n";
-    // std::cout.precision(current_precision);
+    if(!HMC_para.isGFFA) {
+      RealD H1 = TheIntegrator.GF_S(U, KK);  // updated state action
 
-    // return (H1 - H0);
-    return 0;
+      std::streamsize current_precision = std::cout.precision();
+      std::cout.precision(15);
+      std::cout << GridLogMessage << "Total H after trajectory  = " << H1
+          << "  dH = " << H1 - H0 << "\n";
+      std::cout.precision(current_precision);
+
+      return (H1 - H0);
+    }
+    else return 0;
   }
 
 
@@ -95,8 +101,8 @@ class GF_HybridMonteCarlo {
     Params.print_parameters();
     TheIntegrator.print_actions();
 
-  	LatticeColourMatrix g(Ucur._grid);
-  	g = 1.0;
+  	// LatticeColourMatrix g(Ucur._grid);
+  	// g = 1.0;
     // Actual updates (evolve a copy Ucopy then copy back eventually)
     unsigned int FinalTrajectory = Params.Trajectories + Params.NoMetropolisUntil + Params.StartTrajectory;
     for (int traj = Params.StartTrajectory; traj < FinalTrajectory; ++traj) {
@@ -109,9 +115,6 @@ class GF_HybridMonteCarlo {
       Ucopy = Ucur;
 
       DeltaH = evolve_hmc_step(Ucopy, KK, HMC_para);
-
-      // no Metropolis, always accept.
-      Ucur = Ucopy;
 
   	  // Real tt=0;
   	  // Real FinalDeltaH=0;
@@ -138,17 +141,24 @@ class GF_HybridMonteCarlo {
       //   	std::cout<< GridLogMessage << "Final deltaH: " << FinalDeltaH << std::endl;
       // }
 
+
       // Metropolis-Hastings test
-      // bool accept = true;
-      // if (traj >= Params.StartTrajectory + Params.NoMetropolisUntil) {
-      //   //accept = metropolis_test(DeltaH);
-      //   accept = metropolis_test(FinalDeltaH);
-      // } else {
-      // 	std::cout << GridLogMessage << "Skipping Metropolis test" << std::endl;
-      // }
-      //
-      // if (accept)
-      //   Ucur = Ucopy;
+      if(!HMC_para.isGFFA) {
+        bool accept = true;
+        if (traj >= Params.StartTrajectory + Params.NoMetropolisUntil) {
+          accept = metropolis_test(DeltaH);
+          // accept = metropolis_test(FinalDeltaH);
+        } else {
+          std::cout << GridLogMessage << "Skipping Metropolis test" << std::endl;
+        }
+
+        if (accept)
+          Ucur = Ucopy;
+      }
+      else  {
+        // no Metropolis, always accept.
+        Ucur = Ucopy;
+      }
 
       double t1=usecond();
       std::cout << GridLogMessage << "Total time for trajectory (s): " << (t1-t0)/1e6 << std::endl;

@@ -82,6 +82,7 @@ void init(int argc, char **argv, HMC_PARA &hmc_para)
     hmc_para.tc_para.TrajectoryStart = 999999; // If measure_A, do not peroform Wilson flow and measure Topological charge
   }
 
+  hmc_para.isGFFA = hmc_para.action.substr(0,2) == "GF";
 
   // std::cout << "zyd Warning: there is a discrepancy in evolution time between cps and old version Grid." << std::endl;
   // std::cout << "In terms of cps, your trajectory length is " <<  hmc_para.trajL << std::endl;

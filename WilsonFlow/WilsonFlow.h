@@ -76,7 +76,7 @@ void MyWilsonFlow<Gimpl>::save_TC(const LatticeGaugeField &Uflow, double tau) {
 
       int def_prec = std::cout.precision();
       std::cout << GridLogMessage << std::setprecision(std::numeric_limits<Real>::digits10 + 1)
-        << "TC: [ " << traj << " ] : " << "tar: " << tau << " : ";
+        << "TC: [ " << traj << " ] : " << "tau: " << tau << " : ";
       for(double x: topoCharge) std::cout << x << " "; std::cout << std::endl;
 
       std::cout.precision(def_prec);
