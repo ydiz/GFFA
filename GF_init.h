@@ -75,6 +75,7 @@ void init(int argc, char **argv, HMC_PARA &hmc_para)
     GridCmdOptionIntVector(tmp, vec);
     assert(vec.size()==4);
     hmc_para.measure_A_coors.push_back(vec);
+    hmc_para.gm_para.coors.push_back(vec);
   }
 
   if(hmc_para.measure_A) {

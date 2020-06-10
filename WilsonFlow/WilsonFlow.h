@@ -119,17 +119,19 @@ void MyWilsonFlow<Gimpl>::evolve_step_adaptive_fixed_tau(typename Gimpl::GaugeFi
     double energy_density = energyDensity(U);
     double new_tSqauredE = tau * tau * energy_density;
 
-      std::cout << "tau: " << tau << "; E: "
-        << energy_density << "; t^2 E: " << new_tSqauredE << std::endl;
+    std::cout << "tau: " << tau << "; E: "
+      << energy_density << "; t^2 E: " << new_tSqauredE << std::endl;
 
 
     // calculate new step size
     Gimpl::update_field(Zprime, Uprime, -2.0*epsilon); // V'(t+e) = exp(ep*Z')*W0
     GaugeField diffU = U - Uprime;
     RealD diff = 1.0 / 9.0 * std::sqrt(maxNorm(diffU)); // d = 1/N^2 max_{x,mu} \sqrt( || U - Uprime || )
+    // std::cout << GridLogMessage << "diff = " << diff << std::endl;
 
     // if d > δ the integration step is repeated; tau is unchanged.
     if(diff > adaptiveErrorTolerance) {
+      // std::cout << GridLogMessage << "Error too large; repeat last step; diff = " << diff << std::endl;
       tau -= epsilon;
       U = U0;
     }
@@ -139,6 +141,8 @@ void MyWilsonFlow<Gimpl>::evolve_step_adaptive_fixed_tau(typename Gimpl::GaugeFi
     new_epsilon = epsilon * 0.95 * std::pow(adaptiveErrorTolerance/diff,1./3.);
 
     epsilon = new_epsilon;
+    // std::cout << GridLogMessage << "new epsilon = " << epsilon << std::endl;
+    // std::cout << GridLogMessage << "current tau: " << tau << " next step epsilon: " << epsilon << std::endl;
 }
 
 

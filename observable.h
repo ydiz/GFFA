@@ -45,6 +45,152 @@ public:
 
 
 
+
+
+
+
+
+
+
+
+class GaugeModes_para {
+public:
+  std::vector<std::vector<int>> coors;
+};
+
+std::ostream& operator<<(std::ostream &out, const GaugeModes_para &p) {
+  out << "GaugeModes: "<< std::endl;
+  out << "coors: " << p.coors << std::endl;
+  return out;
+}
+
+
+
+
+template <class Impl>
+class GaugeModesLogger : public HmcObservable<typename Impl::Field> {
+  MyTC_para Par;
+public:
+  INHERIT_GIMPL_TYPES(Impl);
+  typedef typename Impl::Field Field;
+
+  MyTC(MyTC_para P): Par(P) {}
+
+  void TrajectoryComplete(int traj,
+                          Field &U,
+                          GridSerialRNG &sRNG,
+                          GridParallelRNG &pRNG) {
+
+    // using LatticeGaugeFieldSite = typename LatticeGaugeField::vector_object::scalar_object;
+    // using LatticeUevalSite = iVector<iScalar<iVector<vComplex, 3> >, 4>;
+    // static std::vector<LatticeUevalSite> log_eval(coors.size(), 0.);
+    //
+    // static bool last_log_evals_initialized = false;
+
+    using LatticeUeval = Lattice<iVector<iScalar<iVector<vComplex, 3> >, 4>>;
+    static LatticeUeval last_log_evals(U._grid); 
+    static bool last_log_evals_initialized = false;
+
+    measure_A(U, Par.coors, last_log_evals, last_log_evals_initialized);
+
+    // for(int i=0; i<Par.coors.size(); ++i) {
+    //
+    //   std::vector<int> coor = Par.coors[i];
+    //   LatticeGaugeFieldSite m;
+    //   peekSite(m, U, coor);
+    //   
+    //   for(int mu=0; mu<4; ++mu) {
+    //     m(mu)() = Log( m(mu)(), log_eval[i](mu)(), last_log_evals_initialized);
+    //   }
+    //   last_log_evals_initialized = true;
+    //   std::cout << GridLogMessage << "GaugeModes: [ " << traj << " ] coor [" << log_m << "]" << std::endl;
+    // }
+    //
+    
+
+  }
+};
+
+
+template < class Impl >
+class GaugeModesMod: public ObservableModule<GaugeModes<Impl>, GaugeModes_para>{
+  typedef ObservableModule<GaugeModes<Impl>, GaugeModes_para> ObsBase;
+  using ObsBase::ObsBase; // for constructors
+
+  // acquire resource
+  virtual void initialize() {
+    this->ObservablePtr.reset(new GaugeModesLogger<Impl>(this->Par_));
+  }
+  public:
+  GaugeModesMod(GaugeModes_para Par): ObsBase(Par){}
+  GaugeModesMod(): ObsBase(){}
+};
+
+
+
+
+
+
+//
+// template <class Impl>
+// class WilsonLineTraceLogger : public HmcObservable<typename Impl::Field> {
+// public:
+//   INHERIT_GIMPL_TYPES(Impl);
+//   typedef typename Impl::Field Field;
+//
+//   void TrajectoryComplete(int traj,
+//                           Field &U,
+//                           GridSerialRNG &sRNG,
+//                           GridParallelRNG &pRNG) {
+//
+//
+//     // !!! Cannot be parallel for
+//     using LatticeGaugeFieldSite = typename LatticeGaugeField::vector_object::scalar_object;
+//     int T = U._grid->_fdimensions[3];
+//     std::vector<LatticeGaugeFieldSite> local_rst(T, 1.);
+//     for(int ss=0; ss<force._grid->lSites(); ss++) {
+//       std::vector<int> lcoor, gcoor;
+//       localIndexToLocalGlobalCoor(U._grid, ss, lcoor, gcoor);
+//       LatticeGaugeFieldSite m;
+//       peekLocalSite(m, force, lcoor);
+//       local_rst[gcoors[3]] *= m;
+//     }
+//
+//     double rst;
+//
+//     int def_prec = std::cout.precision();
+//
+//     std::cout << GridLogMessage
+//         << std::setprecision(std::numeric_limits<Real>::digits10 + 1)
+//         << "WilsonLineTrace: [ " << traj << " ] "<< rst<< std::endl;
+//
+//     std::cout.precision(def_prec);
+//
+//   }
+// };
+//
+//
+// template < class Impl >
+// class WilsonLineTraceMod: public ObservableModule<WilsonLineTraceLogger<Impl>, NoParameters>{
+//   typedef ObservableModule<WilsonLineTraceLogger<Impl>, NoParameters> ObsBase;
+//   using ObsBase::ObsBase; // for constructors
+//
+//   // acquire resource
+//   virtual void initialize(){
+//     this->ObservablePtr.reset(new WilsonLineTraceLogger<Impl>());
+//   }
+// public:
+//   WilsonLineTraceMod(): ObsBase(NoParameters()){}
+// };
+
+
+
+
+
+
+
+
+
 class MyTC_para {
 public:
   std::string type;

@@ -48,6 +48,7 @@ struct HMC_PARA{
   bool isGFFA;
 
   MyTC_para tc_para;
+  GaugeModes_para gm_para;
 
   // Topological Charge
   // int TC_interval;

@@ -26,7 +26,8 @@ double maxNorm(const LatticeGaugeField& U) {
       U_norm2[ss](mu)()() = 0.;
       for(int c1=0;c1<Nc;c1++)
         for(int c2=0;c2<Nc;c2++)
-            U_norm2[ss](mu)()() += toReal(U[ss](mu)()(c1, c2) * U[ss](mu)()(c1, c2));
+            // U_norm2[ss](mu)()() += toReal(U[ss](mu)()(c1, c2) * U[ss](mu)()(c1, c2));
+            U_norm2[ss](mu)()() += toReal(conjugate(U[ss](mu)()(c1, c2)) * U[ss](mu)()(c1, c2));
     }
   }
 
