@@ -69,8 +69,10 @@ int main(int argc, char **argv) {
   TheHMC.Resources.AddObservable<LTObs>();
   typedef MyTCMod<HMCWrapper::ImplPolicy> QObs; 
   TheHMC.Resources.AddObservable<QObs>(hmc_para.tc_para);
-  typedef GaugeModesMod<HMCWrapper::ImplPolicy> GMObs; 
-  TheHMC.Resources.AddObservable<GMObs>(hmc_para.gm_para);
+  if(hmc_para.isGFFA) {
+    typedef GaugeModesMod<HMCWrapper::ImplPolicy> GMObs; 
+    TheHMC.Resources.AddObservable<GMObs>(hmc_para.gm_para);
+  }
 
 
   // typedef TopologicalChargeMod<HMCWrapper::ImplPolicy> QObs;

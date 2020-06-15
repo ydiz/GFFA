@@ -69,12 +69,12 @@ std::ostream& operator<<(std::ostream &out, const GaugeModes_para &p) {
 
 template <class Impl>
 class GaugeModesLogger : public HmcObservable<typename Impl::Field> {
-  MyTC_para Par;
+  GaugeModes_para Par;
 public:
   INHERIT_GIMPL_TYPES(Impl);
   typedef typename Impl::Field Field;
 
-  MyTC(MyTC_para P): Par(P) {}
+  GaugeModesLogger(GaugeModes_para P): Par(P) {}
 
   void TrajectoryComplete(int traj,
                           Field &U,
@@ -113,8 +113,8 @@ public:
 
 
 template < class Impl >
-class GaugeModesMod: public ObservableModule<GaugeModes<Impl>, GaugeModes_para>{
-  typedef ObservableModule<GaugeModes<Impl>, GaugeModes_para> ObsBase;
+class GaugeModesMod: public ObservableModule<GaugeModesLogger<Impl>, GaugeModes_para>{
+  typedef ObservableModule<GaugeModesLogger<Impl>, GaugeModes_para> ObsBase;
   using ObsBase::ObsBase; // for constructors
 
   // acquire resource
