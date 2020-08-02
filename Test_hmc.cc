@@ -24,6 +24,37 @@
 
 
 
+namespace Grid {
+
+struct GFFAParams : Serializable {
+public:
+  std::vector<int> fdims; // lattice size
+
+public:
+  GRID_SERIALIZABLE_CLASS_MEMBERS(A2AParams,
+    int, traj,
+    std::string, lat,
+    std::string, config,
+    int, nhits,
+    std::string, ensemble_name,
+    std::string, prefix,
+    bool, doTimeDilution
+  );
+
+  template <class ReaderClass>
+  A2AParams(Reader<ReaderClass>& reader) {
+    read(reader, "A2A", *this);
+    GridCmdOptionIntVector(lat, fdims);
+    std::cout << "fdims: " << fdims << std::endl;
+    std::cout << *this << std::endl;
+  }
+
+};
+
+}
+
+
+
 // #include <fenv.h>
 
 using namespace std;
@@ -49,11 +80,21 @@ int main(int argc, char **argv) {
 
   TheHMC.Resources.AddFourDimGrid("gauge");
 
+
+
+  std::cout << "before reading json" << << std::endl;
+  JSONReader reader("GFFA.json");
+  std::cout << "After reading json" << std::endl;
+
+  TheHMC.Parameters.initialize(reader);
+  std::cout << TheHMC.Parameters << std::endl;
+
   // Checkpointer definition
-  CheckpointerParameters CPparams;
+  // CheckpointerParameters CPparams;
+  CheckpointerParameters CPparams(reader);
   CPparams.config_prefix = "ckpoint_lat";
   CPparams.rng_prefix = "ckpoint_rng";
-  CPparams.saveInterval = hmc_para.saveInterval;
+  // CPparams.saveInterval = hmc_para.saveInterval;
   CPparams.format = "IEEE64BIG";
   TheHMC.Resources.LoadNerscCheckpointer(CPparams);
 
@@ -73,24 +114,6 @@ int main(int argc, char **argv) {
     typedef GaugeModesMod<HMCWrapper::ImplPolicy> GMObs; 
     TheHMC.Resources.AddObservable<GMObs>(hmc_para.gm_para);
   }
-
-
-  // typedef TopologicalChargeMod<HMCWrapper::ImplPolicy> QObs;
-  // TopologyObsParameters TopParams {};
-  // TopParams.interval = hmc_para.TC_interval;
-  // TopParams.do_smearing = hmc_para.TC_do_smearing;
-  // // TopParams.Smearing.steps = hmc_para.TC_Smearing_steps; //
-  // // TopParams.Smearing.steps = 9999; // this number does not matter
-  // TopParams.Smearing.step_size = hmc_para.TC_Smearing_step_size;
-  // TopParams.Smearing.meas_interval = hmc_para.TC_Smearing_meas_interval;
-  // TopParams.Smearing.maxTau = hmc_para.TC_Smearing_maxTau;
-  // // TopParams.interval = 5;
-  // // TopParams.do_smearing = true;
-  // // TopParams.Smearing.steps = 200;
-  // // TopParams.Smearing.step_size = 0.01;
-  // // TopParams.Smearing.meas_interval = 50;
-  // // TopParams.Smearing.maxTau = 2.0;
-  // TheHMC.Resources.AddObservable<QObs>(TopParams);
 
 
   // action
@@ -120,13 +143,14 @@ int main(int argc, char **argv) {
 
   TheHMC.TheAction.push_back(Level1);
 
-  // HMC
-  TheHMC.Parameters.NoMetropolisUntil = hmc_para.Thermalizations;
-  TheHMC.Parameters.Trajectories = hmc_para.Trajectories;
-  TheHMC.Parameters.MD.MDsteps = hmc_para.mdSteps;
-  TheHMC.Parameters.MD.trajL   = hmc_para.trajL;
-  TheHMC.Parameters.StartingType = hmc_para.StartingType;
-  TheHMC.Parameters.StartTrajectory = hmc_para.StartingTrajectory;
+
+  // // HMC
+  // TheHMC.Parameters.NoMetropolisUntil = hmc_para.Thermalizations;
+  // TheHMC.Parameters.Trajectories = hmc_para.Trajectories;
+  // TheHMC.Parameters.MD.MDsteps = hmc_para.mdSteps;
+  // TheHMC.Parameters.MD.trajL   = hmc_para.trajL;
+  // TheHMC.Parameters.StartingType = hmc_para.StartingType;
+  // TheHMC.Parameters.StartTrajectory = hmc_para.StartingTrajectory;
 
   // TheHMC.ReadCommandLine(argc, argv);
 
