@@ -38,12 +38,16 @@ public:
     //generate epsi;
     epsi = _epsi;
 
-    iScalar<iScalar<iScalar<vComplex> >> epsilon; //regulator; avoid 0 in denominator k.
-    epsilon = epsi;
 
     //generate sinKNormSquare
     sinKNormSquare = sinK[0]*sinK[0] +sinK[1]*sinK[1] + sinK[2]*sinK[2] +sinK[3]*sinK[3];
-    FourSinKSquareEpsilon = 4. * sinKNormSquare + epsilon*epsilon;
+    FourSinKSquareEpsilon = 4. * sinKNormSquare; // + epsilon*epsilon;
+
+    iScalar<iScalar<iScalar<Complex> >> epsilon; //regulator; avoid 0 in denominator k.
+    epsilon = epsi;
+    pokeSite(epsilon * epsilon, FourSinKSquareEpsilon, {0,0,0,0});  // Give zero mode mass epsilon
+
+    
 
     //generate sinKEpsilon
     SqrtFourSinKSquareEpsilon = sqrt(FourSinKSquareEpsilon);
@@ -55,7 +59,6 @@ public:
     TComplex zero;
     zero = 0.0;
     Ck_D = one / (sinKNormSquare * (M * M)) - one / (FourSinKSquareEpsilon * sinKNormSquare);
-    // pokeSite(zero, Ck_D, coor0000);
     pokeSite(zero, Ck_D, {0,0,0,0});
 
     //generate Ck_SqrtInvD

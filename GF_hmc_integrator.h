@@ -74,11 +74,12 @@ inline void GF_refresh(Field& U, GridParallelRNG& pRNG, const Momenta_k &KK, con
   else FieldImplementation::generate_momenta(this->P, pRNG);
   // }
 
-  // set zero mode to zero // FIXME: is this right?
-  if(KK.newHp) {
-    std::cout << "Setting zero mode of initial P to zero" << std::endl;
-    set_zero_mode_to_zero(this->P);
-  }
+  // // I am not setting initial zero mode P(k=0) to zero
+  // // set zero mode to zero // FIXME: is this right?
+  // if(KK.newHp) {
+  //   std::cout << "Setting zero mode of initial P to zero" << std::endl;
+  //   set_zero_mode_to_zero(this->P);
+  // }
 
   this->Smearer.set_Field(U);
   this->Representations.update(U);
