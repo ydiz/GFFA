@@ -204,7 +204,7 @@ public:
 
   // bool saveSmearField;
   // std::string smearFieldFilePrefix;
-  std::string topoChargeOutFile;
+  // std::string topoChargeOutFile;
 };
 
 std::ostream& operator<<(std::ostream &out, const MyTC_para &p) {
@@ -215,7 +215,7 @@ std::ostream& operator<<(std::ostream &out, const MyTC_para &p) {
   out << "step_size: " << p.step_size << std::endl;
   out << "adaptiveErrorTolerance: " << p.adaptiveErrorTolerance << std::endl;
   out << "meas_taus: " << p.meas_taus << std::endl;
-  out << "topoChargeOutFile: " << p.topoChargeOutFile << std::endl;
+  // out << "topoChargeOutFile: " << p.topoChargeOutFile << std::endl;
   return out;
 }
 
@@ -234,7 +234,8 @@ public:
                           GridSerialRNG &sRNG,
                           GridParallelRNG &pRNG) {
 
-    MyWilsonFlow<PeriodicGimplR> WF(Par.step_size, Par.adaptiveErrorTolerance, Par.meas_taus, Par.topoChargeOutFile, traj);
+    // MyWilsonFlow<PeriodicGimplR> WF(Par.step_size, Par.adaptiveErrorTolerance, Par.meas_taus, Par.topoChargeOutFile, traj);
+    MyWilsonFlow<PeriodicGimplR> WF(Par.step_size, Par.adaptiveErrorTolerance, Par.meas_taus, traj);
 
     if(traj > Par.TrajectoryStart && traj % Par.TrajectoryInterval == 0)
     {

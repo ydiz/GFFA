@@ -55,7 +55,7 @@ void init(int argc, char **argv, HMC_PARA &hmc_para)
                     ("TC.meas_taus", po::value<std::string>(&meas_taus_str)->default_value(""), "")
                     ("TC.TrajectoryStart", po::value<int>(&hmc_para.tc_para.TrajectoryStart)->default_value(20))
                     ("TC.TrajectoryInterval", po::value<int>(&hmc_para.tc_para.TrajectoryInterval)->default_value(1))
-                    ("TC.topoChargeOutFile", po::value<std::string>(&hmc_para.tc_para.topoChargeOutFile)->default_value("topoCharge.txt"))
+                    // ("TC.topoChargeOutFile", po::value<std::string>(&hmc_para.tc_para.topoChargeOutFile)->default_value("topoCharge.txt"))
                     ;
 
   po::variables_map vm;

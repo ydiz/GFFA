@@ -23,7 +23,7 @@ public:
   std::string smearFieldFilePrefix;
 
   bool calculateTopoCharge;
-  std::string topoChargeOutFile;
+  // std::string topoChargeOutFile;
 };
 
 
@@ -35,7 +35,7 @@ class MyWilsonFlow {
     int traj;  // current trajectory number; for printing logs
     int Nstep;
     bool hasCompleted = false; // for adaptive
-    std::string topoChargeOutFile;
+    // std::string topoChargeOutFile;
 
     WilsonGaugeAction<Gimpl> SG;
 
@@ -47,12 +47,13 @@ class MyWilsonFlow {
     INHERIT_GIMPL_TYPES(Gimpl)
 
     explicit MyWilsonFlow(RealD _epsilon, RealD _adaptiveErrorTolerance, const std::vector<double> &_meas_taus, 
-                          const std::string &_topoChargeOutFile, int _traj, int _Nstep=0):
+                          // const std::string &_topoChargeOutFile, int _traj, int _Nstep=0):
+                          int _traj, int _Nstep=0):
         initial_epsilon(_epsilon),
         epsilon(_epsilon),
         adaptiveErrorTolerance(_adaptiveErrorTolerance),
         meas_taus(_meas_taus),
-        topoChargeOutFile(_topoChargeOutFile),
+        // topoChargeOutFile(_topoChargeOutFile),
         traj(_traj),
         Nstep(_Nstep),
         hasCompleted(false),
@@ -64,23 +65,23 @@ class MyWilsonFlow {
     void smear_adaptive_fixed0p3(GaugeField&, const GaugeField&);
     void smear_adaptive_fixed_tau(GaugeField&, const GaugeField&);
 
-    void save_TC(const LatticeGaugeField &Uflow, double tau);
+    // void save_TC(const LatticeGaugeField &Uflow, double tau);
 };
 
 
 
-template <class Gimpl>
-void MyWilsonFlow<Gimpl>::save_TC(const LatticeGaugeField &Uflow, double tau) {
-      std::vector<double> topoCharge = timeSliceTopologicalCharge(Uflow);
-      writeVector(topoCharge, traj, tau, topoChargeOutFile, Uflow._grid->ThisRank());
-
-      int def_prec = std::cout.precision();
-      std::cout << GridLogMessage << std::setprecision(std::numeric_limits<Real>::digits10 + 1)
-        << "TC: [ " << traj << " ] : " << "tau: " << tau << " : ";
-      for(double x: topoCharge) std::cout << x << " "; std::cout << std::endl;
-
-      std::cout.precision(def_prec);
-}
+// template <class Gimpl>
+// void MyWilsonFlow<Gimpl>::save_TC(const LatticeGaugeField &Uflow, double tau) {
+//       std::vector<double> topoCharge = timeSliceTopologicalCharge(Uflow);
+//       writeVector(topoCharge, traj, tau, topoChargeOutFile, Uflow._grid->ThisRank());
+//
+//       int def_prec = std::cout.precision();
+//       std::cout << GridLogMessage << std::setprecision(std::numeric_limits<Real>::digits10 + 1)
+//         << "TC: [ " << traj << " ] : " << "tau: " << tau << " : ";
+//       for(double x: topoCharge) std::cout << x << " "; std::cout << std::endl;
+//
+//       std::cout.precision(def_prec);
+// }
 
 
 ////////////////////////////////////////////
@@ -170,7 +171,9 @@ void MyWilsonFlow<Gimpl>::smear_adaptive_fixed_tau(GaugeField& out, const GaugeF
       evolve_step_adaptive_fixed_tau(out);  // tau == 
 
       if(std::abs(tau - meas_taus[times_i]) < 1e-3) {  // If last step is accepted (step size not too large)
-        save_TC(out, tau); // save flowed topological charge
+        // save_TC(out, tau); // save flowed topological charge
+        std::vector<double> topoCharge = timeSliceTopologicalCharge(out);
+        std::cout << GridLogMessage << "TC: [ " << traj << " ] : " << "tau: " << tau << " : " << topoCharge << std::endl;
         if(times_i == meas_taus.size() -1) break;
         else ++times_i;
       }
@@ -334,7 +337,9 @@ void MyWilsonFlow<Gimpl>::smear_adaptive_fixed0p3(GaugeField& out, const GaugeFi
   do{
     evolve_step_adaptive_fixed0p3(out, tSqauredE);
     if(hasCompleted) {
-      save_TC(out, tau); // save flowed topological charge
+      // save_TC(out, tau); // save flowed topological charge
+      std::vector<double> topoCharge = timeSliceTopologicalCharge(out);
+      std::cout << GridLogMessage << "TC: [ " << traj << " ] : " << "tau: " << tau << " : " << topoCharge << std::endl;
       break;
     }
   } while(true);
