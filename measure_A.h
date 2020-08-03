@@ -52,12 +52,15 @@ LatticeGaugeField Log(const LatticeGaugeField &lat, LatticeUeval &last_log_evals
     lat.Grid()->LocalIndexToLocalCoor(ss, lcoor);
 
     LatticeGaugeFieldSite m;  LatticeUevalSite log_eval;
-    peekLocalSite(m, lat, lcoor); peekLocalSite(log_eval, last_log_evals, lcoor);
+    peekLocalSite(m, lat.View(AcceleratorRead), lcoor); peekLocalSite(log_eval, last_log_evals.View(AcceleratorRead), lcoor);
     for(int mu=0; mu<4; ++mu) {
       m(mu)() = Log( m(mu)(), log_eval(mu)(), last_log_evals_initialized);
     }
-    pokeLocalSite(log_eval, last_log_evals, lcoor);
-    pokeLocalSite(m, rst, lcoor);
+
+    autoView(last_log_evals_v, last_log_evals, AcceleratorWrite);
+    autoView(rst_v, rst, AcceleratorWrite);
+    pokeLocalSite(log_eval, last_log_evals_v, lcoor);
+    pokeLocalSite(m, rst_v, lcoor);
 
     // if(lcoor[0]==0 && lcoor[1]==0 && lcoor[2]==0 && lcoor[3]==0) std::cout << "[0,0,0,0] log eigenvalues: " << log_eval << std::endl;
     // if(lcoor[0]==1 && lcoor[1]==0 && lcoor[2]==0 && lcoor[3]==0) std::cout << "[1,0,0,0] log eigenvalues: " << log_eval << std::endl;
@@ -122,15 +125,16 @@ void set_zero_mode_to_zero(LatticeGaugeField &P) {
     tmp = tmp * (1. / V); 
     
     // P_mu(n) = P_mu(n) - (1./V) * \sum_n' P_\mu(n');
-    // parallel_for(int ss=0; ss<P.Grid()->lSites(); ss++) {
+
+    autoView(P_mu_v_write, P_mu, AcceleratorWrite);
     thread_for(ss, P.Grid()->lSites(), {
       Coordinate lcoor;
       P.Grid()->LocalIndexToLocalCoor(ss, lcoor);
 
       typename LatticeColourMatrix::vector_object::scalar_object m;
-      peekLocalSite(m, P_mu, lcoor);
+      peekLocalSite(m, P_mu.View(AcceleratorRead), lcoor);
       m = m - tmp;
-      pokeLocalSite(m, P_mu, lcoor);
+      pokeLocalSite(m, P_mu_v_write, lcoor);
     });
 
     pokeLorentz(P, P_mu, mu);

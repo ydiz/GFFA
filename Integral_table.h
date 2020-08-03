@@ -130,7 +130,7 @@ public:
     return coeff;
   }
 
-  double get_ks_files(std::vector<double> &ks, std::map<double, std::string> &files) {
+  void get_ks_files(std::vector<double> &ks, std::map<double, std::string> &files) {
     DIR *dir;
     dir = opendir(file_prefix.c_str());
     assert(dir!=NULL); // make sure directory exists
