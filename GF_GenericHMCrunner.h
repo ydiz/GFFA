@@ -12,14 +12,15 @@ class GF_HMCWrapperTemplate: public HMCWrapperTemplate<Implementation, Integrato
   template <typename S = NoSmearing<Implementation> >
   using IntegratorType = Integrator<Implementation, S, RepresentationsPolicy>;
 
+  GF_HMCWrapperTemplate(const HMCparameters &hmc_params) : HMCWrapperTemplate<Implementation, Integrator, RepresentationsPolicy, ReaderClass>(hmc_params) {}
 
-  void Run(const HMC_PARA &HMC_para){
+  void Run(const GFFAParams &HMC_para){
     NoSmearing<Implementation> S;
     Runner(S, HMC_para);
   }
 
   template <class SmearingPolicy>
-  void Runner(SmearingPolicy &Smearing, const HMC_PARA &HMC_para) {
+  void Runner(SmearingPolicy &Smearing, const GFFAParams &HMC_para) {
     auto UGrid = this->Resources.GetCartesian();
     this->Resources.AddRNGs();
     Field U(UGrid);
@@ -71,9 +72,10 @@ class GF_HMCWrapperTemplate: public HMCWrapperTemplate<Implementation, Integrato
   }
 };
 
-// These are for gauge fields, default integrator MinimumNorm2
-template <template <typename, typename, typename> class Integrator>
-using GF_GenericHMCRunner = GF_HMCWrapperTemplate<PeriodicGimplR, Integrator>;
+// template <template <typename, typename, typename> class Integrator>
+// using GF_GenericHMCRunner = GF_HMCWrapperTemplate<PeriodicGimplR, Integrator>;
 
+template <template <typename, typename, typename> class Integrator>
+using GF_GenericHMCRunner = GF_HMCWrapperTemplate<PeriodicGimplR, Integrator, NoHirep, JSONReader>;
 }  // namespace QCD
 }  // namespace Grid

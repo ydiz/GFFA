@@ -12,45 +12,64 @@ void my_su2Extract(Lattice<iSinglet<vcplx> > &Determinant,
                        const Lattice<SU3::iSUnMatrix<vcplx> > &link,
                        const Lattice<SU3::iSUnMatrix<vcplx> > &staple,
                        int su2_index) {
-  GridBase *grid(link._grid);
+  GridBase *grid(link.Grid());
 
   static int subgroup_index[3][2] = {{0, 1}, {0, 2}, {1, 2}};
   int i0 = subgroup_index[su2_index][0];
   int i1 = subgroup_index[su2_index][1];
 
-  parallel_for (int ss = 0; ss < grid->oSites(); ss++) {
-    subgroup._odata[ss]()()(0, 0) = matrix_mult_elem(link[ss], staple[ss], i0, i0);
-    subgroup._odata[ss]()()(0, 1) = matrix_mult_elem(link[ss], staple[ss], i0, i1);
-    subgroup._odata[ss]()()(1, 0) = matrix_mult_elem(link[ss], staple[ss], i1, i0);
-    subgroup._odata[ss]()()(1, 1) = matrix_mult_elem(link[ss], staple[ss], i1, i1);
+  auto link_v = link.View();
+  auto staple_v = staple.View();
+  auto subgroup_v = subgroup.View();
+  auto Determinant_v = Determinant.View();
+  //
+  // parallel_for (int ss = 0; ss < grid->oSites(); ss++) {
+  thread_for(ss, grid->oSites(), {
+    subgroup_v[ss]()()(0, 0) = matrix_mult_elem(link_v[ss], staple_v[ss], i0, i0);
+    subgroup_v[ss]()()(0, 1) = matrix_mult_elem(link_v[ss], staple_v[ss], i0, i1);
+    subgroup_v[ss]()()(1, 0) = matrix_mult_elem(link_v[ss], staple_v[ss], i1, i0);
+    subgroup_v[ss]()()(1, 1) = matrix_mult_elem(link_v[ss], staple_v[ss], i1, i1);
 
-    subgroup._odata[ss] = 0.5 * (subgroup._odata[ss] - adj(subgroup._odata[ss]) + trace(adj(subgroup._odata[ss])));
+    subgroup_v[ss] = 0.5 * (subgroup_v[ss] - adj(subgroup_v[ss]) + trace(adj(subgroup_v[ss])));
 
-    Determinant._odata[ss] = subgroup._odata[ss]()()(0, 0) * subgroup._odata[ss]()()(1, 1)
-                            - subgroup._odata[ss]()()(0, 1) * subgroup._odata[ss]()()(1, 0);
-  }
+    Determinant_v[ss] = subgroup_v[ss]()()(0, 0) * subgroup_v[ss]()()(1, 1)
+                            - subgroup_v[ss]()()(0, 1) * subgroup_v[ss]()()(1, 0);
+  });
 }
 
 template <class vcplx>
 void my_su2Insert(const Lattice<SU3::iSU2Matrix<vcplx> > &subgroup,
                       Lattice<SU3::iSUnMatrix<vcplx> > &link, int su2_index) {
-  GridBase *grid(link._grid);
+  GridBase *grid(link.Grid());
 
   static int subgroup_index[3][2] = {{0, 1}, {0, 2}, {1, 2}};
   int i0 = subgroup_index[su2_index][0];
   int i1 = subgroup_index[su2_index][1];
 
-  parallel_for (int ss = 0; ss < grid->oSites(); ss++) {
-    vcplx link_elem[2][3];
-    for(int i=0; i<3; ++i) {link_elem[0][i] = link._odata[ss]()()(i0, i); link_elem[1][i] = link._odata[ss]()()(i1, i);}
+  auto link_v = link.View();
+  auto subgroup_v = subgroup.View();
 
-    link._odata[ss]()()(i0, 0) = subgroup._odata[ss]()()(0, 0) * link_elem[0][0] + subgroup._odata[ss]()()(0, 1) * link_elem[1][0];
-    link._odata[ss]()()(i0, 1) = subgroup._odata[ss]()()(0, 0) * link_elem[0][1] + subgroup._odata[ss]()()(0, 1) * link_elem[1][1];
-    link._odata[ss]()()(i0, 2) = subgroup._odata[ss]()()(0, 0) * link_elem[0][2] + subgroup._odata[ss]()()(0, 1) * link_elem[1][2];
-    link._odata[ss]()()(i1, 0) = subgroup._odata[ss]()()(1, 0) * link_elem[0][0] + subgroup._odata[ss]()()(1, 1) * link_elem[1][0];
-    link._odata[ss]()()(i1, 1) = subgroup._odata[ss]()()(1, 0) * link_elem[0][1] + subgroup._odata[ss]()()(1, 1) * link_elem[1][1];
-    link._odata[ss]()()(i1, 2) = subgroup._odata[ss]()()(1, 0) * link_elem[0][2] + subgroup._odata[ss]()()(1, 1) * link_elem[1][2];
-  }
+  // parallel_for (int ss = 0; ss < grid->oSites(); ss++) {
+  thread_for(ss, grid->oSites(), {
+    vcplx link_elem[2][3];
+    for(int i=0; i<3; ++i) {link_elem[0][i] = link_v[ss]()()(i0, i); link_elem[1][i] = link_v[ss]()()(i1, i);}
+
+
+    link_v[ss]()()(i0, 0) = subgroup_v[ss]()()(0, 0) * link_elem[0][0] + subgroup_v[ss]()()(0, 1) * link_elem[1][0];
+    link_v[ss]()()(i0, 1) = subgroup_v[ss]()()(0, 0) * link_elem[0][1] + subgroup_v[ss]()()(0, 1) * link_elem[1][1];
+    link_v[ss]()()(i0, 2) = subgroup_v[ss]()()(0, 0) * link_elem[0][2] + subgroup_v[ss]()()(0, 1) * link_elem[1][2];
+    link_v[ss]()()(i1, 0) = subgroup_v[ss]()()(1, 0) * link_elem[0][0] + subgroup_v[ss]()()(1, 1) * link_elem[1][0];
+    link_v[ss]()()(i1, 1) = subgroup_v[ss]()()(1, 0) * link_elem[0][1] + subgroup_v[ss]()()(1, 1) * link_elem[1][1];
+    link_v[ss]()()(i1, 2) = subgroup_v[ss]()()(1, 0) * link_elem[0][2] + subgroup_v[ss]()()(1, 1) * link_elem[1][2];
+
+
+    // link._odata[ss]()()(i0, 0) = subgroup._odata[ss]()()(0, 0) * link_elem[0][0] + subgroup._odata[ss]()()(0, 1) * link_elem[1][0];
+    // link._odata[ss]()()(i0, 1) = subgroup._odata[ss]()()(0, 0) * link_elem[0][1] + subgroup._odata[ss]()()(0, 1) * link_elem[1][1];
+    // link._odata[ss]()()(i0, 2) = subgroup._odata[ss]()()(0, 0) * link_elem[0][2] + subgroup._odata[ss]()()(0, 1) * link_elem[1][2];
+    // link._odata[ss]()()(i1, 0) = subgroup._odata[ss]()()(1, 0) * link_elem[0][0] + subgroup._odata[ss]()()(1, 1) * link_elem[1][0];
+    // link._odata[ss]()()(i1, 1) = subgroup._odata[ss]()()(1, 0) * link_elem[0][1] + subgroup._odata[ss]()()(1, 1) * link_elem[1][1];
+    // link._odata[ss]()()(i1, 2) = subgroup._odata[ss]()()(1, 0) * link_elem[0][2] + subgroup._odata[ss]()()(1, 1) * link_elem[1][2];
+  });
 }
 
 class i_Sigmas {
@@ -71,13 +90,19 @@ public:
 };
 
 LatticeComplex invCplx(const LatticeComplex& in) {
-	LatticeComplex ret(in._grid);
-	ret.checkerboard = in.checkerboard;
-	typename std::remove_const<typename std::remove_reference<decltype(in[0])>::type>::type one;
+
+	LatticeComplex ret(in.Grid());
+	ret.Checkerboard() = in.Checkerboard();
+
+  auto ret_v = ret.View();
+  auto in_v = in.View();
+
+	typename std::remove_const<typename std::remove_reference<decltype(in_v[0])>::type>::type one;
 	one = 1.0;
-	parallel_for (int ss = 0; ss < in._grid->oSites(); ss++) {
-		ret[ss] = one / in[ss];
-	}
+	// parallel_for (int ss = 0; ss < in.Grid()->oSites(); ss++) {
+  thread_for(ss, in.Grid()->oSites(), {
+		ret_v[ss] = one / in_v[ss];
+	});
 	return ret;
 }
 
@@ -87,14 +112,14 @@ void GF_SubGroupHeatBath(
        LatticeColourMatrix &link,
        const LatticeColourMatrix &staple,  // multiplied by action coeffs so th
        int su2_subgroup, int cb, const std::string &table_path) {
-     GridBase *rbGrid = link._grid;
+     GridBase *rbGrid = link.Grid();
 
      static Integral_table integral_table(coeff, table_path);
 
      // Subgroup manipulation in the lie algebra space
-     SU3::LatticeSU2Matrix u(rbGrid);  u.checkerboard = cb;// Kennedy pendleton "u" real projected normalised Sigma
-     SU3::LatticeSU2Matrix ua(rbGrid);  ua.checkerboard = cb;// a in pauli form
-     LatticeComplex udet(rbGrid);  udet.checkerboard = cb;// determinant of real(staple)
+     SU3::LatticeSU2Matrix u(rbGrid);  u.Checkerboard() = cb;// Kennedy pendleton "u" real projected normalised Sigma
+     SU3::LatticeSU2Matrix ua(rbGrid);  ua.Checkerboard() = cb;// a in pauli form
+     LatticeComplex udet(rbGrid);  udet.Checkerboard() = cb;// determinant of real(staple)
 
      my_su2Extract(udet, u, link, staple, su2_subgroup);
 
@@ -113,36 +138,42 @@ void GF_SubGroupHeatBath(
      // u = where(tmp_int, u, lident);
      // udet = where(tmp_int, udet, cone);
 
-     LatticeComplex sqrt_udet(rbGrid); sqrt_udet.checkerboard = cb;
+     LatticeComplex sqrt_udet(rbGrid); sqrt_udet.Checkerboard() = cb;
      sqrt_udet = sqrt(udet);
 
-     LatticeReal k(rbGrid); k.checkerboard = cb;
+     LatticeReal k(rbGrid); k.Checkerboard() = cb;
      k = toReal(sqrt_udet); // FIXME: Wilson only; k = \sqrt{\det[staple]}
 
-     std::vector<LatticeReal> a(4, rbGrid); for(auto &x: a) x.checkerboard = cb;
+     std::vector<LatticeReal> a(4, rbGrid); for(auto &x: a) x.Checkerboard() = cb;
 
-     LatticeReal tmp(rbGrid); tmp.checkerboard = cb;
+     LatticeReal tmp(rbGrid); tmp.Checkerboard() = cb;
      random(pRNG, tmp);
-     parallel_for(int ss=0; ss<tmp._grid->oSites(); ++ss){ // ! cannot use grid->lSites() because of simd; use oSites()
-       double *tmp_ptr = (double *)&tmp[ss];
-       double *a0_ptr = (double *)&a[0][ss];
-       double *k_ptr = (double *)&k[ss];
+
+
+     auto tmp_v = tmp.View();
+     auto a0_v = a[0].View();
+     auto k_v = k.View();
+     // parallel_for(int ss=0; ss<tmp.Grid()->oSites(); ++ss){ // ! cannot use grid->lSites() because of simd; use oSites()
+     thread_for(ss, tmp.Grid()->oSites(), {
+       double *tmp_ptr = (double *)&tmp_v[ss];
+       double *a0_ptr = (double *)&a0_v[ss];
+       double *k_ptr = (double *)&k_v[ss];
        for(int idx=0; idx<vReal::Nsimd(); idx+=2) {
          *(a0_ptr + idx) = integral_table.get_a0(*(k_ptr + idx), *(tmp_ptr + idx));
          *(a0_ptr + idx + 1) = *(a0_ptr + idx);
        }
-     }
+     });
 
      //////////////////////////////////////////
      //    ii) generate a_i uniform on two sphere radius (1-a0^2)^0.5
      //////////////////////////////////////////
-     LatticeReal a123mag(rbGrid); a123mag.checkerboard = cb;
+     LatticeReal a123mag(rbGrid); a123mag.Checkerboard() = cb;
      // a123mag = sqrt(abs(1.0 - a[0] * a[0]));
      a123mag = sqrt(1.0 - a[0] * a[0]);
 
-     LatticeReal cos_theta(rbGrid); cos_theta.checkerboard = cb;
-     LatticeReal sin_theta(rbGrid); sin_theta.checkerboard = cb;
-     LatticeReal phi(rbGrid); phi.checkerboard = cb;
+     LatticeReal cos_theta(rbGrid); cos_theta.Checkerboard() = cb;
+     LatticeReal sin_theta(rbGrid); sin_theta.Checkerboard() = cb;
+     LatticeReal phi(rbGrid); phi.Checkerboard() = cb;
 
      random(pRNG, phi);
      const RealD twopi = 2.0 * M_PI;
@@ -161,11 +192,11 @@ void GF_SubGroupHeatBath(
      ua = toComplex(a[0]) * i_sigmas.ident + toComplex(a[1]) * i_sigmas.pauli1 +
           toComplex(a[2]) * i_sigmas.pauli2 + toComplex(a[3]) * i_sigmas.pauli3;
 
-     SU3::LatticeSU2Matrix uinv(rbGrid); uinv.checkerboard = cb;
+     SU3::LatticeSU2Matrix uinv(rbGrid); uinv.Checkerboard() = cb;
      // uinv = adj(u * pow(sqrt_udet, -1.0));
      uinv = adj(u * invCplx(sqrt_udet) ); // pow(, -1.0) is slow to calcualte
 
-     SU3::LatticeSU2Matrix new_su2(rbGrid);   new_su2.checkerboard = cb;// rotated matrix after hb
+     SU3::LatticeSU2Matrix new_su2(rbGrid);   new_su2.Checkerboard() = cb;// rotated matrix after hb
      new_su2 = uinv * ua; // new su2 can be both uinv * ua or ua * uinv; they are both the same distribution.
 
      my_su2Insert(new_su2, link, su2_subgroup);

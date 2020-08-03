@@ -95,9 +95,9 @@ void MyWilsonFlow<Gimpl>::evolve_step_adaptive_fixed_tau(typename Gimpl::GaugeFi
 
     LatticeGaugeField U0 = U;
     // calculate Uflow (third order method) and Uflow^prime (second order method)
-    GaugeField Z(U._grid);
-    GaugeField Zprime(U._grid);
-    GaugeField tmp(U._grid), Uprime(U._grid);
+    GaugeField Z(U.Grid());
+    GaugeField Zprime(U.Grid());
+    GaugeField tmp(U.Grid()), Uprime(U.Grid());
     Uprime = U;
     SG.deriv(U, Z);
     Zprime = -Z;
@@ -191,8 +191,8 @@ void MyWilsonFlow<Gimpl>::smear_adaptive_fixed_tau(GaugeField& out, const GaugeF
 
 template <class Gimpl>
 void MyWilsonFlow<Gimpl>::evolve_step(typename Gimpl::GaugeField &U) const{
-    GaugeField Z(U._grid);
-    GaugeField tmp(U._grid);
+    GaugeField Z(U.Grid());
+    GaugeField tmp(U.Grid());
     SG.deriv(U, Z);
     Z *= 0.25;                                  // Z0 = 1/4 * F(U)
     Gimpl::update_field(Z, U, -2.0*epsilon);    // U = W1 = exp(ep*Z0)*W0
@@ -244,9 +244,9 @@ void MyWilsonFlow<Gimpl>::evolve_step_adaptive_fixed0p3(typename Gimpl::GaugeFie
     step++;
     LatticeGaugeField U0 = U;
     // calculate Uflow (third order method) and Uflow^prime (second order method)
-    GaugeField Z(U._grid);
-    GaugeField Zprime(U._grid);
-    GaugeField tmp(U._grid), Uprime(U._grid);
+    GaugeField Z(U.Grid());
+    GaugeField Zprime(U.Grid());
+    GaugeField tmp(U.Grid()), Uprime(U.Grid());
     Uprime = U;
     SG.deriv(U, Z);
     Zprime = -Z;

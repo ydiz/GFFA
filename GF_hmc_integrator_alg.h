@@ -136,10 +136,10 @@ class GFForceGradient : public GFIntegrator<FieldImplementation, SmearingPolicy,
   std::string integrator_name(){return "GFForceGradient";}
 
   void FG_update_P(Field& U, int level, double fg_dt, double ep, const Momenta_k &KK) {
-    Field Ufg(U._grid);
-    Field Pfg(U._grid);
+    Field Ufg(U.Grid());
+    Field Pfg(U.Grid());
     Ufg = U;
-    Pfg = zero;
+    Pfg = Zero();
     std::cout << GridLogIntegrator << "FG update " << fg_dt << " " << ep
               << std::endl;
     // prepare_fg; no prediction/result cache for now

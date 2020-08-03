@@ -7,31 +7,31 @@ namespace QCD{
 template<class vobj> int shiftUp(const Lattice<vobj> &U, int x, int mu)
 {
 	std::vector<int> coor;
-  Lexicographic::CoorFromIndex(coor, x, U._grid->_gdimensions);
-	int gd = U._grid->_gdimensions[mu];
-	if(coor[mu]==gd-1) return x - (gd-1)*U._grid->_ostride[mu];
-	else return x+U._grid->_ostride[mu];
+  Lexicographic::CoorFromIndex(coor, x, U.Grid()->_gdimensions);
+	int gd = U.Grid()->_gdimensions[mu];
+	if(coor[mu]==gd-1) return x - (gd-1)*U.Grid()->_ostride[mu];
+	else return x+U.Grid()->_ostride[mu];
 }
 
 template<class vobj> int shiftDown(const Lattice<vobj> &U, int x, int mu)
 {
   std::vector<int> coor;
-  Lexicographic::CoorFromIndex(coor, x, U._grid->_gdimensions);
-  int gd = U._grid->_gdimensions[mu];
-  if(coor[mu]==0) return x + (gd-1)*U._grid->_ostride[mu];
-  else return x-U._grid->_ostride[mu];
+  Lexicographic::CoorFromIndex(coor, x, U.Grid()->_gdimensions);
+  int gd = U.Grid()->_gdimensions[mu];
+  if(coor[mu]==0) return x + (gd-1)*U.Grid()->_ostride[mu];
+  else return x-U.Grid()->_ostride[mu];
 }
 
 //didn't consider mpi.
 //peek vColourMatrix
 vColourMatrix peekvCMatrix(const LatticeGaugeField& U, int x, int mu)
 {
-  int nsimd = U._grid->Nsimd();
+  int nsimd = U.Grid()->Nsimd();
   vColourMatrix vM;
 
-  int osites = U._grid->oSites();
-  int gsites = U._grid->gSites();
-  std::vector<int> gdims = U._grid->_gdimensions;
+  int osites = U.Grid()->oSites();
+  int gsites = U.Grid()->gSites();
+  std::vector<int> gdims = U.Grid()->_gdimensions;
 
   std::vector<std::vector<int>> coor(nsimd);
   for(int idx=0; idx<nsimd; ++idx)
@@ -54,12 +54,12 @@ vColourMatrix peekvCMatrix(const LatticeGaugeField& U, int x, int mu)
 
 vColourMatrix peekvg(const LatticeColourMatrix& g, int x)
 {
-  int nsimd = g._grid->Nsimd();
+  int nsimd = g.Grid()->Nsimd();
   vColourMatrix vM;
 
-  int osites = g._grid->oSites();
-  int gsites = g._grid->gSites();
-  std::vector<int> gdims = g._grid->_gdimensions;
+  int osites = g.Grid()->oSites();
+  int gsites = g.Grid()->gSites();
+  std::vector<int> gdims = g.Grid()->_gdimensions;
 
   std::vector<std::vector<int>> coor(nsimd);
   for(int idx=0; idx<nsimd; ++idx)
@@ -81,7 +81,7 @@ vColourMatrix peekvg(const LatticeColourMatrix& g, int x)
 
 void update_gx(int x, LatticeColourMatrix &g, const LatticeGaugeField &U, GridSerialRNG &sRNG, RealD betaMM, RealD scale, int multi_hit)
 {
-  int nsimd = g._grid->Nsimd();
+  int nsimd = g.Grid()->Nsimd();
 
   vColourMatrix gx_new;
   vColourMatrix vM; //random matrix used to update Uxmu
@@ -128,7 +128,7 @@ void update_gx(int x, LatticeColourMatrix &g, const LatticeGaugeField &U, GridSe
 
 void update_g_all(LatticeColourMatrix &g, const LatticeGaugeField &U, GridSerialRNG &sRNG, RealD betaMM, RealD scale, int multi_hit)
 {
-  for(int x=0; x<g._grid->oSites(); ++x)
+  for(int x=0; x<g.Grid()->oSites(); ++x)
   {
       update_gx(x, g, U, sRNG, betaMM, scale, multi_hit);
   }
@@ -137,10 +137,10 @@ void update_g_all(LatticeColourMatrix &g, const LatticeGaugeField &U, GridSerial
 
 Real GF_S(const LatticeColourMatrix &g, const LatticeGaugeField &Umu)
 {
-  LatticeColourMatrix s(Umu._grid);
+  LatticeColourMatrix s(Umu.Grid());
   s=zero;
 
-  std::vector<LatticeColourMatrix> U(4, Umu._grid);
+  std::vector<LatticeColourMatrix> U(4, Umu.Grid());
   for(int mu=0; mu<Nd; mu++)
     U[mu] = PeekIndex<LorentzIndex>(Umu, mu);
 

@@ -53,17 +53,32 @@ public:
 
 
 
-class GaugeModes_para {
+// class GaugeModes_para {
+// public:
+//   std::vector<std::vector<int>> coors;
+// };
+//
+// std::ostream& operator<<(std::ostream &out, const GaugeModes_para &p) {
+//   out << "GaugeModes: "<< std::endl;
+//   out << "coors: " << p.coors << std::endl;
+//   return out;
+// }
+
+
+struct GaugeModes_para : Serializable {
+
 public:
-  std::vector<std::vector<int>> coors;
+  GRID_SERIALIZABLE_CLASS_MEMBERS(GaugeModes_para,
+    std::vector<std::vector<int>>, modes
+  );
+
+  template <class ReaderClass>
+  GaugeModes_para(Reader<ReaderClass>& reader) {
+    read(reader, "GaugeModes_Observable", *this);
+    // std::cout << *this << std::endl;
+  }
+
 };
-
-std::ostream& operator<<(std::ostream &out, const GaugeModes_para &p) {
-  out << "GaugeModes: "<< std::endl;
-  out << "coors: " << p.coors << std::endl;
-  return out;
-}
-
 
 
 
@@ -88,10 +103,11 @@ public:
     // static bool last_log_evals_initialized = false;
 
     using LatticeUeval = Lattice<iVector<iScalar<iVector<vComplex, 3> >, 4>>;
-    static LatticeUeval last_log_evals(U._grid); 
+    static LatticeUeval last_log_evals(U.Grid()); 
     static bool last_log_evals_initialized = false;
 
-    measure_A(U, Par.coors, last_log_evals, last_log_evals_initialized);
+    // measure_A(U, Par.coors, last_log_evals, last_log_evals_initialized);
+    measure_A(U, Par.modes, last_log_evals, last_log_evals_initialized);
 
     // for(int i=0; i<Par.coors.size(); ++i) {
     //
@@ -146,11 +162,11 @@ class GaugeModesMod: public ObservableModule<GaugeModesLogger<Impl>, GaugeModes_
 //
 //     // !!! Cannot be parallel for
 //     using LatticeGaugeFieldSite = typename LatticeGaugeField::vector_object::scalar_object;
-//     int T = U._grid->_fdimensions[3];
+//     int T = U.Grid()->_fdimensions[3];
 //     std::vector<LatticeGaugeFieldSite> local_rst(T, 1.);
-//     for(int ss=0; ss<force._grid->lSites(); ss++) {
+//     for(int ss=0; ss<force.Grid()->lSites(); ss++) {
 //       std::vector<int> lcoor, gcoor;
-//       localIndexToLocalGlobalCoor(U._grid, ss, lcoor, gcoor);
+//       localIndexToLocalGlobalCoor(U.Grid(), ss, lcoor, gcoor);
 //       LatticeGaugeFieldSite m;
 //       peekLocalSite(m, force, lcoor);
 //       local_rst[gcoors[3]] *= m;
@@ -186,38 +202,56 @@ class GaugeModesMod: public ObservableModule<GaugeModesLogger<Impl>, GaugeModes_
 
 
 
+struct MyTC_para: Serializable {
 
-
-
-
-
-class MyTC_para {
 public:
-  std::string type;
-  double step_size;
-  double adaptiveErrorTolerance;
-  // double maxTau;
-  std::vector<double> meas_taus;
+  GRID_SERIALIZABLE_CLASS_MEMBERS(MyTC_para,
+    std::string, type,
+    std::vector<double>, meas_taus,
+    int, TrajectoryStart,
+    int, TrajectoryInterval,
+    double, step_size,
+    double, adaptiveErrorTolerance
+  );
 
-  int TrajectoryStart;
-  int TrajectoryInterval;
+  template <class ReaderClass>
+  MyTC_para(Reader<ReaderClass>& reader) {
+    read(reader, "WilsonFlow_Observable", *this);
+    // std::cout << *this << std::endl;
+  }
 
-  // bool saveSmearField;
-  // std::string smearFieldFilePrefix;
-  // std::string topoChargeOutFile;
 };
 
-std::ostream& operator<<(std::ostream &out, const MyTC_para &p) {
-  out << "Topological Charge: "<< std::endl;
-  out << "type: " << p.type << std::endl;
-  out << "TrajectoryStart: " << p.TrajectoryStart << std::endl;
-  out << "TrajectoryInterval: " << p.TrajectoryInterval << std::endl;
-  out << "step_size: " << p.step_size << std::endl;
-  out << "adaptiveErrorTolerance: " << p.adaptiveErrorTolerance << std::endl;
-  out << "meas_taus: " << p.meas_taus << std::endl;
-  // out << "topoChargeOutFile: " << p.topoChargeOutFile << std::endl;
-  return out;
-}
+
+
+
+// class MyTC_para {
+// public:
+//   std::string type;
+//   double step_size;
+//   double adaptiveErrorTolerance;
+//   // double maxTau;
+//   std::vector<double> meas_taus;
+//
+//   int TrajectoryStart;
+//   int TrajectoryInterval;
+//
+//   // bool saveSmearField;
+//   // std::string smearFieldFilePrefix;
+//   // std::string topoChargeOutFile;
+// };
+//
+// std::ostream& operator<<(std::ostream &out, const MyTC_para &p) {
+//   out << "Topological Charge: "<< std::endl;
+//   out << "type: " << p.type << std::endl;
+//   out << "TrajectoryStart: " << p.TrajectoryStart << std::endl;
+//   out << "TrajectoryInterval: " << p.TrajectoryInterval << std::endl;
+//   out << "step_size: " << p.step_size << std::endl;
+//   out << "adaptiveErrorTolerance: " << p.adaptiveErrorTolerance << std::endl;
+//   out << "meas_taus: " << p.meas_taus << std::endl;
+//   // out << "topoChargeOutFile: " << p.topoChargeOutFile << std::endl;
+//   return out;
+// }
 
 
 template <class Impl>
@@ -239,7 +273,7 @@ public:
 
     if(traj > Par.TrajectoryStart && traj % Par.TrajectoryInterval == 0)
     {
-      LatticeGaugeField Uflow(U._grid);
+      LatticeGaugeField Uflow(U.Grid());
 
       if(Par.type=="fixed_taus") WF.smear_adaptive_fixed_tau(Uflow, U);
       else if(Par.type=="tSquaredE0.3") WF.smear_adaptive_fixed0p3(Uflow, U);

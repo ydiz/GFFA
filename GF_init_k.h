@@ -45,7 +45,7 @@ public:
 
     iScalar<iScalar<iScalar<Complex> >> epsilon; //regulator; avoid 0 in denominator k.
     epsilon = epsi;
-    pokeSite(epsilon * epsilon, FourSinKSquareEpsilon, {0,0,0,0});  // Give zero mode mass epsilon
+    pokeSite(epsilon * epsilon, FourSinKSquareEpsilon, Coordinate({0,0,0,0}));  // Give zero mode mass epsilon
 
     
 
@@ -59,12 +59,12 @@ public:
     TComplex zero;
     zero = 0.0;
     Ck_D = one / (sinKNormSquare * (M * M)) - one / (FourSinKSquareEpsilon * sinKNormSquare);
-    pokeSite(zero, Ck_D, {0,0,0,0});
+    pokeSite(zero, Ck_D, Coordinate({0,0,0,0}));
 
     //generate Ck_SqrtInvD
     Ck_SqrtInvD = (M-SqrtFourSinKSquareEpsilon)/sinKNormSquare;
     // pokeSite(zero, Ck_SqrtInvD, coor0000);
-    pokeSite(zero, Ck_SqrtInvD, {0,0,0,0});
+    pokeSite(zero, Ck_SqrtInvD, Coordinate({0,0,0,0}));
 
     //volume vol
     vol = 1.0;
@@ -78,8 +78,8 @@ public:
 
   LatticeColourMatrix sinKNgExpDotP_func(const LatticeGaugeField &P) const
   {
-    LatticeColourMatrix kDotP(P._grid);
-    kDotP = zero;
+    LatticeColourMatrix kDotP(P.Grid());
+    kDotP = Zero();
     for(int mu=0;mu<4;mu++){
       kDotP += sinKNgExp[mu] * PeekIndex<LorentzIndex>(P, mu);
     }

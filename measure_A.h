@@ -1,7 +1,7 @@
 #include <Grid/Grid.h>
 #include <Grid/Eigen/unsupported/MatrixFunctions>
 
-#include "Test_gauge_force.h"
+// #include "Test_gauge_force.h"
 
 namespace Grid {
 namespace QCD {
@@ -43,11 +43,13 @@ using LatticeUeval = Lattice<iVector<iScalar<iVector<vComplex, 3> >, 4>>;
 using LatticeUevalSite = iVector<iScalar<iVector<Complex, 3> >, 4>;
 
 LatticeGaugeField Log(const LatticeGaugeField &lat, LatticeUeval &last_log_evals, bool &last_log_evals_initialized) {
-  LatticeGaugeField rst(lat._grid);
+  LatticeGaugeField rst(lat.Grid());
 
-  parallel_for(int ss=0; ss<lat._grid->lSites(); ss++) {
-    std::vector<int> lcoor;
-    lat._grid->LocalIndexToLocalCoor(ss, lcoor);
+  // parallel_for(int ss=0; ss<lat.Grid()->lSites(); ss++) {
+  thread_for(ss, lat.Grid()->lSites(), {
+
+    Coordinate lcoor;
+    lat.Grid()->LocalIndexToLocalCoor(ss, lcoor);
 
     LatticeGaugeFieldSite m;  LatticeUevalSite log_eval;
     peekLocalSite(m, lat, lcoor); peekLocalSite(log_eval, last_log_evals, lcoor);
@@ -59,7 +61,7 @@ LatticeGaugeField Log(const LatticeGaugeField &lat, LatticeUeval &last_log_evals
 
     // if(lcoor[0]==0 && lcoor[1]==0 && lcoor[2]==0 && lcoor[3]==0) std::cout << "[0,0,0,0] log eigenvalues: " << log_eval << std::endl;
     // if(lcoor[0]==1 && lcoor[1]==0 && lcoor[2]==0 && lcoor[3]==0) std::cout << "[1,0,0,0] log eigenvalues: " << log_eval << std::endl;
-  }
+  });
 
   last_log_evals_initialized = true;
 
@@ -71,24 +73,24 @@ LatticeGaugeField Log(const LatticeGaugeField &lat, LatticeUeval &last_log_evals
 void measure_A(const LatticeGaugeField &U, const std::vector<std::vector<int>> &coors, LatticeUeval &last_log_evals, bool &last_log_evals_initialized) {
 
 
-  LatticeGaugeField An(U._grid);
+  LatticeGaugeField An(U.Grid());
   An = timesMinusI(Log(U, last_log_evals, last_log_evals_initialized));
 
-  FFT theFFT((Grid::GridCartesian *)An._grid);
+  FFT theFFT((Grid::GridCartesian *)An.Grid());
   theFFT.FFT_all_dim(An, An, FFT::forward);
 
   double vol = 1.0;
-  for(int d=0; d<4; ++d)   vol = vol * U._grid->_fdimensions[d];
+  for(int d=0; d<4; ++d)   vol = vol * U.Grid()->_fdimensions[d];
   An = An * (1. / std::sqrt(vol));
 
 
 
-  Lattice<iVector<iScalar<iVector<vComplex, 8 > >, 4> > alg(U._grid);
+  Lattice<iVector<iScalar<iVector<vComplex, 8 > >, 4> > alg(U.Grid());
 
   for (int mu = 0; mu < Nd; mu++)
   {
-    LatticeColourMatrix An_mu(An._grid);
-    SU3::LatticeAlgebraVector alg_mu(U._grid);
+    LatticeColourMatrix An_mu(An.Grid());
+    SU3::LatticeAlgebraVector alg_mu(U.Grid());
 
     An_mu = peekLorentz(An, mu);
     SU3::projectOnAlgebra(alg_mu, An_mu); // returns -2 i Tr(A t^a) = -i A^a; In Grid Tr(t^a t^b) = 1/2 \delta_{a,b}
@@ -108,10 +110,10 @@ void measure_A(const LatticeGaugeField &U, const std::vector<std::vector<int>> &
 void set_zero_mode_to_zero(LatticeGaugeField &P) {
 
   double V = 1.0;
-  for(int d=0; d<4; ++d)   V = V * P._grid->_fdimensions[d];
+  for(int d=0; d<4; ++d)   V = V * P.Grid()->_fdimensions[d];
   // std::cout << "V: " << V << std::endl;
   
-  LatticeColourMatrix P_mu(P._grid);
+  LatticeColourMatrix P_mu(P.Grid());
   for(int mu=0; mu<4; mu++) {
     P_mu = peekLorentz(P, mu);
 
@@ -120,15 +122,16 @@ void set_zero_mode_to_zero(LatticeGaugeField &P) {
     tmp = tmp * (1. / V); 
     
     // P_mu(n) = P_mu(n) - (1./V) * \sum_n' P_\mu(n');
-    parallel_for(int ss=0; ss<P._grid->lSites(); ss++) {
-      std::vector<int> lcoor;
-      P._grid->LocalIndexToLocalCoor(ss, lcoor);
+    // parallel_for(int ss=0; ss<P.Grid()->lSites(); ss++) {
+    thread_for(ss, P.Grid()->lSites(), {
+      Coordinate lcoor;
+      P.Grid()->LocalIndexToLocalCoor(ss, lcoor);
 
       typename LatticeColourMatrix::vector_object::scalar_object m;
       peekLocalSite(m, P_mu, lcoor);
       m = m - tmp;
       pokeLocalSite(m, P_mu, lcoor);
-    }
+    });
 
     pokeLorentz(P, P_mu, mu);
   }
@@ -140,9 +143,9 @@ void set_zero_mode_to_zero(LatticeGaugeField &P) {
 //   using LatticeColourMatrixSite = typename LatticeColourMatrix::vector_object::scalar_object;
 //
 //   double V = 1.0;
-//   for(int d=0; d<4; ++d)   V = V * U._grid->_fdimensions[d];
+//   for(int d=0; d<4; ++d)   V = V * U.Grid()->_fdimensions[d];
 //   
-//   LatticeColourMatrix U_mu(U._grid);
+//   LatticeColourMatrix U_mu(U.Grid());
 //   for(int mu=0; mu<4; mu++) {
 //     U_mu = peekLorentz(U, mu);
 //

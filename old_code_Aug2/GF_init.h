@@ -28,12 +28,12 @@ void init(int argc, char **argv, HMC_PARA &hmc_para)
   std::string measure_A_coor_str, meas_taus_str;
   po::options_description desc("GFFA options");
   desc.add_options()("help", "help message")
-                    ("StartingType", po::value<std::string>(&hmc_para.StartingType)->default_value("ColdStart"), "Stariing configuration. It can be HotStart, ColdStart, TepidStart, or CheckpointStart.")
-                    ("StartingTrajectory", po::value<int>(&hmc_para.StartingTrajectory), "If StartingType is CheckpointStart, ckpoint_lat.xx and ckpoint_rng.xx corresponding to StartingTrajectory will be loaded.")
-                    ("Thermalizations", po::value<int>(&hmc_para.Thermalizations)->default_value(200), "Number of trajectories without Metropolis test.")
-                    ("Trajectories", po::value<int>(&hmc_para.Trajectories)->default_value(0), "Number of trajectories after those without Metropolis test. p.s. At the moment Metropolis is disabled")
-                    ("mdSteps", po::value<int>(&hmc_para.mdSteps)->default_value(20), "Number of MD steps within each trajectory.")
-                    ("trajL", po::value<double>(&hmc_para.trajL)->default_value(1.0), "Trajectory length.")
+                    // ("StartingType", po::value<std::string>(&hmc_para.StartingType)->default_value("ColdStart"), "Stariing configuration. It can be HotStart, ColdStart, TepidStart, or CheckpointStart.")
+                    // ("StartingTrajectory", po::value<int>(&hmc_para.StartingTrajectory), "If StartingType is CheckpointStart, ckpoint_lat.xx and ckpoint_rng.xx corresponding to StartingTrajectory will be loaded.")
+                    // ("Thermalizations", po::value<int>(&hmc_para.Thermalizations)->default_value(200), "Number of trajectories without Metropolis test.")
+                    // ("Trajectories", po::value<int>(&hmc_para.Trajectories)->default_value(0), "Number of trajectories after those without Metropolis test. p.s. At the moment Metropolis is disabled")
+                    // ("mdSteps", po::value<int>(&hmc_para.mdSteps)->default_value(20), "Number of MD steps within each trajectory.")
+                    // ("trajL", po::value<double>(&hmc_para.trajL)->default_value(1.0), "Trajectory length.")
                     ("saveInterval", po::value<int>(&hmc_para.saveInterval)->default_value(50), "Save interval for checker pointers.")
                     ("action", po::value<std::string>(&hmc_para.action)->default_value("Wilson"), "Action name; available choices: Wilson, GF_Wilson, DBW2, GF_DBW2")
                     ("newHp", po::value<bool>(&hmc_para.newHp)->default_value(false), "Determine whether use Fourier-accelerated kinetic energy term.")
@@ -49,13 +49,13 @@ void init(int argc, char **argv, HMC_PARA &hmc_para)
                     ("fixed_P_k", po::value<double>(&hmc_para.fixed_P_k)->default_value(0.5))
                     ("measure_A_coors", po::value<std::string>(&measure_A_coor_str)->default_value(""))
 
-                    ("TC.type", po::value<std::string>(&hmc_para.tc_para.type)->default_value("fixed_taus"), "")
-                    ("TC.step_size", po::value<double>(&hmc_para.tc_para.step_size)->default_value(1.0), "")
-                    ("TC.adaptiveErrorTolerance", po::value<double>(&hmc_para.tc_para.adaptiveErrorTolerance)->default_value(2e-6), "")
-                    ("TC.meas_taus", po::value<std::string>(&meas_taus_str)->default_value(""), "")
-                    ("TC.TrajectoryStart", po::value<int>(&hmc_para.tc_para.TrajectoryStart)->default_value(20))
-                    ("TC.TrajectoryInterval", po::value<int>(&hmc_para.tc_para.TrajectoryInterval)->default_value(1))
-                    // ("TC.topoChargeOutFile", po::value<std::string>(&hmc_para.tc_para.topoChargeOutFile)->default_value("topoCharge.txt"))
+                    // ("TC.type", po::value<std::string>(&hmc_para.tc_para.type)->default_value("fixed_taus"), "")
+                    // ("TC.step_size", po::value<double>(&hmc_para.tc_para.step_size)->default_value(1.0), "")
+                    // ("TC.adaptiveErrorTolerance", po::value<double>(&hmc_para.tc_para.adaptiveErrorTolerance)->default_value(2e-6), "")
+                    // ("TC.meas_taus", po::value<std::string>(&meas_taus_str)->default_value(""), "")
+                    // ("TC.TrajectoryStart", po::value<int>(&hmc_para.tc_para.TrajectoryStart)->default_value(20))
+                    // ("TC.TrajectoryInterval", po::value<int>(&hmc_para.tc_para.TrajectoryInterval)->default_value(1))
+                    // // ("TC.topoChargeOutFile", po::value<std::string>(&hmc_para.tc_para.topoChargeOutFile)->default_value("topoCharge.txt"))
                     ;
 
   po::variables_map vm;
@@ -65,7 +65,7 @@ void init(int argc, char **argv, HMC_PARA &hmc_para)
   po::notify(vm);
 
   // Wison flow times to measure energy
-  str2vector(meas_taus_str, hmc_para.tc_para.meas_taus);
+  // str2vector(meas_taus_str, hmc_para.tc_para.meas_taus);
 
   // meausre_A coors
   std::stringstream ss(measure_A_coor_str);
@@ -75,12 +75,12 @@ void init(int argc, char **argv, HMC_PARA &hmc_para)
     GridCmdOptionIntVector(tmp, vec);
     assert(vec.size()==4);
     hmc_para.measure_A_coors.push_back(vec);
-    hmc_para.gm_para.coors.push_back(vec);
+    // hmc_para.gm_para.coors.push_back(vec);
   }
 
-  if(hmc_para.measure_A) {
-    hmc_para.Thermalizations = 1; // If measure_A, only run one trajectory
-    hmc_para.tc_para.TrajectoryStart = 999999; // If measure_A, do not peroform Wilson flow and measure Topological charge
+  if(hmc_para.measure_A) { 
+    // hmc_para.Thermalizations = 1; // If measure_A, only run one trajectory
+    // hmc_para.tc_para.TrajectoryStart = 999999; // If measure_A, do not peroform Wilson flow and measure Topological charge
   }
 
   hmc_para.isGFFA = hmc_para.action.substr(0,2) == "GF";

@@ -37,19 +37,19 @@ class GFAction : public Action<typename Gimpl::GaugeField> {
 
   virtual void deriv(const GaugeField &U, GaugeField &dSdU) {
     WilsonGaugeAction<Gimpl> Waction(beta);
-    GaugeField dSwdU(U._grid);
+    GaugeField dSwdU(U.Grid());
     Waction.deriv(U, dSwdU);
 
   	RealD factor = 0.5 * (1./3.) * betaMM;
 
-    GaugeField dSGF1dU(U._grid);
+    GaugeField dSGF1dU(U.Grid());
     dSGF1dU = factor * Ta(U);
 
     // dSdU = dSwdU + dSGF1dU;
 
-    GaugeField dSGF2dU(U._grid);
-    dSGF2dU = zero;
-    static LatticeColourMatrix g(U._grid);
+    GaugeField dSGF2dU(U.Grid());
+    dSGF2dU = Zero();
+    static LatticeColourMatrix g(U.Grid());
     static bool g_initialized = false;
     if(! g_initialized) {
       g = 1.0;
@@ -109,17 +109,17 @@ class GF_DBW2Action : public Action<typename Gimpl::GaugeField> {
   virtual void deriv(const GaugeField &U, GaugeField &dSdU) {
     
     DBW2GaugeAction<Gimpl> DBW2_action(beta);
-    GaugeField dSwdU(U._grid);
+    GaugeField dSwdU(U.Grid());
     DBW2_action.deriv(U, dSwdU);
 
   	RealD factor = 0.5 * betaMM;
 
-    GaugeField dSGF1dU(U._grid);
+    GaugeField dSGF1dU(U.Grid());
     dSGF1dU = factor * Ta(U);
 
-    GaugeField dSGF2dU(U._grid);
-    dSGF2dU = zero;
-    LatticeColourMatrix g(U._grid);
+    GaugeField dSGF2dU(U.Grid());
+    dSGF2dU = Zero();
+    LatticeColourMatrix g(U.Grid());
     g = 1.0;
     GF_heatbath(U, g, hb_offset, betaMM, table_path); //hb_nsweeps before calculate equilibrium value
 

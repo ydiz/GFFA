@@ -43,8 +43,8 @@ GFIntegrator(GridBase* grid, IntegratorParameters Par,
     return H;
   }
 
-inline void GF_refresh(Field& U, GridParallelRNG& pRNG, const Momenta_k &KK, const HMC_PARA &HMC_para) {
-  assert(this->P._grid == U._grid);
+inline void GF_refresh(Field& U, GridParallelRNG& pRNG, const Momenta_k &KK, const GFFAParams &HMC_para) {
+  assert(this->P.Grid() == U.Grid());
   std::cout << GridLogIntegrator << "Integrator refresh\n";
 
   // if(HMC_para.measure_A) {
@@ -104,7 +104,7 @@ void update_U(Field& U, double ep, const Momenta_k &KK) {
 }
 
 void update_U(LatticeGaugeField& Mom, LatticeGaugeField& U, double ep, const Momenta_k &KK) {
-  LatticeGaugeField deltaU(Mom._grid);
+  LatticeGaugeField deltaU(Mom.Grid());
 
   if(KK.newHp) deltaU = dHdP(Mom, KK);
   else deltaU = Mom;
@@ -113,10 +113,14 @@ void update_U(LatticeGaugeField& Mom, LatticeGaugeField& U, double ep, const Mom
   // set_zero_mode_to_zero(deltaU);
   // // measure_A(deltaU, {{0,0,0,0}, {1,0,0,0}}, false);
 
-  parallel_for(int ss=0;ss<Mom._grid->oSites();ss++){
+  auto U_v = U.View();
+  auto deltaU_v = deltaU.View();
+  // parallel_for(int ss=0;ss<Mom.Grid()->oSites();ss++){
+  thread_for(ss, Mom.Grid()->oSites(), {
    for (int mu = 0; mu < Nd; mu++)
-     U[ss]._internal[mu] = ProjectOnGroup(Exponentiate(deltaU[ss]._internal[mu], ep, Nexp) * U[ss]._internal[mu]);
-  }
+     // U[ss]._internal[mu] = ProjectOnGroup(Exponentiate(deltaU[ss]._internal[mu], ep, Nexp) * U[ss]._internal[mu]);
+     U_v[ss](mu) = ProjectOnGroup(Exponentiate(deltaU_v[ss](mu), ep, Nexp) * U_v[ss](mu));
+  });
 
   // std::cout << "explicitly setting A(k=0) to 0" << std::endl;
   // set_zero_mode_U_to_zero(U); // FIXME: set zero mode to 0
@@ -127,7 +131,7 @@ void update_U(LatticeGaugeField& Mom, LatticeGaugeField& U, double ep, const Mom
   this->Representations.update(U);  // void functions if fundamental representation
 }
 
-void GF_integrate(Field& U, const Momenta_k &KK, const HMC_PARA &HMC_para) {
+void GF_integrate(Field& U, const Momenta_k &KK, const GFFAParams &HMC_para) {
   // reset the clocks
   this->t_U = 0;
   for (int level = 0; level < this->as.size(); ++level) {
@@ -145,7 +149,7 @@ void GF_integrate(Field& U, const Momenta_k &KK, const HMC_PARA &HMC_para) {
       std::cout << "measure A(k): " << std::endl;
 
       using LatticeUeval = Lattice<iVector<iScalar<iVector<vComplex, 3> >, 4>>;
-      static LatticeUeval last_log_evals(U._grid); 
+      static LatticeUeval last_log_evals(U.Grid()); 
       static bool last_log_evals_initialized = false;
 
       measure_A(U, HMC_para.measure_A_coors, last_log_evals, last_log_evals_initialized);

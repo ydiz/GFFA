@@ -9,7 +9,7 @@ void GF_heatbath(const LatticeGaugeField &Umu, LatticeColourMatrix &g,
                 LatticeGaugeField (* const ForceFunc)(const LatticeColourMatrix &, const std::vector<LatticeColourMatrix> &)=NULL)//, bool verbose=0)
 {
   static bool initialized = false;
-  static GridRedBlackCartesian rbGrid(Umu._grid);
+  static GridRedBlackCartesian rbGrid(Umu.Grid());
   static GridParallelRNG  pRNG(&rbGrid);
   static GridSerialRNG    sRNG;
   if (!initialized) {
@@ -21,7 +21,7 @@ void GF_heatbath(const LatticeGaugeField &Umu, LatticeColourMatrix &g,
   RealD coeff = _betaMM * (1./3.);
   // Real betaMM = _betaMM * 3; //In heatbath routine, the coefficient is beta/Nc
 
-  std::vector<LatticeColourMatrix> U(4, Umu._grid);
+  std::vector<LatticeColourMatrix> U(4, Umu.Grid());
   for(int mu=0; mu<Nd; mu++) U[mu] = PeekIndex<LorentzIndex>(Umu, mu);
 
   std::vector<LatticeColourMatrix> g_oe(2, &rbGrid);
@@ -30,7 +30,7 @@ void GF_heatbath(const LatticeGaugeField &Umu, LatticeColourMatrix &g,
   std::vector<std::vector<LatticeColourMatrix>> U_oe(4, std::vector<LatticeColourMatrix>(2, &rbGrid));
   std::vector<std::vector<LatticeColourMatrix>> UMinusShift_oe(4, std::vector<LatticeColourMatrix>(2, &rbGrid));
   {
-    LatticeColourMatrix UMinusShift_tmp(Umu._grid);
+    LatticeColourMatrix UMinusShift_tmp(Umu.Grid());
     for(int mu=0; mu<4; ++mu) {
       UMinusShift_tmp = Cshift(U[mu], mu, -1);
       for(int cb=0; cb<2; cb++) pickCheckerboard(cb, U_oe[mu][cb], U[mu]);
@@ -43,8 +43,8 @@ void GF_heatbath(const LatticeGaugeField &Umu, LatticeColourMatrix &g,
   if(dSGF2dU!=NULL) {
     for(int cb=0;cb<2;cb++) {
       for(int mu=0;mu<4;mu++) {
-        dSGF2dU_oe[mu][cb] = zero;
-        dSGF2dU_oe[mu][cb].checkerboard = cb;
+        dSGF2dU_oe[mu][cb] = Zero();
+        dSGF2dU_oe[mu][cb].Checkerboard() = cb;
       }
     }
   }
@@ -53,12 +53,12 @@ void GF_heatbath(const LatticeGaugeField &Umu, LatticeColourMatrix &g,
   // std::cout<<GridLogMessage<<"sweep "<<sweep<<" S: "<<GF_S(g, Umu)<<std::endl;
     for(int cb=0;cb<2;cb++) {
 
-      staple_half = zero;
-      staple_half.checkerboard = cb;
+      staple_half = Zero();
+      staple_half.Checkerboard() = cb;
       int cb_inverse = (cb==1) ? 0 : 1;
       //if we choose the sign of S_GF1 to be postive, sign of staple should be negative
       for(int mu=0; mu<Nd; ++mu) {
-        // Cshift will adjuct checkerboard automatically
+        // Cshift will adjuct Checkerboard() automatically
         staple_half += U_oe[mu][cb] * adj(Cshift(g_oe[cb_inverse],mu,1))
                         + adj( Cshift(g_oe[cb_inverse], mu, -1) * UMinusShift_oe[mu][cb]);
       }
@@ -88,7 +88,7 @@ void GF_heatbath(const LatticeGaugeField &Umu, LatticeColourMatrix &g,
   setCheckerboard(g, g_oe[Even]);
 
   if(dSGF2dU!=NULL) {
-    LatticeColourMatrix tmp(Umu._grid);
+    LatticeColourMatrix tmp(Umu.Grid());
     for(int mu=0;mu<4;mu++) {
         setCheckerboard(tmp, dSGF2dU_oe[mu][Odd]);
         setCheckerboard(tmp, dSGF2dU_oe[mu][Even]);

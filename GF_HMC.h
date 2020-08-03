@@ -50,7 +50,7 @@ class GF_HybridMonteCarlo {
   /////////////////////////////////////////////////////////
   // Evolution
   /////////////////////////////////////////////////////////
-  RealD evolve_hmc_step(Field &U, const Momenta_k &KK, const HMC_PARA &HMC_para) {
+  RealD evolve_hmc_step(Field &U, const Momenta_k &KK, const GFFAParams &HMC_para) {
     TheIntegrator.GF_refresh(U, pRNG, KK, HMC_para);  // set U and initialize P and phi's
 
     double H0;
@@ -90,18 +90,18 @@ class GF_HybridMonteCarlo {
     : Params(_Pams), TheIntegrator(_Int), sRNG(_sRNG), pRNG(_pRNG), Observables(_Obs), Ucur(_U) {}
   ~GF_HybridMonteCarlo(){};
 
-  void evolve(const HMC_PARA &HMC_para) {
+  void evolve(const GFFAParams &HMC_para) {
 
-    const Momenta_k KK(Ucur._grid, HMC_para.M, HMC_para.epsilon, HMC_para.newHp);
+    const Momenta_k KK(Ucur.Grid(), HMC_para.M, HMC_para.epsilon, HMC_para.newHp);
 
     Real DeltaH;
 
-    Field Ucopy(Ucur._grid);
+    Field Ucopy(Ucur.Grid());
 
     Params.print_parameters();
     TheIntegrator.print_actions();
 
-  	// LatticeColourMatrix g(Ucur._grid);
+  	// LatticeColourMatrix g(Ucur.Grid());
   	// g = 1.0;
     // Actual updates (evolve a copy Ucopy then copy back eventually)
     unsigned int FinalTrajectory = Params.Trajectories + Params.NoMetropolisUntil + Params.StartTrajectory;
@@ -121,7 +121,7 @@ class GF_HybridMonteCarlo {
 
       //calculate delta S_GF2
       // if(HMC_para.newAction){
-      //   //LatticeColourMatrix g(Ucur._grid);
+      //   //LatticeColourMatrix g(Ucur.Grid());
       //   //g = 1.0;
       //   // GF_metro(Ucur, g, HMC_para.hb_offset, HMC_para.betaMM, HMC_para.hb_multi_hit, 0.05);
       //   GF_heatbath(Ucur, g, HMC_para.hb_offset, HMC_para.betaMM, HMC_para.hb_multi_hit);
