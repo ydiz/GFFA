@@ -18,10 +18,16 @@ void my_su2Extract(Lattice<iSinglet<vcplx> > &Determinant,
   int i0 = subgroup_index[su2_index][0];
   int i1 = subgroup_index[su2_index][1];
 
-  auto link_v = link.View();
-  auto staple_v = staple.View();
-  auto subgroup_v = subgroup.View();
-  auto Determinant_v = Determinant.View();
+  // auto link_v = link.View();
+  // auto staple_v = staple.View();
+  // auto subgroup_v = subgroup.View();
+  // auto Determinant_v = Determinant.View();
+
+  autoView(subgroup_v, subgroup, AcceleratorWrite);  // FIXME: we are both writing to and reading from a0_v
+  autoView(Determinant_v, Determinant, AcceleratorWrite);
+  autoView(link_v, link, AcceleratorRead);
+  autoView(staple_v, staple, AcceleratorRead);
+
   //
   // parallel_for (int ss = 0; ss < grid->oSites(); ss++) {
   thread_for(ss, grid->oSites(), {
@@ -46,8 +52,10 @@ void my_su2Insert(const Lattice<SU3::iSU2Matrix<vcplx> > &subgroup,
   int i0 = subgroup_index[su2_index][0];
   int i1 = subgroup_index[su2_index][1];
 
-  auto link_v = link.View();
-  auto subgroup_v = subgroup.View();
+  // auto link_v = link.View();
+  // auto subgroup_v = subgroup.View();
+  autoView(link_v, link, AcceleratorWrite);
+  autoView(subgroup_v, subgroup, AcceleratorRead);
 
   // parallel_for (int ss = 0; ss < grid->oSites(); ss++) {
   thread_for(ss, grid->oSites(), {
@@ -94,8 +102,10 @@ LatticeComplex invCplx(const LatticeComplex& in) {
 	LatticeComplex ret(in.Grid());
 	ret.Checkerboard() = in.Checkerboard();
 
-  auto ret_v = ret.View();
-  auto in_v = in.View();
+  // auto ret_v = ret.View();
+  // auto in_v = in.View();
+  autoView(ret_v, ret, AcceleratorWrite);
+  autoView(in_v, in, AcceleratorRead);
 
 	typename std::remove_const<typename std::remove_reference<decltype(in_v[0])>::type>::type one;
 	one = 1.0;
@@ -150,9 +160,16 @@ void GF_SubGroupHeatBath(
      random(pRNG, tmp);
 
 
-     auto tmp_v = tmp.View();
-     auto a0_v = a[0].View();
-     auto k_v = k.View();
+     // auto tmp_v = tmp.View();
+     // auto a0_v = a[0].View();
+     // auto k_v = k.View();
+
+
+     autoView(a0_v, a[0], AcceleratorWrite);  // FIXME: we are both writing to and reading from a0_v
+     autoView(tmp_v, tmp, AcceleratorRead);
+     autoView(k_v, k, AcceleratorRead);
+
+
      // parallel_for(int ss=0; ss<tmp.Grid()->oSites(); ++ss){ // ! cannot use grid->lSites() because of simd; use oSites()
      thread_for(ss, tmp.Grid()->oSites(), {
        double *tmp_ptr = (double *)&tmp_v[ss];

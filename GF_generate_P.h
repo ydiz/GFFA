@@ -31,6 +31,8 @@ void GF_generate_P(LatticeGaugeField& P, GridParallelRNG& pRNG, const Momenta_k 
 
   Coordinate gdims = P.Grid()->_gdimensions;
 
+  autoView(newP_Minus_v, newP_Minus, AcceleratorWrite);
+
 // Cannot use parallel_for 
   for(int node=0; node<P.Grid()->_Nprocessors; ++node){
 	for(int ss=0; ss<P.Grid()->lSites(); ss++){
@@ -43,9 +45,11 @@ void GF_generate_P(LatticeGaugeField& P, GridParallelRNG& pRNG, const Momenta_k 
 
 		new_gcoor = gdims - gcoor;
 		peekSite(m, newP, new_gcoor);
+
 		//gcoor = gdims - gcoor; // zyd: do not need to modulo L. This is done in pokeSite.
 		if(P.Grid()->ThisRank()==node) {
-			pokeLocalSite(m, newP_Minus, lcoor);
+			// pokeLocalSite(m, newP_Minus, lcoor);
+			pokeLocalSite(m, newP_Minus_v, lcoor);
 		}
 	}
 #ifndef GRID_COMMS_NONE

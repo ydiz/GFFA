@@ -21,8 +21,12 @@ std::vector<double> operator*(double x, const std::vector<double> &vec) {
 double maxNorm(const LatticeGaugeField& U) {
   Lattice<iVector<iScalar<iScalar<vRealD>>, Nd> > U_norm2(U.Grid());
 
-  auto U_v = U.View();
-  auto U_norm2_v = U_norm2.View();
+  // auto U_v = U.View();
+  // auto U_norm2_v = U_norm2.View();
+
+  autoView(U_norm2_v, U_norm2, AcceleratorWrite);
+  autoView(U_v, U, AcceleratorRead);
+
   // parallel_for(int ss=0;ss<U_norm2.Grid()->oSites();ss++){
   thread_for(ss, U_norm2.Grid()->oSites(), {
     for(int mu=0; mu<Nd; mu++) {
