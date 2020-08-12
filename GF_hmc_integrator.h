@@ -113,8 +113,11 @@ void update_U(LatticeGaugeField& Mom, LatticeGaugeField& U, double ep, const Mom
   // set_zero_mode_to_zero(deltaU);
   // // measure_A(deltaU, {{0,0,0,0}, {1,0,0,0}}, false);
 
-  auto U_v = U.View();
-  auto deltaU_v = deltaU.View();
+  // auto U_v = U.View();
+  // auto deltaU_v = deltaU.View();
+  autoView(U_v, U, AcceleratorWrite);
+  autoView(deltaU_v, deltaU, AcceleratorRead);
+
   // parallel_for(int ss=0;ss<Mom.Grid()->oSites();ss++){
   thread_for(ss, Mom.Grid()->oSites(), {
    for (int mu = 0; mu < Nd; mu++)
