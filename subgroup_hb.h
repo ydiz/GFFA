@@ -18,19 +18,14 @@ void my_su2Extract(Lattice<iSinglet<vcplx> > &Determinant,
   int i0 = subgroup_index[su2_index][0];
   int i1 = subgroup_index[su2_index][1];
 
-  // auto link_v = link.View();
-  // auto staple_v = staple.View();
-  // auto subgroup_v = subgroup.View();
-  // auto Determinant_v = Determinant.View();
-
-  autoView(subgroup_v, subgroup, AcceleratorWrite);  // FIXME: we are both writing to and reading from a0_v
+  autoView(subgroup_v, subgroup, AcceleratorWrite);  // It is fine to also read from this View
+  // autoView(subgroup_v_read, subgroup, AcceleratorRead);  
   autoView(Determinant_v, Determinant, AcceleratorWrite);
   autoView(link_v, link, AcceleratorRead);
   autoView(staple_v, staple, AcceleratorRead);
 
-  //
-  // parallel_for (int ss = 0; ss < grid->oSites(); ss++) {
-  thread_for(ss, grid->oSites(), {
+  // thread_for(ss, grid->oSites(), {
+  accelerator_for(ss, grid->oSites(), vcplx::Nsimd(), {
     subgroup_v[ss]()()(0, 0) = matrix_mult_elem(link_v[ss], staple_v[ss], i0, i0);
     subgroup_v[ss]()()(0, 1) = matrix_mult_elem(link_v[ss], staple_v[ss], i0, i1);
     subgroup_v[ss]()()(1, 0) = matrix_mult_elem(link_v[ss], staple_v[ss], i1, i0);
@@ -52,16 +47,18 @@ void my_su2Insert(const Lattice<SU3::iSU2Matrix<vcplx> > &subgroup,
   int i0 = subgroup_index[su2_index][0];
   int i1 = subgroup_index[su2_index][1];
 
-  // auto link_v = link.View();
-  // auto subgroup_v = subgroup.View();
   autoView(link_v, link, AcceleratorWrite);
   autoView(subgroup_v, subgroup, AcceleratorRead);
 
-  // parallel_for (int ss = 0; ss < grid->oSites(); ss++) {
-  thread_for(ss, grid->oSites(), {
+  // thread_for(ss, grid->oSites(), {
+  accelerator_for(ss, grid->oSites(), vcplx::Nsimd(), {
     vcplx link_elem[2][3];
-    for(int i=0; i<3; ++i) {link_elem[0][i] = link_v[ss]()()(i0, i); link_elem[1][i] = link_v[ss]()()(i1, i);}
+    for(int i=0; i<3; ++i) {
+      link_elem[0][i] = link_v[ss]()()(i0, i); 
+      link_elem[1][i] = link_v[ss]()()(i1, i);
+    }
 
+    //FIXME: Coalesce read/write
 
     link_v[ss]()()(i0, 0) = subgroup_v[ss]()()(0, 0) * link_elem[0][0] + subgroup_v[ss]()()(0, 1) * link_elem[1][0];
     link_v[ss]()()(i0, 1) = subgroup_v[ss]()()(0, 0) * link_elem[0][1] + subgroup_v[ss]()()(0, 1) * link_elem[1][1];
@@ -69,14 +66,6 @@ void my_su2Insert(const Lattice<SU3::iSU2Matrix<vcplx> > &subgroup,
     link_v[ss]()()(i1, 0) = subgroup_v[ss]()()(1, 0) * link_elem[0][0] + subgroup_v[ss]()()(1, 1) * link_elem[1][0];
     link_v[ss]()()(i1, 1) = subgroup_v[ss]()()(1, 0) * link_elem[0][1] + subgroup_v[ss]()()(1, 1) * link_elem[1][1];
     link_v[ss]()()(i1, 2) = subgroup_v[ss]()()(1, 0) * link_elem[0][2] + subgroup_v[ss]()()(1, 1) * link_elem[1][2];
-
-
-    // link._odata[ss]()()(i0, 0) = subgroup._odata[ss]()()(0, 0) * link_elem[0][0] + subgroup._odata[ss]()()(0, 1) * link_elem[1][0];
-    // link._odata[ss]()()(i0, 1) = subgroup._odata[ss]()()(0, 0) * link_elem[0][1] + subgroup._odata[ss]()()(0, 1) * link_elem[1][1];
-    // link._odata[ss]()()(i0, 2) = subgroup._odata[ss]()()(0, 0) * link_elem[0][2] + subgroup._odata[ss]()()(0, 1) * link_elem[1][2];
-    // link._odata[ss]()()(i1, 0) = subgroup._odata[ss]()()(1, 0) * link_elem[0][0] + subgroup._odata[ss]()()(1, 1) * link_elem[1][0];
-    // link._odata[ss]()()(i1, 1) = subgroup._odata[ss]()()(1, 0) * link_elem[0][1] + subgroup._odata[ss]()()(1, 1) * link_elem[1][1];
-    // link._odata[ss]()()(i1, 2) = subgroup._odata[ss]()()(1, 0) * link_elem[0][2] + subgroup._odata[ss]()()(1, 1) * link_elem[1][2];
   });
 }
 
@@ -102,15 +91,13 @@ LatticeComplex invCplx(const LatticeComplex& in) {
 	LatticeComplex ret(in.Grid());
 	ret.Checkerboard() = in.Checkerboard();
 
-  // auto ret_v = ret.View();
-  // auto in_v = in.View();
   autoView(ret_v, ret, AcceleratorWrite);
   autoView(in_v, in, AcceleratorRead);
 
 	typename std::remove_const<typename std::remove_reference<decltype(in_v[0])>::type>::type one;
 	one = 1.0;
-	// parallel_for (int ss = 0; ss < in.Grid()->oSites(); ss++) {
-  thread_for(ss, in.Grid()->oSites(), {
+  // thread_for(ss, in.Grid()->oSites(), {
+  accelerator_for(ss, in.Grid()->oSites(), vComplex::Nsimd(), {
 		ret_v[ss] = one / in_v[ss];
 	});
 	return ret;
@@ -159,19 +146,13 @@ void GF_SubGroupHeatBath(
      LatticeReal tmp(rbGrid); tmp.Checkerboard() = cb;
      random(pRNG, tmp);
 
-
-     // auto tmp_v = tmp.View();
-     // auto a0_v = a[0].View();
-     // auto k_v = k.View();
-
-
      autoView(a0_v, a[0], AcceleratorWrite);  // FIXME: we are both writing to and reading from a0_v
      autoView(tmp_v, tmp, AcceleratorRead);
      autoView(k_v, k, AcceleratorRead);
 
 
-     // parallel_for(int ss=0; ss<tmp.Grid()->oSites(); ++ss){ // ! cannot use grid->lSites() because of simd; use oSites()
-     thread_for(ss, tmp.Grid()->oSites(), {
+     // thread_for(ss, tmp.Grid()->oSites(), {
+     accelerator_for(ss, tmp.Grid()->oSites(), vComplex::Nsimd(), {
        double *tmp_ptr = (double *)&tmp_v[ss];
        double *a0_ptr = (double *)&a0_v[ss];
        double *k_ptr = (double *)&k_v[ss];

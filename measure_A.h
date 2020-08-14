@@ -45,6 +45,11 @@ using LatticeUevalSite = iVector<iScalar<iVector<Complex, 3> >, 4>;
 LatticeGaugeField Log(const LatticeGaugeField &lat, LatticeUeval &last_log_evals, bool &last_log_evals_initialized) {
   LatticeGaugeField rst(lat.Grid());
 
+  autoView(last_log_evals_v_read, last_log_evals, CpuRead);
+  autoView(lat_v, lat, CpuRead);
+  autoView(last_log_evals_v, last_log_evals, CpuWrite);
+  autoView(rst_v, rst, CpuWrite);
+
   // parallel_for(int ss=0; ss<lat.Grid()->lSites(); ss++) {
   thread_for(ss, lat.Grid()->lSites(), {
 
@@ -52,13 +57,11 @@ LatticeGaugeField Log(const LatticeGaugeField &lat, LatticeUeval &last_log_evals
     lat.Grid()->LocalIndexToLocalCoor(ss, lcoor);
 
     LatticeGaugeFieldSite m;  LatticeUevalSite log_eval;
-    peekLocalSite(m, lat.View(AcceleratorRead), lcoor); peekLocalSite(log_eval, last_log_evals.View(AcceleratorRead), lcoor);
+    peekLocalSite(m, lat_v, lcoor); peekLocalSite(log_eval, last_log_evals_v_read, lcoor);
     for(int mu=0; mu<4; ++mu) {
       m(mu)() = Log( m(mu)(), log_eval(mu)(), last_log_evals_initialized);
     }
 
-    autoView(last_log_evals_v, last_log_evals, AcceleratorWrite);
-    autoView(rst_v, rst, AcceleratorWrite);
     pokeLocalSite(log_eval, last_log_evals_v, lcoor);
     pokeLocalSite(m, rst_v, lcoor);
 
@@ -126,13 +129,13 @@ void set_zero_mode_to_zero(LatticeGaugeField &P) {
     
     // P_mu(n) = P_mu(n) - (1./V) * \sum_n' P_\mu(n');
 
-    autoView(P_mu_v_write, P_mu, AcceleratorWrite);
+    autoView(P_mu_v_write, P_mu, CpuWrite);
     thread_for(ss, P.Grid()->lSites(), {
       Coordinate lcoor;
       P.Grid()->LocalIndexToLocalCoor(ss, lcoor);
 
       typename LatticeColourMatrix::vector_object::scalar_object m;
-      peekLocalSite(m, P_mu.View(AcceleratorRead), lcoor);
+      peekLocalSite(m, P_mu.View(CpuRead), lcoor);
       m = m - tmp;
       pokeLocalSite(m, P_mu_v_write, lcoor);
     });

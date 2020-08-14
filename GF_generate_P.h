@@ -31,7 +31,7 @@ void GF_generate_P(LatticeGaugeField& P, GridParallelRNG& pRNG, const Momenta_k 
 
   Coordinate gdims = P.Grid()->_gdimensions;
 
-  autoView(newP_Minus_v, newP_Minus, AcceleratorWrite);
+  autoView(newP_Minus_v, newP_Minus, CpuWrite);
 
 // Cannot use parallel_for 
   for(int node=0; node<P.Grid()->_Nprocessors; ++node){

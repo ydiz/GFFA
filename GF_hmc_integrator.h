@@ -119,7 +119,8 @@ void update_U(LatticeGaugeField& Mom, LatticeGaugeField& U, double ep, const Mom
   autoView(deltaU_v, deltaU, AcceleratorRead);
 
   // parallel_for(int ss=0;ss<Mom.Grid()->oSites();ss++){
-  thread_for(ss, Mom.Grid()->oSites(), {
+  // thread_for(ss, Mom.Grid()->oSites(), {
+  accelerator_for(ss, Mom.Grid()->oSites(), vComplex::Nsimd(), {
    for (int mu = 0; mu < Nd; mu++)
      // U[ss]._internal[mu] = ProjectOnGroup(Exponentiate(deltaU[ss]._internal[mu], ep, Nexp) * U[ss]._internal[mu]);
      U_v[ss](mu) = ProjectOnGroup(Exponentiate(deltaU_v[ss](mu), ep, Nexp) * U_v[ss](mu));
