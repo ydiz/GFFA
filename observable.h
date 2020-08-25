@@ -107,7 +107,9 @@ public:
     static bool last_log_evals_initialized = false;
 
     // measure_A(U, Par.coors, last_log_evals, last_log_evals_initialized);
+    std::cout << "before measure_A function" << std::endl;
     measure_A(U, Par.modes, last_log_evals, last_log_evals_initialized);
+    std::cout << "after measure_A function" << std::endl;
 
     // for(int i=0; i<Par.coors.size(); ++i) {
     //

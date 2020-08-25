@@ -89,8 +89,6 @@ void measure_A(const LatticeGaugeField &U, const std::vector<std::vector<int>> &
   for(int d=0; d<4; ++d)   vol = vol * U.Grid()->_fdimensions[d];
   An = An * (1. / std::sqrt(vol));
 
-
-
   Lattice<iVector<iScalar<iVector<vComplex, 8 > >, 4> > alg(U.Grid());
 
   for (int mu = 0; mu < Nd; mu++)
@@ -109,6 +107,7 @@ void measure_A(const LatticeGaugeField &U, const std::vector<std::vector<int>> &
     std::cout << "coor=";
     print_grid_field_site(alg, coor);
   }
+  std::cout << "end of measure_A function" << std::endl;
 }
 
 
