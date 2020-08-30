@@ -13,8 +13,23 @@ inline iMatrix<Complex, 3> Log(iMatrix<Complex, 3> &U, iVector<Complex, 3> &last
   using Vec = Eigen::Vector3cd;
 
   // Grid::complex -> c++ complex
+#if defined(GRID_CUDA) || defined(GRID_HIP)
+  std::complex<double> U_tmp[3][3];
+  for(int i=0; i<3; ++i) {
+    for(int j=0; j<3; ++j) {
+      U_tmp[i][j] = std::complex<double>(U(i, j));
+    }
+  }
 
+
+  Map<Mat> U_e(&U_tmp[0][0]);
+  // Map<Mat> U_e(&U(0,0));
+#else
   Map<Mat> U_e(&U(0,0));
+
+#endif
+
+
 
   ComplexEigenSolver<Mat> es(U_e);
   Vec evals = es.eigenvalues();
