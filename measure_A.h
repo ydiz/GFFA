@@ -12,6 +12,8 @@ inline iMatrix<Complex, 3> Log(iMatrix<Complex, 3> &U, iVector<Complex, 3> &last
   using Mat = Eigen::Matrix<std::complex<double>, 3, 3, RowMajor>; // !!! by default MatrixXcd is columns Major !!!
   using Vec = Eigen::Vector3cd;
 
+  // Grid::complex -> c++ complex
+
   Map<Mat> U_e(&U(0,0));
 
   ComplexEigenSolver<Mat> es(U_e);

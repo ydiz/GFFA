@@ -164,15 +164,10 @@ class GF_HybridMonteCarlo {
       std::cout << GridLogMessage << "Total time for trajectory (s): " << (t1-t0)/1e6 << std::endl;
 
       for (int obs = 0; obs < Observables.size(); obs++) {
-      	// std::cout << GridLogDebug << "Observables # " << obs << std::endl;
-      	// std::cout << GridLogDebug << "Observables total " << Observables.size() << std::endl;
-      	// std::cout << GridLogDebug << "Observables pointer " << Observables[obs] << std::endl;
-      	std::cout << GridLogMessage << "Observables # " << obs << std::endl;
-      	std::cout << GridLogMessage << "Observables total " << Observables.size() << std::endl;
-      	std::cout << GridLogMessage << "Observables pointer " << Observables[obs] << std::endl;
-        std::cout << "before Observables[obs]->TrajectoryComplete" << std::endl;
+      	std::cout << GridLogDebug << "Observables # " << obs << std::endl;
+      	std::cout << GridLogDebug << "Observables total " << Observables.size() << std::endl;
+      	std::cout << GridLogDebug << "Observables pointer " << Observables[obs] << std::endl;
         Observables[obs]->TrajectoryComplete(traj + 1, Ucur, sRNG, pRNG);
-        std::cout << "after Observables[obs]->TrajectoryComplete" << std::endl;
       }
       std::cout << GridLogMessage << ":::::::::::::::::::::::::::::::::::::::::::" << std::endl;
     }

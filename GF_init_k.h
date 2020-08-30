@@ -23,6 +23,7 @@ public:
 
   Momenta_k(GridBase* grid, Real _M, Real _epsi, bool _newHp): k(4, grid), sinK(4, grid), sinKNgExp(4, grid), sinKPsExp(4, grid), sinKNormSquare(grid), sinKNorm(grid), FourSinKSquareEpsilon(grid), SqrtFourSinKSquareEpsilon(grid), Ck_D(grid), Ck_SqrtInvD(grid), M(_M), newHp(_newHp)
   {
+    std::cout << "beginning of initialzing Momenta_k" << std::endl;
     // generate k, and sinK
     LatticeComplex    coor(grid);
     LatticeComplex    tt(grid);
@@ -55,14 +56,25 @@ public:
     //generate one
     one = 1.0;
 
+
+    LatticeComplex tmp_sinKNormSquare = sinKNormSquare;
+    TComplex tmp_site;  tmp_site = 42.;  // Just some random number to avoid division by 0
+    pokeSite(tmp_site, tmp_sinKNormSquare, Coordinate({0,0,0,0}));
+
+    std::cout << "before generate Ck_D" << std::endl;
     //generate Ck_D.
     TComplex zero;
     zero = 0.0;
-    Ck_D = one / (sinKNormSquare * (M * M)) - one / (FourSinKSquareEpsilon * sinKNormSquare);
+    std::cout << "before Ck_D = one / (sinKNormSquare * (M * M)) - one / (FourSinKSquareEpsilon * tmp_sinKNormSquare)" << std::endl;
+    // Ck_D = one / (sinKNormSquare * (M * M)) - one / (FourSinKSquareEpsilon * sinKNormSquare);
+    Ck_D = one / (tmp_sinKNormSquare * (M * M)) - one / (FourSinKSquareEpsilon * tmp_sinKNormSquare);
+    std::cout << "after Ck_D = one / (sinKNormSquare * (M * M)) - one / (FourSinKSquareEpsilon * tmp_sinKNormSquare)" << std::endl;
     pokeSite(zero, Ck_D, Coordinate({0,0,0,0}));
+    std::cout << "after pokeSite" << std::endl;
 
     //generate Ck_SqrtInvD
-    Ck_SqrtInvD = (M-SqrtFourSinKSquareEpsilon)/sinKNormSquare;
+    // Ck_SqrtInvD = (M-SqrtFourSinKSquareEpsilon)/sinKNormSquare;
+    Ck_SqrtInvD = (M-SqrtFourSinKSquareEpsilon) / tmp_sinKNormSquare;
     // pokeSite(zero, Ck_SqrtInvD, coor0000);
     pokeSite(zero, Ck_SqrtInvD, Coordinate({0,0,0,0}));
 
@@ -73,6 +85,8 @@ public:
     // std::cout << __func__ << ": M = " << M << std::endl;
     // std::cout << __func__ << ": epsi = " << epsi << std::endl;
     // std::cout << __func__ << ": newHp = " << newHp << std::endl;
+
+    std::cout << "end of initialzing Momenta_k" << std::endl;
 
   }
 
