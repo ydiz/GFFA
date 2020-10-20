@@ -46,23 +46,125 @@ public:
 
 
 
+struct PolyakovLoop_para : Serializable {
 
+public:
+  GRID_SERIALIZABLE_CLASS_MEMBERS(PolyakovLoop_para,
+    bool, do_measure
+  );
 
+  template <class ReaderClass>
+  PolyakovLoop_para(Reader<ReaderClass>& reader) {
+    read(reader, "PolyakovLoop_Observable", *this);
+    // std::cout << *this << std::endl;
+  }
 
+};
 
+template <class Impl>
+class PolyakovLoopLogger : public HmcObservable<typename Impl::Field> {
+  PolyakovLoop_para Par;
+public:
+  INHERIT_GIMPL_TYPES(Impl);
+  typedef typename Impl::Field Field;
 
+  PolyakovLoopLogger(PolyakovLoop_para P): Par(P) {}
 
+  void TrajectoryComplete(int traj,
+                          Field &U,
+                          GridSerialRNG &sRNG,
+                          GridParallelRNG &pRNG) {
 
-// class GaugeModes_para {
-// public:
-//   std::vector<std::vector<int>> coors;
-// };
+    if(!Par.do_measure) return;
+
+    Coordinate fdims = U.Grid()->FullDimensions();
+    int V = fdims[0] * fdims[1] * fdims[2];
+    int T = fdims[3];
+
+    for(int mu=0; mu<4; ++mu) {       // Direction of Polaykov loop
+      LatticeColourMatrix tmp = peekLorentz(U, mu); // U_mu
+      for(int i=0; i<T; ++i) tmp = tmp * Cshift(tmp, mu, 1);
+
+      // get three directions perpendicular to direction mu
+      std::vector<int> perp_dirs {0,1,2,3};
+      perp_dirs.erase(perp_dirs.begin() + mu);   
+      int dir1 = perp_dirs[0], dir2 = perp_dirs[1], dir3 = perp_dirs[2];
+
+      std::vector<Complex> polya(V);
+
+      autoView(tmp_v , tmp, CpuRead);
+      thread_for(ss, U.Grid()->lSites(), {
+        Coordinate lcoor, gcoor;
+        localIndexToLocalGlobalCoor(U.Grid(), ss, lcoor, gcoor);
+
+        if(gcoor[mu] == 0) {
+          typename LatticeColourMatrix::vector_object::scalar_object m;
+          peekLocalSite(m, tmp_v, lcoor);
+
+          typename LatticeComplex::vector_object::scalar_object m2;
+          m2 = trace(m);
+
+          // int x = gcoor[0], y = gcoor[1], z = gcoor[2];
+          // polya[x * fdims[0] * fdims[1] + y * fdims[1] + z] = m2()()();
+
+          int idx = gcoor[dir1] * fdims[dir1] * fdims[dir2] + gcoor[dir2] * fdims[dir2] + gcoor[dir3];
+          polya[idx] = m2()()();
+        }
+      });
+      int def_prec = std::cout.precision();
+      std::cout << std::setprecision(3) << "Polyakov loop: [ " << traj << " ] mu = " << mu << ": " << polya << std::endl;
+
+      Complex avg_polya = 0.;
+      for(int i=0; i<polya.size(); ++i) avg_polya += polya[i];
+      avg_polya /= double(polya.size());
+
+      std::cout << GridLogMessage
+          << std::setprecision(std::numeric_limits<Real>::digits10 + 1)
+          << "AvgPolyakovLoop: [ " << traj << " ] mu = " << mu << ": " << avg_polya << std::endl;
+      std::cout.precision(def_prec);
+    }
+
+  }
+};
+
+template < class Impl >
+class PolyakovLoopMod: public ObservableModule<PolyakovLoopLogger<Impl>, PolyakovLoop_para>{
+  typedef ObservableModule<PolyakovLoopLogger<Impl>, PolyakovLoop_para> ObsBase;
+  using ObsBase::ObsBase; // for constructors
+
+  // acquire resource
+  virtual void initialize(){
+    this->ObservablePtr.reset(new PolyakovLoopLogger<Impl>(this->Par_));
+  }
+public:
+  PolyakovLoopMod(PolyakovLoop_para Par): ObsBase(Par){}
+  // PolyakovLoopMod(): ObsBase(){}
+};
+
+// template < class Impl >
+// class GaugeModesMod: public ObservableModule<GaugeModesLogger<Impl>, GaugeModes_para>{
+//   typedef ObservableModule<GaugeModesLogger<Impl>, GaugeModes_para> ObsBase;
+//   using ObsBase::ObsBase; // for constructors
 //
-// std::ostream& operator<<(std::ostream &out, const GaugeModes_para &p) {
-//   out << "GaugeModes: "<< std::endl;
-//   out << "coors: " << p.coors << std::endl;
-//   return out;
-// }
+//   // acquire resource
+//   virtual void initialize() {
+//     this->ObservablePtr.reset(new GaugeModesLogger<Impl>(this->Par_));
+//   }
+//   public:
+//   GaugeModesMod(GaugeModes_para Par): ObsBase(Par){}
+//   GaugeModesMod(): ObsBase(){}
+// };
+
+
+
+
+
+
+
+
+
+
+
 
 
 struct GaugeModes_para : Serializable {
@@ -96,12 +198,6 @@ public:
                           GridSerialRNG &sRNG,
                           GridParallelRNG &pRNG) {
 
-    // using LatticeGaugeFieldSite = typename LatticeGaugeField::vector_object::scalar_object;
-    // using LatticeUevalSite = iVector<iScalar<iVector<vComplex, 3> >, 4>;
-    // static std::vector<LatticeUevalSite> log_eval(coors.size(), 0.);
-    //
-    // static bool last_log_evals_initialized = false;
-
     using LatticeUeval = Lattice<iVector<iScalar<iVector<vComplex, 3> >, 4>>;
     static LatticeUeval last_log_evals(U.Grid()); 
     static bool last_log_evals_initialized = false;
@@ -110,21 +206,6 @@ public:
     std::cout << "before measure_A function" << std::endl;
     measure_A(U, Par.modes, last_log_evals, last_log_evals_initialized);
     std::cout << "after measure_A function" << std::endl;
-
-    // for(int i=0; i<Par.coors.size(); ++i) {
-    //
-    //   std::vector<int> coor = Par.coors[i];
-    //   LatticeGaugeFieldSite m;
-    //   peekSite(m, U, coor);
-    //   
-    //   for(int mu=0; mu<4; ++mu) {
-    //     m(mu)() = Log( m(mu)(), log_eval[i](mu)(), last_log_evals_initialized);
-    //   }
-    //   last_log_evals_initialized = true;
-    //   std::cout << GridLogMessage << "GaugeModes: [ " << traj << " ] coor [" << log_m << "]" << std::endl;
-    // }
-    //
-    
 
   }
 };
@@ -141,65 +222,10 @@ class GaugeModesMod: public ObservableModule<GaugeModesLogger<Impl>, GaugeModes_
   }
   public:
   GaugeModesMod(GaugeModes_para Par): ObsBase(Par){}
-  GaugeModesMod(): ObsBase(){}
+  // GaugeModesMod(): ObsBase(){}
 };
 
 
-
-
-
-
-//
-// template <class Impl>
-// class WilsonLineTraceLogger : public HmcObservable<typename Impl::Field> {
-// public:
-//   INHERIT_GIMPL_TYPES(Impl);
-//   typedef typename Impl::Field Field;
-//
-//   void TrajectoryComplete(int traj,
-//                           Field &U,
-//                           GridSerialRNG &sRNG,
-//                           GridParallelRNG &pRNG) {
-//
-//
-//     // !!! Cannot be parallel for
-//     using LatticeGaugeFieldSite = typename LatticeGaugeField::vector_object::scalar_object;
-//     int T = U.Grid()->_fdimensions[3];
-//     std::vector<LatticeGaugeFieldSite> local_rst(T, 1.);
-//     for(int ss=0; ss<force.Grid()->lSites(); ss++) {
-//       std::vector<int> lcoor, gcoor;
-//       localIndexToLocalGlobalCoor(U.Grid(), ss, lcoor, gcoor);
-//       LatticeGaugeFieldSite m;
-//       peekLocalSite(m, force, lcoor);
-//       local_rst[gcoors[3]] *= m;
-//     }
-//
-//     double rst;
-//
-//     int def_prec = std::cout.precision();
-//
-//     std::cout << GridLogMessage
-//         << std::setprecision(std::numeric_limits<Real>::digits10 + 1)
-//         << "WilsonLineTrace: [ " << traj << " ] "<< rst<< std::endl;
-//
-//     std::cout.precision(def_prec);
-//
-//   }
-// };
-//
-//
-// template < class Impl >
-// class WilsonLineTraceMod: public ObservableModule<WilsonLineTraceLogger<Impl>, NoParameters>{
-//   typedef ObservableModule<WilsonLineTraceLogger<Impl>, NoParameters> ObsBase;
-//   using ObsBase::ObsBase; // for constructors
-//
-//   // acquire resource
-//   virtual void initialize(){
-//     this->ObservablePtr.reset(new WilsonLineTraceLogger<Impl>());
-//   }
-// public:
-//   WilsonLineTraceMod(): ObsBase(NoParameters()){}
-// };
 
 
 
@@ -226,34 +252,6 @@ public:
 
 
 
-
-// class MyTC_para {
-// public:
-//   std::string type;
-//   double step_size;
-//   double adaptiveErrorTolerance;
-//   // double maxTau;
-//   std::vector<double> meas_taus;
-//
-//   int TrajectoryStart;
-//   int TrajectoryInterval;
-//
-//   // bool saveSmearField;
-//   // std::string smearFieldFilePrefix;
-//   // std::string topoChargeOutFile;
-// };
-//
-// std::ostream& operator<<(std::ostream &out, const MyTC_para &p) {
-//   out << "Topological Charge: "<< std::endl;
-//   out << "type: " << p.type << std::endl;
-//   out << "TrajectoryStart: " << p.TrajectoryStart << std::endl;
-//   out << "TrajectoryInterval: " << p.TrajectoryInterval << std::endl;
-//   out << "step_size: " << p.step_size << std::endl;
-//   out << "adaptiveErrorTolerance: " << p.adaptiveErrorTolerance << std::endl;
-//   out << "meas_taus: " << p.meas_taus << std::endl;
-//   // out << "topoChargeOutFile: " << p.topoChargeOutFile << std::endl;
-//   return out;
-// }
 
 
 template <class Impl>
@@ -297,7 +295,7 @@ class MyTCMod: public ObservableModule<MyTC<Impl>, MyTC_para>{
   }
   public:
   MyTCMod(MyTC_para Par): ObsBase(Par){}
-  MyTCMod(): ObsBase(){}
+  // MyTCMod(): ObsBase(){}
 };
 
 

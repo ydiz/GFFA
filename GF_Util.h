@@ -4,6 +4,7 @@
 
 namespace Grid{
 
+
 template<class T>
 void print_grid_field_site(const T &field, const std::vector<int> coor) {
   using namespace Grid;
@@ -12,6 +13,19 @@ void print_grid_field_site(const T &field, const std::vector<int> coor) {
   peekSite(site, field, coor);
   std::cout << site << std::endl;
 }
+
+
+
+void localIndexToLocalGlobalCoor(GridBase *grid, int ss, Coordinate &lcoor, Coordinate &gcoor) {
+  // ss is local index; parallel_for(int ss=0; ss<ret.Grid()->lSites(); ss++)
+  lcoor.resize(4);
+  gcoor.resize(4);
+  grid->LocalIndexToLocalCoor(ss, lcoor);
+  Coordinate processor_coor;
+  grid->ProcessorCoorFromRank(grid->ThisRank(), processor_coor);
+  grid->ProcessorCoorLocalCoorToGlobalCoor(processor_coor, lcoor, gcoor);
+}
+
 
 
 
@@ -28,6 +42,7 @@ strong_inline auto operator*(const iVector<rtype, N> &rhs, const iVector<ltype, 
 namespace QCD{
 
 using LatticeGaugeFieldSite = typename LatticeGaugeField::vector_object::scalar_object;
+using LatticeComplexSite = typename LatticeComplex::vector_object::scalar_object;
 
 template <class T>
 std::ostream& operator<<(std::ostream &out, const std::vector<T> &v) {

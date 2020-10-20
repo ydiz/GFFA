@@ -39,6 +39,7 @@ int main(int argc, char **argv) {
   HMCparameters hmcParams(reader);
   MyTC_para tc_para(reader);
   GaugeModes_para gm_para(reader);
+  PolyakovLoop_para pl_para(reader);
 
   std::cout << hmcParams << std::endl;
   std::cout << hmc_para << std::endl;
@@ -74,6 +75,8 @@ int main(int argc, char **argv) {
   TheHMC.Resources.AddObservable<PlaqObs>();
   typedef LinkTraceMod<HMCWrapper::ImplPolicy> LTObs;
   TheHMC.Resources.AddObservable<LTObs>();
+  typedef PolyakovLoopMod<HMCWrapper::ImplPolicy> PolyakovObs;
+  TheHMC.Resources.AddObservable<PolyakovObs>(pl_para);
 
   typedef MyTCMod<HMCWrapper::ImplPolicy> QObs; 
   TheHMC.Resources.AddObservable<QObs>(tc_para);

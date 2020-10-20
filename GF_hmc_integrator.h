@@ -20,7 +20,7 @@ GFIntegrator(GridBase* grid, IntegratorParameters Par,
   RealD GF_S(Field& U, const Momenta_k &KK) {
     RealD H;
     if(KK.newHp) H = Hp(this->P, KK);
-    else H = - FieldImplementation::FieldSquareNorm(this->P); //minus sign comes from the fact that P is actually timesI(P).
+    else H = - FieldImplementation::FieldSquareNorm(this->P) / HMC_MOMENTUM_DENOMINATOR; // - trace (P*P) / denom // minus sign comes from the fact that P is actually timesI(P).  // ! Must add HMC_MOMENTUM_DENOMINATOR factor for new version Grid
 
     RealD Hterm;
     std::cout << GridLogMessage << "Momentum action H_p = "<<  std::setprecision(8)  << H << "\n";

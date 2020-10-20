@@ -21,7 +21,7 @@ public:
     int, hb_offset,
 
     bool, measure_A,
-    double, fixed_P_k,
+    // double, fixed_P_k,
     std::vector<std::vector<int>>, measure_A_coors
   );
 
