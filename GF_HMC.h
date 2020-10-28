@@ -122,7 +122,7 @@ class GF_HybridMonteCarlo {
       //calculate delta S_GF2
       // if(HMC_para.newAction){
       //   //LatticeColourMatrix g(Ucur.Grid());
-      //   //g = 1.0;
+      //   //g = 1.0;time.count()
       //   // GF_metro(Ucur, g, HMC_para.hb_offset, HMC_para.betaMM, HMC_para.hb_multi_hit, 0.05);
       //   GF_heatbath(Ucur, g, HMC_para.hb_offset, HMC_para.betaMM, HMC_para.hb_multi_hit);
       //   	std::cout << "Omega_g(g, Ucur): "<< Omega_g(g, Ucur) << std::endl;
@@ -170,6 +170,23 @@ class GF_HybridMonteCarlo {
         Observables[obs]->TrajectoryComplete(traj + 1, Ucur, sRNG, pRNG);
       }
       std::cout << GridLogMessage << ":::::::::::::::::::::::::::::::::::::::::::" << std::endl;
+
+
+      // If time is close to the maximum time allowed, exit the program
+      using namespace std::chrono;
+
+      GridLogMessage.StopWatch->Stop();   // must stop the watch before calling StopWatch->Elapsed()
+      seconds elapsed_time = duration_cast<seconds>(GridLogMessage.StopWatch->Elapsed());
+      GridLogMessage.StopWatch->Start();
+
+      double elapsed_seconds = elapsed_time.count();
+      std::cout << GridLogMessage << elapsed_seconds << " seconds have elapsed" << std::endl;
+      double avg_time_traj = elapsed_seconds / (traj - Params.StartTrajectory + 1 );
+
+      if(HMC_para.maxHours * 3600 - elapsed_seconds < avg_time_traj * 5) {
+        std::cout << "The time left can do only less than 5 trajectories; so I am exiting the program. " << std::endl;
+        break;
+      }
     }
   }
 

@@ -22,7 +22,9 @@ public:
 
     bool, measure_A,
     // double, fixed_P_k,
-    std::vector<std::vector<int>>, measure_A_coors
+    std::vector<std::vector<int>>, measure_A_coors,
+
+    double, maxHours // maximum allowed time in hours
   );
 
   template <class ReaderClass>
