@@ -172,20 +172,22 @@ class GF_HybridMonteCarlo {
       std::cout << GridLogMessage << ":::::::::::::::::::::::::::::::::::::::::::" << std::endl;
 
 
-      // If time is close to the maximum time allowed, exit the program
-      using namespace std::chrono;
+      if(HMC_para.maxHours > 0) {
+        // If time is close to the maximum time allowed, exit the program
+        using namespace std::chrono;
 
-      GridLogMessage.StopWatch->Stop();   // must stop the watch before calling StopWatch->Elapsed()
-      seconds elapsed_time = duration_cast<seconds>(GridLogMessage.StopWatch->Elapsed());
-      GridLogMessage.StopWatch->Start();
+        GridLogMessage.StopWatch->Stop();   // must stop the watch before calling StopWatch->Elapsed()
+        seconds elapsed_time = duration_cast<seconds>(GridLogMessage.StopWatch->Elapsed());
+        GridLogMessage.StopWatch->Start();
 
-      double elapsed_seconds = elapsed_time.count();
-      std::cout << GridLogMessage << elapsed_seconds << " seconds have elapsed" << std::endl;
-      double avg_time_traj = elapsed_seconds / (traj - Params.StartTrajectory + 1 );
+        double elapsed_seconds = elapsed_time.count();
+        std::cout << GridLogMessage << elapsed_seconds << " seconds have elapsed" << std::endl;
+        double avg_time_traj = elapsed_seconds / (traj - Params.StartTrajectory + 1 );
 
-      if(HMC_para.maxHours * 3600 - elapsed_seconds < avg_time_traj * 5) {
-        std::cout << "The time left can do only less than 5 trajectories; so I am exiting the program. " << std::endl;
-        break;
+        if(HMC_para.maxHours * 3600 - elapsed_seconds < avg_time_traj * 5) {
+          std::cout << "The time left can do only less than 5 trajectories; so I am exiting the program. " << std::endl;
+          break;
+        }
       }
     }
   }
