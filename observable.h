@@ -83,7 +83,7 @@ public:
 
     for(int mu=0; mu<4; ++mu) {       // Direction of Polaykov loop
       LatticeColourMatrix tmp = peekLorentz(U, mu); // U_mu
-      for(int i=0; i<T; ++i) tmp = tmp * Cshift(tmp, mu, 1);
+      for(int i=0; i<fdims[mu]-1; ++i) tmp = tmp * Cshift(tmp, mu, 1);
 
       // get three directions perpendicular to direction mu
       std::vector<int> perp_dirs {0,1,2,3};
