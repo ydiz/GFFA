@@ -61,16 +61,16 @@ public:
     TComplex tmp_site;  tmp_site = 42.;  // Just some random number to avoid division by 0
     pokeSite(tmp_site, tmp_sinKNormSquare, Coordinate({0,0,0,0}));
 
-    std::cout << "before generate Ck_D" << std::endl;
+    // std::cout << "before generate Ck_D" << std::endl;
     //generate Ck_D.
     TComplex zero;
     zero = 0.0;
-    std::cout << "before Ck_D = one / (sinKNormSquare * (M * M)) - one / (FourSinKSquareEpsilon * tmp_sinKNormSquare)" << std::endl;
+    // std::cout << "before Ck_D = one / (sinKNormSquare * (M * M)) - one / (FourSinKSquareEpsilon * tmp_sinKNormSquare)" << std::endl;
     // Ck_D = one / (sinKNormSquare * (M * M)) - one / (FourSinKSquareEpsilon * sinKNormSquare);
     Ck_D = one / (tmp_sinKNormSquare * (M * M)) - one / (FourSinKSquareEpsilon * tmp_sinKNormSquare);
-    std::cout << "after Ck_D = one / (sinKNormSquare * (M * M)) - one / (FourSinKSquareEpsilon * tmp_sinKNormSquare)" << std::endl;
+    // std::cout << "after Ck_D = one / (sinKNormSquare * (M * M)) - one / (FourSinKSquareEpsilon * tmp_sinKNormSquare)" << std::endl;
     pokeSite(zero, Ck_D, Coordinate({0,0,0,0}));
-    std::cout << "after pokeSite" << std::endl;
+    // std::cout << "after pokeSite" << std::endl;
 
     //generate Ck_SqrtInvD
     // Ck_SqrtInvD = (M-SqrtFourSinKSquareEpsilon)/sinKNormSquare;

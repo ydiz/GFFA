@@ -14,13 +14,13 @@ class GFLeapFrog : public GFIntegrator<FieldImplementation, SmearingPolicy,
   std::string integrator_name(){return "GFLeapFrog";}
 
   GFLeapFrog(GridBase* grid, IntegratorParameters Par,
-           ActionSet<Field, RepresentationPolicy>& Aset, SmearingPolicy& Sm)
+           MyActionSet<Field, RepresentationPolicy>& Aset, SmearingPolicy& Sm)
       : GFIntegrator<FieldImplementation, SmearingPolicy, RepresentationPolicy>(
             grid, Par, Aset, Sm){};
 
   void step(Field& U, int level, int first, int last) {assert(0);}
 
-  void step(Field& U, int level, int _first, int _last, const Momenta_k &KK)
+  void step(Field& U, int level, int _first, int _last, const Momenta_k &KK, GridSerialRNG &sRNG, GridParallelRNG &pRNG)
   {
     int fl = this->as.size() - 1;
 
@@ -33,7 +33,7 @@ class GFLeapFrog : public GFIntegrator<FieldImplementation, SmearingPolicy,
       int last_step = _last && (e == multiplier - 1);
 
       if (first_step) {  // initial half step
-        this->update_P(U, level, eps / 2.0);
+        this->update_P(U, level, eps / 2.0, sRNG, pRNG);
       }
       // std::cout << "Leap Frog: after first half setp update_P" << std::endl;
       // print_grid_field_site(this->P, {0,0,0,0});
@@ -42,14 +42,14 @@ class GFLeapFrog : public GFIntegrator<FieldImplementation, SmearingPolicy,
       if (level == fl) {  // lowest level
         this->update_U(U, eps, KK);
       } else {  // recursive function call
-        this->step(U, level + 1, first_step, last_step, KK);
+        this->step(U, level + 1, first_step, last_step, KK, sRNG, pRNG);
       }
       // std::cout << "Leap Frog: after  update_U" << std::endl;
       // print_grid_field_site(U, {0,0,0,0});
       // print_grid_field_site(U, {1,2,0,0});
 
       int mm = last_step ? 1 : 2;
-      this->update_P(U, level, mm * eps / 2.0);
+      this->update_P(U, level, mm * eps / 2.0, sRNG, pRNG);
 
     }
   }
@@ -68,7 +68,7 @@ class GFMinimumNorm2 : public GFIntegrator<FieldImplementation, SmearingPolicy,
   INHERIT_FIELD_TYPES(FieldImplementation);
 
   GFMinimumNorm2(GridBase* grid, IntegratorParameters Par,
-               ActionSet<Field, RepresentationPolicy>& Aset, SmearingPolicy& Sm)
+               MyActionSet<Field, RepresentationPolicy>& Aset, SmearingPolicy& Sm)
       : GFIntegrator<FieldImplementation, SmearingPolicy, RepresentationPolicy>(
             grid, Par, Aset, Sm){};
 
@@ -129,7 +129,7 @@ class GFForceGradient : public GFIntegrator<FieldImplementation, SmearingPolicy,
   INHERIT_FIELD_TYPES(FieldImplementation);
 
   GFForceGradient(GridBase* grid, IntegratorParameters Par,
-               ActionSet<Field, RepresentationPolicy>& Aset, SmearingPolicy& Sm)
+               MyActionSet<Field, RepresentationPolicy>& Aset, SmearingPolicy& Sm)
       : GFIntegrator<FieldImplementation, SmearingPolicy, RepresentationPolicy>(
             grid, Par, Aset, Sm){};
 

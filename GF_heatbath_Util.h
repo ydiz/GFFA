@@ -5,18 +5,29 @@ namespace QCD{
 
 void GF_heatbath(const LatticeGaugeField &Umu, LatticeColourMatrix &g,
                 int nsweeps, Real _betaMM, const std::string &table_path,
+                GridSerialRNG &sRNG, GridParallelRNG &_pRNG_fullLat,
                 LatticeGaugeField *dSGF2dU=NULL,
                 LatticeGaugeField (* const ForceFunc)(const LatticeColourMatrix &, const std::vector<LatticeColourMatrix> &)=NULL)//, bool verbose=0)
 {
-  static bool initialized = false;
+  // static bool initialized = false;
+  // static GridRedBlackCartesian rbGrid(Umu.Grid());
+  // static GridParallelRNG  pRNG(&rbGrid);
+  // static GridSerialRNG    sRNG;
+  // if (!initialized) {
+  //  initialized = true;
+  //  pRNG.SeedFixedIntegers(std::vector<int>{1,2,3,4});
+  //  sRNG.SeedFixedIntegers(std::vector<int>{5,6,7,8});
+  // }
   static GridRedBlackCartesian rbGrid(Umu.Grid());
-  static GridParallelRNG  pRNG(&rbGrid);
-  static GridSerialRNG    sRNG;
-  if (!initialized) {
-   initialized = true;
-   pRNG.SeedFixedIntegers(std::vector<int>{1,2,3,4});
-   sRNG.SeedFixedIntegers(std::vector<int>{5,6,7,8});
+  GridParallelRNG  pRNG(&rbGrid);
+
+  std::vector<int> seeds(4);
+  for(int i=0; i<4; ++i) {
+    double rand;
+    random(sRNG, rand);
+    seeds[i] = int(rand * 100000);
   }
+  pRNG.SeedFixedIntegers(seeds);
 
   RealD coeff = _betaMM * (1./3.);
   // Real betaMM = _betaMM * 3; //In heatbath routine, the coefficient is beta/Nc

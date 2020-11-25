@@ -87,11 +87,12 @@ int main(int argc, char **argv) {
 
 
   // action
-  ActionLevel<HMCWrapper::Field> Level1(1);
+  MyActionLevel<HMCWrapper::Field> Level1(1);
 
-  WilsonGaugeActionR Wilson_action(hmc_para.beta);
+  My_WilsonActionR Wilson_action(hmc_para.beta);
+  // WilsonGaugeActionR Wilson_action(hmc_para.beta);
   GFActionR GF_Wilson_action(hmc_para.beta, hmc_para.betaMM, hmc_para.innerMC_N, hmc_para.hb_offset, hmc_para.table_path);
-  DBW2GaugeAction<PeriodicGimplR> DBW2_action(hmc_para.beta);
+  // DBW2GaugeAction<PeriodicGimplR> DBW2_action(hmc_para.beta);
   GF_DBW2ActionR GF_DBW2_action(hmc_para.beta, hmc_para.betaMM, hmc_para.innerMC_N, hmc_para.hb_offset, hmc_para.table_path);
 
   if(hmc_para.action == "Wilson"){
@@ -100,9 +101,9 @@ int main(int argc, char **argv) {
   else if(hmc_para.action == "GF_Wilson"){
     Level1.push_back(&GF_Wilson_action);
   }
-  else if(hmc_para.action == "DBW2"){
-    Level1.push_back(&DBW2_action);
-  }
+  // else if(hmc_para.action == "DBW2"){
+  //   Level1.push_back(&DBW2_action);
+  // }
   else if(hmc_para.action == "GF_DBW2"){
     Level1.push_back(&GF_DBW2_action);
   }

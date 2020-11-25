@@ -1,10 +1,118 @@
 namespace Grid {
 namespace QCD {
 
-//add betaMM
+
+
+template <class GaugeField >
+class MyAction 
+{
+
+public:
+  bool is_smeared = false;
+  // Heatbath?
+  virtual void refresh(const GaugeField& U, GridParallelRNG& pRNG) = 0; // refresh pseudofermions
+  virtual RealD S(const GaugeField& U) = 0;                             // evaluate the action
+  virtual void deriv(const GaugeField& U, GaugeField& dSdU, GridSerialRNG &sRNG, GridParallelRNG &pRNG) = 0;        // evaluate the action derivative
+  virtual std::string action_name()    = 0;                             // return the action name
+  virtual std::string LogParameters()  = 0;                             // prints action parameters
+  virtual ~MyAction(){}
+};
+
+
+
+template <class Field, class Repr = NoHirep >
+struct MyActionLevel {
+public:
+  unsigned int multiplier;
+
+  // Fundamental repr actions separated because of the smearing
+  typedef MyAction<Field>* ActPtr;
+
+  // construct a tuple of vectors of the actions for the corresponding higher
+  // representation fields
+  typedef typename AccessTypes<MyAction, Repr>::VectorCollection action_collection;
+  typedef typename  AccessTypes<MyAction, Repr>::FieldTypeCollection action_hirep_types;
+
+  action_collection actions_hirep;
+  std::vector<ActPtr>& actions;
+
+  explicit MyActionLevel(unsigned int mul = 1) : 
+    actions(std::get<0>(actions_hirep)), multiplier(mul) {
+    // initialize the hirep vectors to zero.
+    // apply(this->resize, actions_hirep, 0); //need a working resize
+    assert(mul >= 1);
+  }
+
+  template < class GenField >
+  void push_back(MyAction<GenField>* ptr) {
+    // insert only in the correct vector
+    std::get< Index < GenField, action_hirep_types>::value >(actions_hirep).push_back(ptr);
+  }
+
+  template <class ActPtr>
+  static void resize(ActPtr ap, unsigned int n) {
+    ap->resize(n);
+  }
+
+  // Loop on tuple for a callable function
+  template <std::size_t I = 1, typename Callable, typename ...Args>
+  inline typename std::enable_if<I == std::tuple_size<action_collection>::value, void>::type apply(Callable, Repr& R,Args&...) const {}
+
+  template <std::size_t I = 1, typename Callable, typename ...Args>
+  inline typename std::enable_if<I < std::tuple_size<action_collection>::value, void>::type apply(Callable fn, Repr& R, Args&... arguments) const {
+    fn(std::get<I>(actions_hirep), std::get<I>(R.rep), arguments...);
+    apply<I + 1>(fn, R, arguments...);
+  }  
+
+};
+
+// Define the MyActionSet
+template <class GaugeField, class R>
+using MyActionSet = std::vector<MyActionLevel<GaugeField, R> >;
+
+
+
+
+//////////////////////////////////////// Actions ///////////////////////////////////
+
 
 template <class Gimpl>
-class GFAction : public Action<typename Gimpl::GaugeField> {
+class My_WilsonAction : public MyAction<typename Gimpl::GaugeField> {
+ public:
+  INHERIT_GIMPL_TYPES(Gimpl);
+
+  explicit My_WilsonAction(RealD beta_) : beta(beta_){};
+
+  virtual std::string action_name() {return "WilsonGaugeAction";}
+
+  virtual std::string LogParameters(){
+    std::stringstream sstream;
+    sstream << GridLogMessage << "[WilsonGaugeAction] Beta: " << beta << std::endl;
+    return sstream.str();
+  }
+
+  virtual void refresh(const GaugeField &U,
+                       GridParallelRNG &pRNG){};  // noop as no pseudoferms
+
+  virtual RealD S(const GaugeField &U) {
+    WilsonGaugeAction<Gimpl> Waction(beta);
+    return Waction.S(U);
+  }
+
+  virtual void deriv(const GaugeField &U, GaugeField &dSdU, GridSerialRNG &sRNG, GridParallelRNG &pRNG) {
+    WilsonGaugeAction<Gimpl> Waction(beta);
+    Waction.deriv(U, dSdU);
+  }
+private:
+  RealD beta;
+};
+
+
+
+
+
+template <class Gimpl>
+class GFAction : public MyAction<typename Gimpl::GaugeField> {
  public:
   INHERIT_GIMPL_TYPES(Gimpl);
 
@@ -35,7 +143,7 @@ class GFAction : public Action<typename Gimpl::GaugeField> {
     return Sw + SGF1;
   }
 
-  virtual void deriv(const GaugeField &U, GaugeField &dSdU) {
+  virtual void deriv(const GaugeField &U, GaugeField &dSdU, GridSerialRNG &sRNG, GridParallelRNG &pRNG) {
     WilsonGaugeAction<Gimpl> Waction(beta);
     GaugeField dSwdU(U.Grid());
     Waction.deriv(U, dSwdU);
@@ -56,8 +164,8 @@ class GFAction : public Action<typename Gimpl::GaugeField> {
       g_initialized = true;
     }
 
-    GF_heatbath(U, g, hb_offset, betaMM, table_path); //hb_nsweeps before calculate equilibrium value
-    GF_heatbath(U, g, innerMC_N, betaMM, table_path, &dSGF2dU, dOmegadU_g); // calculate dSGF2dU
+    GF_heatbath(U, g, hb_offset, betaMM, table_path, sRNG, pRNG); //hb_nsweeps before calculate equilibrium value
+    GF_heatbath(U, g, innerMC_N, betaMM, table_path, sRNG, pRNG, &dSGF2dU, dOmegadU_g); // calculate dSGF2dU
 
     dSGF2dU = factor *  (1.0 / double(innerMC_N)) * dSGF2dU;
 
@@ -74,7 +182,7 @@ private:
 
 
 template <class Gimpl>
-class GF_DBW2Action : public Action<typename Gimpl::GaugeField> {
+class GF_DBW2Action : public MyAction<typename Gimpl::GaugeField> {
  public:
   INHERIT_GIMPL_TYPES(Gimpl);
 
@@ -106,8 +214,9 @@ class GF_DBW2Action : public Action<typename Gimpl::GaugeField> {
     return Sw + SGF1;
   }
 
-  virtual void deriv(const GaugeField &U, GaugeField &dSdU) {
-    
+  // virtual void deriv(const GaugeField &U, GaugeField &dSdU) {
+  virtual void deriv(const GaugeField &U, GaugeField &dSdU, GridSerialRNG &sRNG, GridParallelRNG &pRNG) {
+
     DBW2GaugeAction<Gimpl> DBW2_action(beta);
     GaugeField dSwdU(U.Grid());
     DBW2_action.deriv(U, dSwdU);
@@ -121,9 +230,9 @@ class GF_DBW2Action : public Action<typename Gimpl::GaugeField> {
     dSGF2dU = Zero();
     LatticeColourMatrix g(U.Grid());
     g = 1.0;
-    GF_heatbath(U, g, hb_offset, betaMM, table_path); //hb_nsweeps before calculate equilibrium value
+    GF_heatbath(U, g, hb_offset, betaMM, table_path, sRNG, pRNG); //hb_nsweeps before calculate equilibrium value
 
-    GF_heatbath(U, g, innerMC_N, betaMM, table_path, &dSGF2dU, dOmegadU_g); // calculate dSGF2dU
+    GF_heatbath(U, g, innerMC_N, betaMM, table_path, sRNG, pRNG, &dSGF2dU, dOmegadU_g); // calculate dSGF2dU
 
     dSGF2dU = factor *  (1.0 / double(innerMC_N)) * dSGF2dU;
 
@@ -138,6 +247,7 @@ private:
   std::string table_path;
 };
 
+typedef My_WilsonAction<PeriodicGimplR>          My_WilsonActionR;
 typedef GFAction<PeriodicGimplR>          GFActionR;
 typedef GF_DBW2Action<PeriodicGimplR>     GF_DBW2ActionR;
 

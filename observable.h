@@ -82,8 +82,17 @@ public:
     int T = fdims[3];
 
     for(int mu=0; mu<4; ++mu) {       // Direction of Polaykov loop
-      LatticeColourMatrix tmp = peekLorentz(U, mu); // U_mu
-      for(int i=0; i<fdims[mu]-1; ++i) tmp = tmp * Cshift(tmp, mu, 1);
+      // LatticeColourMatrix tmp = peekLorentz(U, mu); // U_mu
+      // for(int i=0; i<fdims[mu]-1; ++i) tmp = tmp * Cshift(tmp, mu, 1);  // WRONG
+      LatticeColourMatrix Umu = peekLorentz(U, mu); // U_mu
+      LatticeColourMatrix Umu_shift = Umu;
+      LatticeColourMatrix tmp = Umu;
+     
+      for(int i=0; i<fdims[mu]-1; ++i) {
+        Umu_shift = Cshift(Umu_shift, mu, 1); 
+        tmp = tmp * Umu_shift;
+      }   
+
 
       // get three directions perpendicular to direction mu
       std::vector<int> perp_dirs {0,1,2,3};

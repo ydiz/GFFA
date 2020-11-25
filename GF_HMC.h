@@ -50,7 +50,7 @@ class GF_HybridMonteCarlo {
   /////////////////////////////////////////////////////////
   // Evolution
   /////////////////////////////////////////////////////////
-  RealD evolve_hmc_step(Field &U, const Momenta_k &KK, const GFFAParams &HMC_para) {
+  RealD evolve_hmc_step(Field &U, const Momenta_k &KK, const GFFAParams &HMC_para, GridSerialRNG &sRNG, GridParallelRNG &pRNG) {
     TheIntegrator.GF_refresh(U, pRNG, KK, HMC_para);  // set U and initialize P and phi's
 
     double H0;
@@ -63,7 +63,7 @@ class GF_HybridMonteCarlo {
       std::cout.precision(current_precision);
     }
 
-    TheIntegrator.GF_integrate(U, KK, HMC_para);
+    TheIntegrator.GF_integrate(U, KK, HMC_para, sRNG, pRNG);
 
     if(!HMC_para.isGFFA) {
       RealD H1 = TheIntegrator.GF_S(U, KK);  // updated state action
@@ -114,7 +114,7 @@ class GF_HybridMonteCarlo {
       double t0=usecond();
       Ucopy = Ucur;
 
-      DeltaH = evolve_hmc_step(Ucopy, KK, HMC_para);
+      DeltaH = evolve_hmc_step(Ucopy, KK, HMC_para, sRNG, pRNG);
 
   	  // Real tt=0;
   	  // Real FinalDeltaH=0;
