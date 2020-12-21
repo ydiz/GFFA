@@ -5,7 +5,7 @@ namespace QCD{
 
 void GF_heatbath(const LatticeGaugeField &Umu, LatticeColourMatrix &g,
                 int nsweeps, Real _betaMM, const std::string &table_path,
-                GridSerialRNG &sRNG, GridParallelRNG &_pRNG_fullLat,
+                GridSerialRNG &sRNG, GridParallelRNG &_pRNG_fullLat, // _pRNG_fullLat is not used in this function
                 LatticeGaugeField *dSGF2dU=NULL,
                 LatticeGaugeField (* const ForceFunc)(const LatticeColourMatrix &, const std::vector<LatticeColourMatrix> &)=NULL)//, bool verbose=0)
 {

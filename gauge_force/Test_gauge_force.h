@@ -3,25 +3,16 @@
 namespace Grid {
 namespace QCD {
 
-void localIndexToLocalGlobalCoor(GridBase *grid, int ss, std::vector<int> &lcoor, std::vector<int> &gcoor) {
-  // ss is local index; parallel_for(int ss=0; ss<ret.Grid()->lSites(); ss++)
-  lcoor.resize(4);
-  gcoor.resize(4);
-  grid->LocalIndexToLocalCoor(ss, lcoor);
-  std::vector<int> processor_coor;
-  grid->ProcessorCoorFromRank(grid->ThisRank(), processor_coor);
-  grid->ProcessorCoorLocalCoorToGlobalCoor(processor_coor, lcoor, gcoor);
-}
-
 int smod(const int x, const int len)
 {
   if (x * 2 <= len) return x;
   else return x - len;
 }
 
-std::vector<int> smod(const std::vector<int> &v, const std::vector<int> &lens)
+// std::vector<int> smod(const std::vector<int> &v, const std::vector<int> &lens)
+Coordinate smod(const Coordinate &v, const Coordinate &lens)
 {
-  std::vector<int> rst(v.size());
+  Coordinate rst(v.size());
   for(size_t i=0; i<v.size(); ++i) rst[i] = smod(v[i], lens[i]);
   return rst;  
 }
@@ -30,41 +21,54 @@ std::vector<int> smod(const std::vector<int> &v, const std::vector<int> &lens)
 
 // get (|k|, average F(|k|))
 void aggregate(const LatticeGaugeField &force, std::vector<double> &sums, std::vector<double> &counts, double interval = 1.) {
-  std::vector<int> fdims = force._grid->_fdimensions;
+  Coordinate fdims = force.Grid()->_fdimensions;
   double max_r = std::sqrt(0.25 * (fdims[0]*fdims[0] + fdims[1]*fdims[1] + fdims[2]*fdims[2] + fdims[3]*fdims[3]));
 
   sums.resize(int(max_r / interval)+1);
   counts.resize(int(max_r / interval)+1);
   // std::cout << "rst size: " << rst.size() << std::endl;
   
+
+  autoView(force_v, force, CpuRead);
   
   // FIXME: this is wrong!!!! Will be data race in parallel for; need to use "reduction" in "parallel for"
   // https://stackoverflow.com/questions/43168661/openmp-and-reduction-on-stdvector
-  parallel_for(int ss=0; ss<force._grid->lSites(); ss++) {
-    std::vector<int> lcoor, gcoor;
-    localIndexToLocalGlobalCoor(force._grid, ss, lcoor, gcoor);
+  // parallel_for(int ss=0; ss<force._grid->lSites(); ss++) {
+  for(int ss=0; ss<force.Grid()->lSites(); ss++) {  // FIXME: I disabled parallelism
+    Coordinate lcoor, gcoor;
+    localIndexToLocalGlobalCoor(force.Grid(), ss, lcoor, gcoor);
 
     gcoor = smod(gcoor, fdims);
     double r = std::sqrt(gcoor[0]*gcoor[0] + gcoor[1]*gcoor[1] + gcoor[2]*gcoor[2] + gcoor[3]*gcoor[3]);
 
     typename LatticeGaugeField::vector_object::scalar_object m;
-    peekLocalSite(m, force, lcoor);
+    peekLocalSite(m, force_v, lcoor);
 
-    double val = norm2(real(m));
-    // double val = norm2(m);
-    // assert(int(r)<=16);
+    // double val = norm2(real(m));  // FIXME: Dec 05, 2020: why take real part?
+    double val = norm2(m); // Dec 10.
+    // assert(int(r)<=16); 
     sums[int(r / interval)] += val;
     counts[int(r / interval)] += 1.0;
+
+
+    if( abs(r - 1.) < 0.0001 ) {
+      std::cout << "gcoor: " << gcoor << std::endl;
+      std::cout << "sum: " << sums[10] << std::endl;
+      std::cout << "count: " << counts[10] << std::endl;
+    }
+
   }
+
+  force.Grid()->GlobalSumVector(sums.data(), sums.size()); // sum over nodes
+  force.Grid()->GlobalSumVector(counts.data(), counts.size());
 }
 
 std::vector<double> get_average_force(const LatticeGaugeField &force, double interval) {
   std::vector<double> sums;
   std::vector<double> counts;
   aggregate(force, sums, counts, interval);
+  std::cout << "counts: " << counts << std::endl;
 
-  force._grid->GlobalSumVector(sums.data(), sums.size());
-  force._grid->GlobalSumVector(counts.data(), counts.size());
   // std::cout << sums << std::endl;
   // std::cout << counts << std::endl;
 
@@ -76,15 +80,15 @@ std::vector<double> get_average_force(const LatticeGaugeField &force, double int
 
 
 LatticeGaugeField PL_projection(const LatticeGaugeField &P, double epsilon) {
-  LatticeGaugeField PL(P._grid);
+  LatticeGaugeField PL(P.Grid());
 
-  static Momenta_k KK(P._grid, 0., epsilon, true);
+  static Momenta_k KK(P.Grid(), 0., epsilon, true);
   
-  LatticeColourMatrix sinKExpDotPk(P._grid);
+  LatticeColourMatrix sinKExpDotPk(P.Grid());
   // sinKExpDotPk = KK.sinKPsExpDotP_func(P);
   sinKExpDotPk = KK.sinKNgExpDotP_func(P);
 
-  LatticeColourMatrix PLmu(P._grid);
+  LatticeColourMatrix PLmu(P.Grid());
   for(int mu=0; mu<Nd; ++mu) {
     // PLmu = KK.sinKNgExp[mu] * sinKExpDotPk;
     PLmu = KK.sinKPsExp[mu] * sinKExpDotPk;
@@ -104,31 +108,41 @@ std::ostream& operator<<(std::ostream &out, const std::vector<double> &vec) {
   return out;
 }
 
-template<class T>
-void print_grid_field_site(const T &field, const std::vector<int> &coor) {
-  using namespace Grid;
-  std::cout << coor << std::endl;
-  // std::cout << "[ " << coor[0] << " " << coor[1] << " " << coor[2] << " " << coor[3] << " ]" << std::endl;
-  typename T::vector_object::scalar_object site;
-  peekSite(site, field, coor);
-  std::cout << site << std::endl;
-}
 
 
 void get_force_stats(LatticeGaugeField &force, double interval, double epsilon) {
-  FFT theFFT((Grid::GridCartesian *)force._grid);
-  theFFT.FFT_all_dim(force, force, FFT::forward);
+  std::cout << "before Fourier transformation" << std::endl;
+  print_grid_field_site(force, {1,0,0,0});
+  print_grid_field_site(force, {0,1,0,0});
 
-  // print_grid_field_site(force, {0,0,0,0});
-  
-  LatticeGaugeField force_L(force._grid);
-  LatticeGaugeField force_T(force._grid);
+
+  Coordinate fdims = force.Grid()->_fdimensions;
+  double V = fdims[0] * fdims[1] * fdims[2] * fdims[3];
+
+  FFT theFFT((Grid::GridCartesian *)force.Grid());
+
+  // LatticeGaugeField force_k(force.Grid());   // does not make a difference
+  // theFFT.FFT_all_dim(force_k, force, FFT::forward);
+  // force_k *= 1. / sqrt(V);
+  // std::cout << "after Fourier transformation" << std::endl;
+  // print_grid_field_site(force_k, {1,0,0,0});
+  // print_grid_field_site(force_k, {0,1,0,0});
+
+  theFFT.FFT_all_dim(force, force, FFT::forward);
+  force *= 1. / sqrt(V);
+
+  std::cout << "after Fourier transformation" << std::endl;
+  print_grid_field_site(force, {1,0,0,0});
+  print_grid_field_site(force, {0,1,0,0});
+
+  LatticeGaugeField force_L(force.Grid());
+  LatticeGaugeField force_T(force.Grid());
   force_L = PL_projection(force, epsilon);
   force_T = force - force_L;
 
   std::cout << "force avg: " << get_average_force(force, interval) << std::endl;
-  std::cout << "force_L avg: " << get_average_force(force_L, interval) << std::endl;
-  std::cout << "force_T avg: " << get_average_force(force_T, interval) << std::endl;
+  // std::cout << "force_L avg: " << get_average_force(force_L, interval) << std::endl;  // FIXME: uncomment this
+  // std::cout << "force_T avg: " << get_average_force(force_T, interval) << std::endl;
 }
 
 }}

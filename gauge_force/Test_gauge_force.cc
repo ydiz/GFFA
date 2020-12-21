@@ -1,23 +1,4 @@
-#include <Grid/Grid.h>
-#include <sys/sysinfo.h>
-
-#include "GF_Util.h"
-// #include "observable.h"
-
-#include "GF_HMC_para.h"
-#include "GF_init.h"
-#include "GF_assert.h"
-#include "GF_init_k.h"
-#include "Integral_table.h"
-#include "subgroup_hb.h"
-#include "GF_heatbath_Util.h"
-#include "GF_generate_P.h"
-#include "GF_Action.h"
-#include "GF_deltaU.h"
-#include "GF_hmc_integrator.h"
-#include "GF_hmc_integrator_alg.h"
-#include "GF_HMC.h"
-#include "GF_GenericHMCrunner.h"
+#include "../GFFA.h"
 
 #include "Test_gauge_force.h"
 
@@ -35,11 +16,23 @@ int main(int argc, char **argv) {
   std::cout << "after Grid init" << std::endl;
   GridLogLayout();
 
-  HMC_PARA hmc_para {};  // initialize each data member to default value
-  init(argc, argv, hmc_para);
+  // HMC_PARA hmc_para {};  // initialize each data member to default value
+  // init(argc, argv, hmc_para);
+
+  JSONReader reader("GFFA.json");
+
+  GFFAParams hmc_para(reader);
+  std::cout << hmc_para << std::endl;
 
 
-  GridCartesian * grid = SpaceTimeGrid::makeFourDimGrid({16,16,16,16}, GridDefaultSimd(Nd,vComplex::Nsimd()), GridDefaultMpi());
+  // GridCartesian *grid = SpaceTimeGrid::makeFourDimGrid(Coordinate({8,8,8,8}), GridDefaultSimd(Nd,vComplex::Nsimd()), GridDefaultMpi());
+  GridCartesian *grid = SpaceTimeGrid::makeFourDimGrid(Coordinate({16,16,16,16}), GridDefaultSimd(Nd,vComplex::Nsimd()), GridDefaultMpi());
+
+  GridParallelRNG pRNG(grid);
+  GridSerialRNG sRNG;
+
+  pRNG.SeedFixedIntegers(std::vector<int>({1,2,3,4}));
+  sRNG.SeedFixedIntegers(std::vector<int>({1,2,3,4}));
 
   // // action
   // Action<PeriodicGimplR::GaugeField> *action;
@@ -56,59 +49,71 @@ int main(int argc, char **argv) {
   //   return 0;
   // }
   //
-  if(argc < 1) {
-    std::cout << "You have to use input argv[1] as base directory for configuration" << std::endl;
-  }
+  // if(argc < 1) {
+  //   std::cout << "You have to use input argv[1] as base directory for configuration" << std::endl;
+  // }
 
   double interval = 0.1;
+  bool display_each_force = false;
+  // bool display_each_force = true;
 
-  std::string base_dir = argv[1];
-  int traj_start = 5000, traj_end = 5010, traj_sep = 10; // for 24ID, kaon wall
+  // std::string base_dir = argv[1];
+  // std::string base_dir = "/home/ahmedsheta/cuth_runs/results/GFFA_runs/bad_polyakov_lines/beta10/M3/traj0.6/all_steps24_MC40";
+  std::string base_dir = ".";
+  // int traj_start = 1990, traj_end = 1995, traj_sep = 1; // for 24ID, kaon wall
+  // int traj_start = 1000, traj_end = 1005, traj_sep = 1; // for 24ID, kaon wall
+  int traj_start = 1000, traj_end = 1000, traj_sep = 1; // for 24ID, kaon wall
+  // std::string base_dir = "/home/ydzhao/cuth/GFFA/results/GFFA_runs/beta=100/M3_eps0.1";
+  // std::string base_dir = "/home/ydzhao/cuth/GFFA/beta100/FA_eps0.1";
+  // int traj_start = 1000, traj_end = 1000, traj_sep = 1; // for 24ID, kaon wall
   // int traj_start = 5000, traj_end = 5000, traj_sep = 10; // for 24ID, kaon wall
   int traj_num = (traj_end - traj_start) / traj_sep + 1;
 
   for(int traj = traj_start; traj <= traj_end; traj += traj_sep) {
     LatticeGaugeField U(grid);
-    readField(U, base_dir + "/ckpoint_lat." + std::to_string(traj));
+    // readField(U, base_dir + "/ckpoint_lat." + std::to_string(traj));
+    U = 1.0;          // FIXME: I am setting to cold configuration
 
     // LatticeGaugeField force(grid);
     // action->deriv(U, force); // force contains coefficient
 
     WilsonGaugeAction<PeriodicGimplR> Waction(hmc_para.beta);
-    LatticeGaugeField dSwdU(U._grid);
+    LatticeGaugeField dSwdU(U.Grid());
     Waction.deriv(U, dSwdU);
 
   	RealD factor = 0.5 * hmc_para.betaMM;
 
-    LatticeGaugeField dSGF1dU(U._grid);
+    LatticeGaugeField dSGF1dU(U.Grid());
     dSGF1dU = factor * Ta(U);
 
-    LatticeGaugeField dSGF2dU(U._grid);
-    dSGF2dU = zero;
-    static LatticeColourMatrix g(U._grid);
+    LatticeGaugeField dSGF2dU(U.Grid());
+    dSGF2dU = Zero();
+    static LatticeColourMatrix g(U.Grid());
     static bool g_initialized = false;
     if(! g_initialized) {
       g = 1.0;
       g_initialized = true;
     }
 
-    GF_heatbath(U, g, hmc_para.hb_offset, hmc_para.betaMM, hmc_para.table_path); //hb_nsweeps before calculate equilibrium value
-    GF_heatbath(U, g, hmc_para.innerMC_N, hmc_para.betaMM, hmc_para.table_path, &dSGF2dU, dOmegadU_g); // calculate dSGF2dU
+    GF_heatbath(U, g, hmc_para.hb_offset, hmc_para.betaMM, hmc_para.table_path, sRNG, pRNG); //hb_nsweeps before calculate equilibrium value
+    GF_heatbath(U, g, hmc_para.innerMC_N, hmc_para.betaMM, hmc_para.table_path, sRNG, pRNG, &dSGF2dU, dOmegadU_g); // calculate dSGF2dU
 
     dSGF2dU = factor *  (1.0 / double(hmc_para.innerMC_N)) * dSGF2dU;
 
-    LatticeGaugeField dSdU(U._grid);
+    LatticeGaugeField dSdU(U.Grid());
     dSdU = dSwdU + dSGF1dU - dSGF2dU;
 
 
-    std::cout << "===================Wilson force: =====================" << std::endl;
-    get_force_stats(dSwdU, interval, hmc_para.epsilon);
+    if(display_each_force) {
+      std::cout << "===================Wilson force: =====================" << std::endl;
+      get_force_stats(dSwdU, interval, hmc_para.epsilon);
 
-    std::cout << "===================dSGF1dU force: =====================" << std::endl;
-    get_force_stats(dSGF1dU, interval, hmc_para.epsilon);
+      std::cout << "===================dSGF1dU force: =====================" << std::endl;
+      get_force_stats(dSGF1dU, interval, hmc_para.epsilon);
 
-    std::cout << "===================dSGF2dU force: =====================" << std::endl;
-    get_force_stats(dSGF2dU, interval, hmc_para.epsilon);
+      std::cout << "===================dSGF2dU force: =====================" << std::endl;
+      get_force_stats(dSGF2dU, interval, hmc_para.epsilon);
+    }
 
     std::cout << "===================total force: =====================" << std::endl;
     get_force_stats(dSdU, interval, hmc_para.epsilon);
@@ -130,6 +135,7 @@ int main(int argc, char **argv) {
   // LatticeColourMatrix tmp(grid);
   // norm2(tmp);
 
+  std::cout << "Finished!"  << std::endl;
   Grid_finalize();
 
 } // main
