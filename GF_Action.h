@@ -153,23 +153,24 @@ class GFAction : public MyAction<typename Gimpl::GaugeField> {
     GaugeField dSGF1dU(U.Grid());
     dSGF1dU = factor * Ta(U);
 
-    // dSdU = dSwdU + dSGF1dU;
+    dSdU = dSwdU + dSGF1dU;
+    std::cout << "not adding dSGF2dU" << std::endl;
 
-    GaugeField dSGF2dU(U.Grid());
-    dSGF2dU = Zero();
-    static LatticeColourMatrix g(U.Grid());
-    static bool g_initialized = false;
-    if(! g_initialized) {
-      g = 1.0;
-      g_initialized = true;
-    }
-
-    GF_heatbath(U, g, hb_offset, betaMM, table_path, sRNG, pRNG); //hb_nsweeps before calculate equilibrium value
-    GF_heatbath(U, g, innerMC_N, betaMM, table_path, sRNG, pRNG, &dSGF2dU, dOmegadU_g); // calculate dSGF2dU
-
-    dSGF2dU = factor *  (1.0 / double(innerMC_N)) * dSGF2dU;
-
-    dSdU = dSwdU + dSGF1dU - dSGF2dU;
+    // GaugeField dSGF2dU(U.Grid());
+    // dSGF2dU = Zero();
+    // static LatticeColourMatrix g(U.Grid());
+    // static bool g_initialized = false;
+    // if(! g_initialized) {
+    //   g = 1.0;
+    //   g_initialized = true;
+    // }
+    //
+    // GF_heatbath(U, g, hb_offset, betaMM, table_path, sRNG, pRNG); //hb_nsweeps before calculate equilibrium value
+    // GF_heatbath(U, g, innerMC_N, betaMM, table_path, sRNG, pRNG, &dSGF2dU, dOmegadU_g); // calculate dSGF2dU
+    //
+    // dSGF2dU = factor *  (1.0 / double(innerMC_N)) * dSGF2dU;
+    //
+    // dSdU = dSwdU + dSGF1dU - dSGF2dU;
 
   }
 private:

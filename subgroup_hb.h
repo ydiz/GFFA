@@ -38,6 +38,7 @@ void my_su2Extract(Lattice<iSinglet<vcplx> > &Determinant,
   });
 }
 
+// zyd: Dec: U_new = R * U_old, where R is a SU(3) matrix obtained by embedding an SU(2) inside an identity matrix.
 template <class vcplx>
 void my_su2Insert(const Lattice<SU3::iSU2Matrix<vcplx> > &subgroup,
                       Lattice<SU3::iSUnMatrix<vcplx> > &link, int su2_index) {
@@ -47,8 +48,10 @@ void my_su2Insert(const Lattice<SU3::iSU2Matrix<vcplx> > &subgroup,
   int i0 = subgroup_index[su2_index][0];
   int i1 = subgroup_index[su2_index][1];
 
-  autoView(link_v, link, AcceleratorWrite);
-  autoView(subgroup_v, subgroup, AcceleratorRead);
+  // autoView(link_v, link, AcceleratorWrite);
+  // autoView(subgroup_v, subgroup, AcceleratorRead);
+  autoView(link_v, link, CpuWrite);
+  autoView(subgroup_v, subgroup, CpuRead);
 
   // thread_for(ss, grid->oSites(), {
   accelerator_for(ss, grid->oSites(), vcplx::Nsimd(), {
@@ -105,10 +108,31 @@ LatticeComplex invCplx(const LatticeComplex& in) {
 
 void GF_SubGroupHeatBath(
        GridSerialRNG &sRNG, GridParallelRNG &pRNG,
-       RealD coeff,  // coeff multiplying Re Tr(field * staple) in action; for Wilson: beta / 3.0; for S_GF1: beta * M^2
+       RealD coeff,  // coeff multiplying Re Tr(field * staple) in action; for Wilson: beta / 3.0; for S_GF1: beta * M^2 / 3.0
        LatticeColourMatrix &link,
        const LatticeColourMatrix &staple,  // multiplied by action coeffs so th
        int su2_subgroup, int cb, const std::string &table_path) {
+
+
+//   // link = 1.0;
+// static i_Sigmas i_sigmas_tmp;
+//
+// if(su2_subgroup ==0 ) {
+//   SU3::LatticeSU2Matrix tmp(link.Grid()); // rbGrid
+//   tmp = i_sigmas_tmp.pauli1;
+//   std::cout << "link Site (0,0,0,0) before my_su2Insert" << std::endl;
+//   if(cb==0) print_grid_field_site(link, {0,0,0,0});
+//   std::cout << "su2_subgroup: " << su2_subgroup << std::endl;
+//   SU3::su2Insert(tmp, link, su2_subgroup);  // Note: Use su2Insert, not my_su2Insert
+//
+//   std::cout << "tmp Site (0,0,0,0)" << std::endl;
+//   if(cb==0) print_grid_field_site(tmp, {0,0,0,0});
+//   std::cout << "link Site (0,0,0,0) after my_su2Insert" << std::endl;
+//   if(cb==0) print_grid_field_site(link, {0,0,0,0});
+//
+// }
+//   return;
+
      GridBase *rbGrid = link.Grid();
 
      static Integral_table integral_table(coeff, table_path);
@@ -141,7 +165,7 @@ void GF_SubGroupHeatBath(
      LatticeReal k(rbGrid); k.Checkerboard() = cb;
      k = toReal(sqrt_udet); // FIXME: Wilson only; k = \sqrt{\det[staple]}
 
-     std::vector<LatticeReal> a(4, rbGrid); for(auto &x: a) x.Checkerboard() = cb;
+     std::vector<LatticeRealD> a(4, rbGrid); for(auto &x: a) x.Checkerboard() = cb;
 
      LatticeReal tmp(rbGrid); tmp.Checkerboard() = cb;
      random(pRNG, tmp);
@@ -152,7 +176,8 @@ void GF_SubGroupHeatBath(
 
 
      // thread_for(ss, tmp.Grid()->oSites(), {
-     accelerator_for(ss, tmp.Grid()->oSites(), vComplex::Nsimd(), {
+     // accelerator_for(ss, tmp.Grid()->oSites(), vComplex::Nsimd(), {
+     accelerator_for(ss, tmp.Grid()->oSites(), vReal::Nsimd(), {   // ??? Seems like vReal/vComplex does not make a difference
        double *tmp_ptr = (double *)&tmp_v[ss];
        double *a0_ptr = (double *)&a0_v[ss];
        double *k_ptr = (double *)&k_v[ss];
@@ -161,6 +186,21 @@ void GF_SubGroupHeatBath(
          *(a0_ptr + idx + 1) = *(a0_ptr + idx);
        }
      });
+
+     // for(int ss=0; ss<tmp.Grid()->oSites(); ++ss) {
+     //   double *tmp_ptr = (double *)&tmp_v[ss];
+     //   double *a0_ptr = (double *)&a0_v[ss];
+     //   double *k_ptr = (double *)&k_v[ss];
+     //   for(int idx=0; idx<vReal::Nsimd(); idx+=2) {
+     //     *(a0_ptr + idx) = integral_table.get_a0(*(k_ptr + idx), *(tmp_ptr + idx));
+     //     *(a0_ptr + idx + 1) = *(a0_ptr + idx);
+     //   }
+     // }
+     //
+     // std::cout << vComplex::Nsimd() << std::endl;
+     // std::cout << vReal::Nsimd() << std::endl;
+     // std::cout << a[0] << std::endl;
+     // assert(0);
 
      //////////////////////////////////////////
      //    ii) generate a_i uniform on two sphere radius (1-a0^2)^0.5

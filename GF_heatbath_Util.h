@@ -27,6 +27,7 @@ void GF_heatbath(const LatticeGaugeField &Umu, LatticeColourMatrix &g,
     random(sRNG, rand);
     seeds[i] = int(rand * 100000);
   }
+  std::cout << "seeds: " << seeds << std::endl;
   pRNG.SeedFixedIntegers(seeds);
 
   RealD coeff = _betaMM * (1./3.);
@@ -79,6 +80,21 @@ void GF_heatbath(const LatticeGaugeField &Umu, LatticeColourMatrix &g,
       }
 
     }
+
+    //   // FIXME: for test
+    // for(int cb=0;cb<2;cb++) {
+    //     g_oe[cb] = Zero();
+    //     autoView( g_v , g_oe[cb], AcceleratorWrite);
+    //     accelerator_for(ss, rbGrid.oSites(),1,
+    //     {
+    //       g_v[ss]()()(0, 1) = 1.0;
+    //       g_v[ss]()()(1, 0) = -1.0;
+    //       g_v[ss]()()(2, 2) = 1.0;
+    //     });
+    // }
+
+
+
 
     // I found that project on group has almost no effect. at least on a small lattice
     // if(sweep%10==9) {ProjectOnGroup(g_oe[Odd]); ProjectOnGroup(g_oe[Even]);}// project on group every 10 sweeps

@@ -22,16 +22,17 @@ int main(int argc, char **argv) {
   JSONReader reader("GFFA.json");
 
   GFFAParams hmc_para(reader);
-  std::cout << hmc_para << std::endl;
+  std::cout << hmc_para << std::endl; // FIXME:
 
 
-  // GridCartesian *grid = SpaceTimeGrid::makeFourDimGrid(Coordinate({8,8,8,8}), GridDefaultSimd(Nd,vComplex::Nsimd()), GridDefaultMpi());
-  GridCartesian *grid = SpaceTimeGrid::makeFourDimGrid(Coordinate({16,16,16,16}), GridDefaultSimd(Nd,vComplex::Nsimd()), GridDefaultMpi());
+  GridCartesian *grid = SpaceTimeGrid::makeFourDimGrid(Coordinate({8,8,8,8}), GridDefaultSimd(Nd,vComplex::Nsimd()), GridDefaultMpi());
+  // GridCartesian *grid = SpaceTimeGrid::makeFourDimGrid(Coordinate({16,16,16,16}), GridDefaultSimd(Nd,vComplex::Nsimd()), GridDefaultMpi());
 
-  GridParallelRNG pRNG(grid);
+  GridParallelRNG _pRNG(grid);  // not used
   GridSerialRNG sRNG;
 
-  pRNG.SeedFixedIntegers(std::vector<int>({1,2,3,4}));
+  _pRNG.SeedFixedIntegers(std::vector<int>({10,20,30,40}));
+  // sRNG.SeedFixedIntegers(std::vector<int>({1,2,3,4}));
   sRNG.SeedFixedIntegers(std::vector<int>({1,2,3,4}));
 
   // // action
@@ -58,8 +59,8 @@ int main(int argc, char **argv) {
   // bool display_each_force = true;
 
   // std::string base_dir = argv[1];
-  // std::string base_dir = "/home/ahmedsheta/cuth_runs/results/GFFA_runs/bad_polyakov_lines/beta10/M3/traj0.6/all_steps24_MC40";
-  std::string base_dir = ".";
+  std::string base_dir = "/home/ahmedsheta/cuth_runs/results/GFFA_runs/bad_polyakov_lines/beta10/M3/traj0.6/all_steps24_MC40";
+  // std::string base_dir = ".";
   // int traj_start = 1990, traj_end = 1995, traj_sep = 1; // for 24ID, kaon wall
   // int traj_start = 1000, traj_end = 1005, traj_sep = 1; // for 24ID, kaon wall
   int traj_start = 1000, traj_end = 1000, traj_sep = 1; // for 24ID, kaon wall
@@ -71,8 +72,23 @@ int main(int argc, char **argv) {
 
   for(int traj = traj_start; traj <= traj_end; traj += traj_sep) {
     LatticeGaugeField U(grid);
-    // readField(U, base_dir + "/ckpoint_lat." + std::to_string(traj));
-    U = 1.0;          // FIXME: I am setting to cold configuration
+    readField(U, base_dir + "/ckpoint_lat." + std::to_string(traj));  // ./ckpoint_lat.1000: 16nt16 lattice
+    // U = 1.0;          // FIXME: I am setting to cold configuration
+
+    // U = Zero();  
+    // autoView( U_v, U, CpuWrite);
+    // accelerator_for(ss, grid->oSites(),1,
+    // {
+    //   for(int mu=0; mu<4; ++mu) {
+    //   U_v[ss](mu)()(0, 1) = 1.0;
+    //   U_v[ss](mu)()(1, 0) = -1.0;
+    //   U_v[ss](mu)()(2, 2) = 1.0;
+    //   }
+    // });
+    //
+    // PeriodicGimplR::HotConfiguration(pRNG, U);
+    // print_grid_field_site(U, {0,0,0,0});
+    // print_grid_field_site(U, {1,0,0,0});
 
     // LatticeGaugeField force(grid);
     // action->deriv(U, force); // force contains coefficient
@@ -95,41 +111,50 @@ int main(int argc, char **argv) {
       g_initialized = true;
     }
 
-    GF_heatbath(U, g, hmc_para.hb_offset, hmc_para.betaMM, hmc_para.table_path, sRNG, pRNG); //hb_nsweeps before calculate equilibrium value
-    GF_heatbath(U, g, hmc_para.innerMC_N, hmc_para.betaMM, hmc_para.table_path, sRNG, pRNG, &dSGF2dU, dOmegadU_g); // calculate dSGF2dU
+    GF_heatbath(U, g, hmc_para.hb_offset, hmc_para.betaMM, hmc_para.table_path, sRNG, _pRNG); //hb_nsweeps before calculate equilibrium value
+    GF_heatbath(U, g, hmc_para.innerMC_N, hmc_para.betaMM, hmc_para.table_path, sRNG, _pRNG, &dSGF2dU, dOmegadU_g); // calculate dSGF2dU
 
     dSGF2dU = factor *  (1.0 / double(hmc_para.innerMC_N)) * dSGF2dU;
 
-    LatticeGaugeField dSdU(U.Grid());
-    dSdU = dSwdU + dSGF1dU - dSGF2dU;
+
+    // std::cout << "Force dSGF2dU" << std::endl;
+    // print_grid_field_site(dSGF2dU, {0,0,0,0});
+    // std::cout << dSGF2dU << std::endl;
+    // return 0;
 
 
-    if(display_each_force) {
-      std::cout << "===================Wilson force: =====================" << std::endl;
-      get_force_stats(dSwdU, interval, hmc_para.epsilon);
+    std::cout << "===================dSGF2dU force: =====================" << std::endl;
+    get_force_stats(dSGF2dU, interval, hmc_para.epsilon);
 
-      std::cout << "===================dSGF1dU force: =====================" << std::endl;
-      get_force_stats(dSGF1dU, interval, hmc_para.epsilon);
-
-      std::cout << "===================dSGF2dU force: =====================" << std::endl;
-      get_force_stats(dSGF2dU, interval, hmc_para.epsilon);
-    }
-
-    std::cout << "===================total force: =====================" << std::endl;
-    get_force_stats(dSdU, interval, hmc_para.epsilon);
-
-    // FFT theFFT((Grid::GridCartesian *)grid);
-    // theFFT.FFT_all_dim(force, force, FFT::forward);
+    // LatticeGaugeField dSdU(U.Grid());
+    // dSdU = dSwdU + dSGF1dU - dSGF2dU;
     //
+    // if(display_each_force) {
+    //   std::cout << "===================Wilson force: =====================" << std::endl;
+    //   get_force_stats(dSwdU, interval, hmc_para.epsilon);
     //
-    // LatticeGaugeField force_L(grid);
-    // LatticeGaugeField force_T(grid);
-    // force_L = PL_projection(force, hmc_para.epsilon);
-    // force_T = force - force_L;
+    //   std::cout << "===================dSGF1dU force: =====================" << std::endl;
+    //   get_force_stats(dSGF1dU, interval, hmc_para.epsilon);
     //
-    // std::cout << "force avg: " << get_average_force(force, interval) << std::endl;
-    // std::cout << "force_L avg: " << get_average_force(force_L, interval) << std::endl;
-    // std::cout << "force_T avg: " << get_average_force(force_T, interval) << std::endl;
+    //   std::cout << "===================dSGF2dU force: =====================" << std::endl;
+    //   get_force_stats(dSGF2dU, interval, hmc_para.epsilon);
+    // }
+    //
+    // std::cout << "===================total force: =====================" << std::endl;
+    // get_force_stats(dSdU, interval, hmc_para.epsilon);
+    //
+    // // FFT theFFT((Grid::GridCartesian *)grid);
+    // // theFFT.FFT_all_dim(force, force, FFT::forward);
+    // //
+    // //
+    // // LatticeGaugeField force_L(grid);
+    // // LatticeGaugeField force_T(grid);
+    // // force_L = PL_projection(force, hmc_para.epsilon);
+    // // force_T = force - force_L;
+    // //
+    // // std::cout << "force avg: " << get_average_force(force, interval) << std::endl;
+    // // std::cout << "force_L avg: " << get_average_force(force_L, interval) << std::endl;
+    // // std::cout << "force_T avg: " << get_average_force(force_T, interval) << std::endl;
   }
 
   // LatticeColourMatrix tmp(grid);
