@@ -6,14 +6,25 @@ namespace Grid{
 
 
 template<class T>
-void print_grid_field_site(const T &field, const std::vector<int> coor) {
-  using namespace Grid;
+void print_grid_field_site(const T &field, const std::vector<int> &coor) {
   std::cout << "[ " << coor[0] << " " << coor[1] << " " << coor[2] << " " << coor[3] << " ]" << std::endl;
   typename T::vector_object::scalar_object site;
   peekSite(site, field, coor);
   std::cout << site << std::endl;
 }
 
+template<class T>
+void print_grid_half_field_site(const T &field) {
+  typename T::vector_object::scalar_object site;
+
+  std::vector<int> coor;
+  if(field.Checkerboard() == Odd) coor = {1,0,0,0};
+  else coor = {0,0,0,0};
+
+  std::cout << "[ " << coor[0] << " " << coor[1] << " " << coor[2] << " " << coor[3] << " ]" << std::endl;
+  peekSite(site, field, coor);
+  std::cout << site << std::endl;
+}
 
 
 void localIndexToLocalGlobalCoor(GridBase *grid, int ss, Coordinate &lcoor, Coordinate &gcoor) {

@@ -50,7 +50,6 @@ void GF_heatbath(const LatticeGaugeField &Umu, LatticeColourMatrix &g,
     }
   }
 
-  LatticeColourMatrix staple_half(&rbGrid);
   std::vector<std::vector<LatticeColourMatrix>> dSGF2dU_oe(4, std::vector<LatticeColourMatrix>(2, &rbGrid));
   if(dSGF2dU!=NULL) {
     for(int cb=0;cb<2;cb++) {
@@ -65,19 +64,38 @@ void GF_heatbath(const LatticeGaugeField &Umu, LatticeColourMatrix &g,
   // std::cout<<GridLogMessage<<"sweep "<<sweep<<" S: "<<GF_S(g, Umu)<<std::endl;
     for(int cb=0;cb<2;cb++) {
 
+      LatticeColourMatrix staple_half(&rbGrid);
       staple_half = Zero();
       staple_half.Checkerboard() = cb;
       int cb_inverse = (cb==1) ? 0 : 1;
-      //if we choose the sign of S_GF1 to be postive, sign of staple should be negative
+      
       for(int mu=0; mu<Nd; ++mu) {
-        // Cshift will adjuct Checkerboard() automatically
+        // Cshift will adjust Checkerboard() automatically
+        // if we choose the sign of S_GF1 to be postive, sign of staple should be negative
         staple_half += U_oe[mu][cb] * adj(Cshift(g_oe[cb_inverse],mu,1))
                         + adj( Cshift(g_oe[cb_inverse], mu, -1) * UMinusShift_oe[mu][cb]);
       }
 
-      for(int subgroup=0;subgroup<SU3::su2subgroups();subgroup++) {
+      // // FIXME: test whether using half field to calculate staple is correct; remove this
+      // LatticeColourMatrix staple_full(U[0].Grid()); staple_full = Zero();
+      // for(int mu=0; mu<Nd; ++mu) {
+      //   staple_full += U[mu] * adj(Cshift(g,mu,1))
+      //                   + adj( Cshift(g, mu, -1) *  Cshift(U[mu], mu, -1));
+      // }
+      // pickCheckerboard(cb, staple_half, staple_full);
+      // // print_grid_field_site(staple_full, {0,0,0,0});
+      //
+      // // print_grid_half_field_site(staple_half);
+      // // assert(0);
+
+      // for(int subgroup=0;subgroup<SU3::su2subgroups();subgroup++) {
+      for(int subgroup=0;subgroup<3;subgroup++) {
+        // std::cout << "subgroup" << subgroup << std::endl;
         GF_SubGroupHeatBath(sRNG, pRNG, coeff, g_oe[cb], staple_half, subgroup, cb, table_path);
       }
+
+      // // FIXME: test whether using half field to calculate staple is correct; remove this
+      // setCheckerboard(g, g_oe[cb]);
 
     }
 
