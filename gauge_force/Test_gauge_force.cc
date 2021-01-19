@@ -29,11 +29,8 @@ int main(int argc, char **argv) {
   // GridCartesian *grid = SpaceTimeGrid::makeFourDimGrid(Coordinate({16,16,16,16}), GridDefaultSimd(Nd,vComplex::Nsimd()), GridDefaultMpi());
 
   GridParallelRNG _pRNG(grid);  // not used
-  GridSerialRNG sRNG;
 
-  _pRNG.SeedFixedIntegers(std::vector<int>({10,20,30,40}));
-  // sRNG.SeedFixedIntegers(std::vector<int>({1,2,3,4}));
-  sRNG.SeedFixedIntegers(std::vector<int>({1,2,3,4}));
+  _pRNG.SeedFixedIntegers(std::vector<int>({1,2,3,4}));
 
   // // action
   // Action<PeriodicGimplR::GaugeField> *action;
@@ -55,8 +52,8 @@ int main(int argc, char **argv) {
   // }
 
   double interval = 0.1;
-  bool display_each_force = false;
-  // bool display_each_force = true;
+  // bool display_each_force = false;
+  bool display_each_force = true;
 
   // std::string base_dir = argv[1];
   std::string base_dir = "/home/ahmedsheta/cuth_runs/results/GFFA_runs/bad_polyakov_lines/beta10/M3/traj0.6/all_steps24_MC40";
@@ -111,8 +108,8 @@ int main(int argc, char **argv) {
       g_initialized = true;
     }
 
-    GF_heatbath(U, g, hmc_para.hb_offset, hmc_para.betaMM, hmc_para.table_path, sRNG, _pRNG); //hb_nsweeps before calculate equilibrium value
-    GF_heatbath(U, g, hmc_para.innerMC_N, hmc_para.betaMM, hmc_para.table_path, sRNG, _pRNG, &dSGF2dU, dOmegadU_g); // calculate dSGF2dU
+    GF_heatbath(U, g, hmc_para.hb_offset, hmc_para.betaMM, hmc_para.table_path, _pRNG); //hb_nsweeps before calculate equilibrium value
+    GF_heatbath(U, g, hmc_para.innerMC_N, hmc_para.betaMM, hmc_para.table_path, _pRNG, &dSGF2dU, dOmegadU_g); // calculate dSGF2dU
 
     dSGF2dU = factor *  (1.0 / double(hmc_para.innerMC_N)) * dSGF2dU;
 
@@ -123,25 +120,25 @@ int main(int argc, char **argv) {
     // return 0;
 
 
-    std::cout << "===================dSGF2dU force: =====================" << std::endl;
-    get_force_stats(dSGF2dU, interval, hmc_para.epsilon);
+    // std::cout << "===================dSGF2dU force: =====================" << std::endl;
+    // get_force_stats(dSGF2dU, interval, hmc_para.epsilon);
 
-    // LatticeGaugeField dSdU(U.Grid());
-    // dSdU = dSwdU + dSGF1dU - dSGF2dU;
-    //
-    // if(display_each_force) {
-    //   std::cout << "===================Wilson force: =====================" << std::endl;
-    //   get_force_stats(dSwdU, interval, hmc_para.epsilon);
-    //
-    //   std::cout << "===================dSGF1dU force: =====================" << std::endl;
-    //   get_force_stats(dSGF1dU, interval, hmc_para.epsilon);
-    //
-    //   std::cout << "===================dSGF2dU force: =====================" << std::endl;
-    //   get_force_stats(dSGF2dU, interval, hmc_para.epsilon);
-    // }
-    //
-    // std::cout << "===================total force: =====================" << std::endl;
-    // get_force_stats(dSdU, interval, hmc_para.epsilon);
+    LatticeGaugeField dSdU(U.Grid());
+    dSdU = dSwdU + dSGF1dU - dSGF2dU;
+
+    if(display_each_force) {
+      std::cout << "===================Wilson force: =====================" << std::endl;
+      get_force_stats(dSwdU, interval, hmc_para.epsilon);
+
+      std::cout << "===================dSGF1dU force: =====================" << std::endl;
+      get_force_stats(dSGF1dU, interval, hmc_para.epsilon);
+
+      std::cout << "===================dSGF2dU force: =====================" << std::endl;
+      get_force_stats(dSGF2dU, interval, hmc_para.epsilon);
+    }
+
+    std::cout << "===================total force: =====================" << std::endl;
+    get_force_stats(dSdU, interval, hmc_para.epsilon);
     //
     // // FFT theFFT((Grid::GridCartesian *)grid);
     // // theFFT.FFT_all_dim(force, force, FFT::forward);

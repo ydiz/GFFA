@@ -5,30 +5,12 @@ namespace QCD{
 
 void GF_heatbath(const LatticeGaugeField &Umu, LatticeColourMatrix &g,
                 int nsweeps, Real _betaMM, const std::string &table_path,
-                GridSerialRNG &sRNG, GridParallelRNG &_pRNG_fullLat, // _pRNG_fullLat is not used in this function
+                GridParallelRNG &pRNG,
                 LatticeGaugeField *dSGF2dU=NULL,
                 LatticeGaugeField (* const ForceFunc)(const LatticeColourMatrix &, const std::vector<LatticeColourMatrix> &)=NULL)//, bool verbose=0)
 {
-  // static bool initialized = false;
-  // static GridRedBlackCartesian rbGrid(Umu.Grid());
-  // static GridParallelRNG  pRNG(&rbGrid);
-  // static GridSerialRNG    sRNG;
-  // if (!initialized) {
-  //  initialized = true;
-  //  pRNG.SeedFixedIntegers(std::vector<int>{1,2,3,4});
-  //  sRNG.SeedFixedIntegers(std::vector<int>{5,6,7,8});
-  // }
-  static GridRedBlackCartesian rbGrid(Umu.Grid());
-  GridParallelRNG  pRNG(&rbGrid);
 
-  std::vector<int> seeds(4);
-  for(int i=0; i<4; ++i) {
-    double rand;
-    random(sRNG, rand);
-    seeds[i] = int(rand * 100000);
-  }
-  std::cout << "seeds: " << seeds << std::endl;
-  pRNG.SeedFixedIntegers(seeds);
+  static GridRedBlackCartesian rbGrid(Umu.Grid());
 
   RealD coeff = _betaMM * (1./3.);
   // Real betaMM = _betaMM * 3; //In heatbath routine, the coefficient is beta/Nc
@@ -76,41 +58,12 @@ void GF_heatbath(const LatticeGaugeField &Umu, LatticeColourMatrix &g,
                         + adj( Cshift(g_oe[cb_inverse], mu, -1) * UMinusShift_oe[mu][cb]);
       }
 
-      // // FIXME: test whether using half field to calculate staple is correct; remove this
-      // LatticeColourMatrix staple_full(U[0].Grid()); staple_full = Zero();
-      // for(int mu=0; mu<Nd; ++mu) {
-      //   staple_full += U[mu] * adj(Cshift(g,mu,1))
-      //                   + adj( Cshift(g, mu, -1) *  Cshift(U[mu], mu, -1));
-      // }
-      // pickCheckerboard(cb, staple_half, staple_full);
-      // // print_grid_field_site(staple_full, {0,0,0,0});
-      //
-      // // print_grid_half_field_site(staple_half);
-      // // assert(0);
-
-      // for(int subgroup=0;subgroup<SU3::su2subgroups();subgroup++) {
-      for(int subgroup=0;subgroup<3;subgroup++) {
-        // std::cout << "subgroup" << subgroup << std::endl;
-        GF_SubGroupHeatBath(sRNG, pRNG, coeff, g_oe[cb], staple_half, subgroup, cb, table_path);
+      for(int subgroup=0;subgroup<SU3::su2subgroups();subgroup++) {
+        GF_SubGroupHeatBath(pRNG, coeff, g_oe[cb], staple_half, subgroup, cb, table_path);
       }
 
-      // // FIXME: test whether using half field to calculate staple is correct; remove this
-      // setCheckerboard(g, g_oe[cb]);
 
     }
-
-    //   // FIXME: for test
-    // for(int cb=0;cb<2;cb++) {
-    //     g_oe[cb] = Zero();
-    //     autoView( g_v , g_oe[cb], AcceleratorWrite);
-    //     accelerator_for(ss, rbGrid.oSites(),1,
-    //     {
-    //       g_v[ss]()()(0, 1) = 1.0;
-    //       g_v[ss]()()(1, 0) = -1.0;
-    //       g_v[ss]()()(2, 2) = 1.0;
-    //     });
-    // }
-
 
 
 
@@ -140,6 +93,20 @@ void GF_heatbath(const LatticeGaugeField &Umu, LatticeColourMatrix &g,
         PokeIndex<LorentzIndex>(*dSGF2dU, tmp, mu);
     }
     *dSGF2dU = Ta(*dSGF2dU);
+  }
+  
+
+  if(dSGF2dU!=NULL) {
+    // print ||adj(g) * g - I||^2
+    LatticeColourMatrix one(Umu.Grid());
+    one = 1.0;
+    LatticeColourMatrix tmp = adj(g) * g - one;
+    std::cout << "||adj(g) * g - I||^2: " << norm2(tmp) << std::endl;
+
+    // Re-unitarize Umu
+    g = ProjectOnGroup(g);
+    // tmp = adj(g) * g - one;
+    // std::cout << "||adj(g) * g - I||^2" << norm2(tmp) << std::endl;
   }
 
 

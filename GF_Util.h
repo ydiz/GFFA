@@ -26,6 +26,27 @@ void print_grid_half_field_site(const T &field) {
   std::cout << site << std::endl;
 }
 
+template<class T>
+void print_half_field(const T &field) { // print field with RedBlack grid
+
+  Coordinate latt_size = field.Grid()->_fdimensions;
+  Coordinate coor(4);
+
+  for(coor[3]=0; coor[3]<latt_size[3];coor[3]++){
+    for(coor[2]=0; coor[2]<latt_size[2];coor[2]++){
+      for(coor[1]=0; coor[1]<latt_size[1];coor[1]++){
+        for(coor[0]=0; coor[0]<latt_size[0];coor[0]++){
+    
+          if(field.Grid()->CheckerBoard(coor) == field.Checkerboard()) {
+            std::cout << "[" << coor[0] << "," << coor[1] << "," << coor[2] << "," << coor[3] << "] ";
+            typename T::vector_object::scalar_object site;
+            peekSite(site, field, coor);
+            std::cout << site << std::endl;
+          }
+  }}}}
+}
+
+
 
 void localIndexToLocalGlobalCoor(GridBase *grid, int ss, Coordinate &lcoor, Coordinate &gcoor) {
   // ss is local index; parallel_for(int ss=0; ss<ret.Grid()->lSites(); ss++)

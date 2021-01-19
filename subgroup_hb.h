@@ -48,10 +48,8 @@ void my_su2Insert(const Lattice<SU3::iSU2Matrix<vcplx> > &subgroup,
   int i0 = subgroup_index[su2_index][0];
   int i1 = subgroup_index[su2_index][1];
 
-  // autoView(link_v, link, AcceleratorWrite);
-  // autoView(subgroup_v, subgroup, AcceleratorRead);
-  autoView(link_v, link, CpuWrite);
-  autoView(subgroup_v, subgroup, CpuRead);
+  autoView(link_v, link, AcceleratorWrite);
+  autoView(subgroup_v, subgroup, AcceleratorRead);
 
   // thread_for(ss, grid->oSites(), {
   accelerator_for(ss, grid->oSites(), vcplx::Nsimd(), {
@@ -106,32 +104,21 @@ LatticeComplex invCplx(const LatticeComplex& in) {
 	return ret;
 }
 
+// Note: Must not use RedBlack pRNG to generate random RedBlack field; it was not designed to work.
+LatticeReal get_random_RedBlack(GridParallelRNG &pRNG, int cb, GridBase *rbGrid) {
+  LatticeReal rst_full(pRNG.Grid()), rst_half(rbGrid);
+  random(pRNG, rst_full);
+  pickCheckerboard(cb, rst_half, rst_full);
+  return rst_half;
+}
+
 void GF_SubGroupHeatBath(
-       GridSerialRNG &sRNG, GridParallelRNG &pRNG,
+       GridParallelRNG &pRNG, // Full Grid pRNG, rather than RedBlackGrid pRNG
        RealD coeff,  // coeff multiplying Re Tr(field * staple) in action; for Wilson: beta / 3.0; for S_GF1: beta * M^2 / 3.0
-       LatticeColourMatrix &link,
+       LatticeColourMatrix &link,  // link and stape have RedBlackGrid, rather than full Grid
        const LatticeColourMatrix &staple,  // multiplied by action coeffs so th
        int su2_subgroup, int cb, const std::string &table_path) {
 
-
-//   // link = 1.0;
-// static i_Sigmas i_sigmas_tmp;
-//
-// if(su2_subgroup ==0 ) {
-//   SU3::LatticeSU2Matrix tmp(link.Grid()); // rbGrid
-//   tmp = i_sigmas_tmp.pauli1;
-//   std::cout << "link Site (0,0,0,0) before my_su2Insert" << std::endl;
-//   if(cb==0) print_grid_field_site(link, {0,0,0,0});
-//   std::cout << "su2_subgroup: " << su2_subgroup << std::endl;
-//   SU3::su2Insert(tmp, link, su2_subgroup);  // Note: Use su2Insert, not my_su2Insert
-//
-//   std::cout << "tmp Site (0,0,0,0)" << std::endl;
-//   if(cb==0) print_grid_field_site(tmp, {0,0,0,0});
-//   std::cout << "link Site (0,0,0,0) after my_su2Insert" << std::endl;
-//   if(cb==0) print_grid_field_site(link, {0,0SU3::su2subgroups(),0,0});
-//
-// }
-//   return;
 
      GridBase *rbGrid = link.Grid();
 
@@ -143,7 +130,6 @@ void GF_SubGroupHeatBath(
      LatticeComplex udet(rbGrid);  udet.Checkerboard() = cb;// determinant of real(staple)
 
      my_su2Extract(udet, u, link, staple, su2_subgroup);
-     // std::cout << "ONE" << std::endl;
 
      // // FIXME: maybe this is necessary
      // // from the book:In the rare case that det A vanishes, any random link variable is accepted
@@ -165,37 +151,33 @@ void GF_SubGroupHeatBath(
      sqrt_udet = sqrt(udet);
 
      LatticeReal k(rbGrid); k.Checkerboard() = cb;
-     k = toReal(sqrt_udet); // FIXME: Wilson only; k = \sqrt{\det[staple]}
+     k = toReal(sqrt_udet); // For Wilson: k = \sqrt{\det[staple]}
+
+//      // print_half_field(k);
+//      // assert(0);
+//
+// // REMOVE ME: calculate a0_old;  // p.s. Similar piece of code appears at the end of this function
+//      SU3::LatticeSU2Matrix u_norm(rbGrid); u_norm.Checkerboard() = cb;  // Normalized u
+//      u_norm = u * invCplx(sqrt_udet);
+//      LatticeRealD a0_old(rbGrid); a0_old.Checkerboard() = cb;
+//      a0_old = toReal(trace(u_norm)) * 0.5;
+//      print_half_field(a0_old);
+//      assert(0);
+
+
+
 
      std::vector<LatticeRealD> a(4, rbGrid); for(auto &x: a) x.Checkerboard() = cb;
 
-     LatticeReal tmp(rbGrid); tmp.Checkerboard() = cb;
-     random(pRNG, tmp);
+     // LatticeReal tmp(rbGrid); tmp.Checkerboard() = cb;
+     // random(pRNG, tmp);
+     LatticeReal tmp = get_random_RedBlack(pRNG, cb, rbGrid);
+
 
      autoView(a0_v, a[0], AcceleratorWrite);  // FIXME: we are both writing to and reading from a0_v
      autoView(tmp_v, tmp, AcceleratorRead);
      autoView(k_v, k, AcceleratorRead);
 
-     // REMOVE ME: for test
-     // for(int ss=0; ss<tmp.Grid()->oSites(); ++ss) {
-     //   std::cout << ss << " ";
-     //   // double *tmp_ptr = (double *)&tmp_v[ss];
-     //   // for(int idx=0; idx<vReal::Nsimd(); idx+=1) std::cout << *(tmp_ptr + idx) << " ";
-     //   // std::cout << std::endl;
-     //   std::cout << tmp_v[ss] << std::endl;
-     // }
-     // assert(0);
-     LatticeComplex tmp22(rbGrid); tmp22.Checkerboard() = cb;
-     random(pRNG, tmp22);
-     autoView(tmp_v22, tmp22, AcceleratorRead);
-     for(int ss=0; ss<tmp22.Grid()->oSites(); ++ss) {
-       std::cout << ss << " ";
-       std::cout << tmp_v22[ss] << std::endl;
-     }
-
-     // std::cout << "TWO" << std::endl;
-
-     // thread_for(ss, tmp.Grid()->oSites(), {
      accelerator_for(ss, tmp.Grid()->oSites(), vComplex::Nsimd(), {
      // accelerator_for(ss, tmp.Grid()->oSites(), vReal::Nsimd(), {   // ??? Seems like vReal/vComplex does not make a difference
        double *tmp_ptr = (double *)&tmp_v[ss];
@@ -206,21 +188,8 @@ void GF_SubGroupHeatBath(
          *(a0_ptr + idx + 1) = *(a0_ptr + idx);
        }
      });
-     // std::cout << "2.5" << std::endl;
 
-     // for(int ss=0; ss<tmp.Grid()->oSites(); ++ss) {
-     //   double *tmp_ptr = (double *)&tmp_v[ss];
-     //   double *a0_ptr = (double *)&a0_v[ss];
-     //   double *k_ptr = (double *)&k_v[ss];
-     //   for(int idx=0; idx<vReal::Nsimd(); idx+=2) {
-     //     *(a0_ptr + idx) = integral_table.get_a0(*(k_ptr + idx), *(tmp_ptr + idx));
-     //     *(a0_ptr + idx + 1) = *(a0_ptr + idx);
-     //   }
-     // }
-     //
-     // std::cout << vComplex::Nsimd() << std::endl;
-     // std::cout << vReal::Nsimd() << std::endl;
-     // std::cout << a[0] << std::endl;
+     // print_half_field(a[0]);
      // assert(0);
 
      //////////////////////////////////////////
@@ -229,25 +198,26 @@ void GF_SubGroupHeatBath(
      LatticeReal a123mag(rbGrid); a123mag.Checkerboard() = cb;
      // a123mag = sqrt(abs(1.0 - a[0] * a[0]));
      a123mag = sqrt(1.0 - a[0] * a[0]);
-     // std::cout << "2.7" << std::endl;
 
-     LatticeReal cos_theta(rbGrid); cos_theta.Checkerboard() = cb;
-     LatticeReal sin_theta(rbGrid); sin_theta.Checkerboard() = cb;
-     LatticeReal phi(rbGrid); phi.Checkerboard() = cb;
 
-     random(pRNG, phi);
+     // LatticeReal phi(rbGrid); phi.Checkerboard() = cb;
+     // random(pRNG, phi);
+
+     LatticeReal phi = get_random_RedBlack(pRNG, cb, rbGrid);
      const RealD twopi = 2.0 * M_PI;
      phi = phi * twopi;  // uniform in [0,2pi]
-     random(pRNG, cos_theta);
+
+     // LatticeReal cos_theta(rbGrid); cos_theta.Checkerboard() = cb;
+     // random(pRNG, cos_theta);
+     LatticeReal cos_theta = get_random_RedBlack(pRNG, cb, rbGrid);
      cos_theta = (cos_theta * 2.0) - 1.0;  // uniform in [-1,1]
      // sin_theta = sqrt(abs(1.0 - cos_theta * cos_theta));
+     LatticeReal sin_theta(rbGrid); sin_theta.Checkerboard() = cb;
      sin_theta = sqrt(1.0 - cos_theta * cos_theta);
-     // std::cout << "2.9" << std::endl;
 
      a[1] = a123mag * sin_theta * cos(phi);
      a[2] = a123mag * sin_theta * sin(phi);
      a[3] = a123mag * cos_theta;
-     // std::cout << "THREE" << std::endl;
 
      static i_Sigmas i_sigmas;
 
@@ -260,7 +230,6 @@ void GF_SubGroupHeatBath(
 
      SU3::LatticeSU2Matrix new_su2(rbGrid);   new_su2.Checkerboard() = cb;// rotated matrix after hb
      new_su2 = uinv * ua; // new su2 can be both uinv * ua or ua * uinv; they are both the same distribution.
-     // std::cout << "FOUR" << std::endl;
 
      my_su2Insert(new_su2, link, su2_subgroup);
 

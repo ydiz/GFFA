@@ -28,18 +28,15 @@ int main(int argc, char **argv) {
   GridCartesian *grid = SpaceTimeGrid::makeFourDimGrid(Coordinate({8,8,8,8}), GridDefaultSimd(Nd,vComplex::Nsimd()), GridDefaultMpi());
   // GridCartesian *grid = SpaceTimeGrid::makeFourDimGrid(Coordinate({16,16,16,16}), GridDefaultSimd(Nd,vComplex::Nsimd()), GridDefaultMpi());
 
-  GridParallelRNG _pRNG(grid);  // not used
-  GridSerialRNG sRNG;
+  GridParallelRNG pRNG(grid); 
 
-  _pRNG.SeedFixedIntegers(std::vector<int>({10,20,30,40}));
-  // sRNG.SeedFixedIntegers(std::vector<int>({1,2,3,4}));
-  sRNG.SeedFixedIntegers(std::vector<int>({1,2,3,4}));
+  pRNG.SeedFixedIntegers(std::vector<int>({1,2,3,4}));
 
   LatticeGaugeField U(grid);
   U = 1.0;          // FIXME: I am setting to cold configuration
   LatticeColourMatrix g(U.Grid());
   g = 1.0;
-  GF_heatbath(U, g, hmc_para.hb_offset, hmc_para.betaMM, hmc_para.table_path, sRNG, _pRNG); //hb_nsweeps before calculate equilibrium value
+  GF_heatbath(U, g, hmc_para.hb_offset, hmc_para.betaMM, hmc_para.table_path, pRNG); //hb_nsweeps before calculate equilibrium value
 
 
   // LatticeComplex g_trace(grid);
