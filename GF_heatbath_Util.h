@@ -97,11 +97,11 @@ void GF_heatbath(const LatticeGaugeField &Umu, LatticeColourMatrix &g,
   
 
   if(dSGF2dU!=NULL) {
-    // print ||adj(g) * g - I||^2
-    LatticeColourMatrix one(Umu.Grid());
-    one = 1.0;
-    LatticeColourMatrix tmp = adj(g) * g - one;
-    std::cout << "||adj(g) * g - I||^2: " << norm2(tmp) << std::endl;
+    // // print ||adj(g) * g - I||^2
+    // LatticeColourMatrix one(Umu.Grid());
+    // one = 1.0;
+    // LatticeColourMatrix tmp = adj(g) * g - one;
+    // std::cout << "||adj(g) * g - I||^2: " << norm2(tmp) << std::endl;
 
     // Re-unitarize Umu
     g = ProjectOnGroup(g);

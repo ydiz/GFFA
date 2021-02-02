@@ -160,17 +160,17 @@ void update_U(LatticeGaugeField& Mom, LatticeGaugeField& U, double ep, const Mom
   this->Representations.update(U);  // void functions if fundamental representation
 }
 
-void update_P(Field& U, int level, double ep, GridSerialRNG &sRNG, GridParallelRNG &pRNG) 
+void update_P(Field& U, int level, double ep, GridSerialRNG &sRNG, GridParallelRNG &pRNG, bool first_step) 
 {
   this->t_P[level] += ep;
-  update_P(this->P, U, level, ep, sRNG, pRNG);
+  update_P(this->P, U, level, ep, sRNG, pRNG, first_step);
 
   // std::cout << GridLogIntegrator << "[" << level << "] P " << " dt " << ep << " : t_P " << this->t_P[level] << std::endl;
 }
 
 
 
-void update_P(MomentaField& Mom, Field& U, int level, double ep, GridSerialRNG &sRNG, GridParallelRNG &pRNG) {
+void update_P(MomentaField& Mom, Field& U, int level, double ep, GridSerialRNG &sRNG, GridParallelRNG &pRNG, bool first_step) {
   // input U actually not used in the fundamental case
   // Fundamental updates, include smearing
 
@@ -181,7 +181,8 @@ void update_P(MomentaField& Mom, Field& U, int level, double ep, GridSerialRNG &
 
     Field& Us = this->Smearer.get_U(this->as[level].actions.at(a)->is_smeared);
     double start_force = usecond();
-    this->as[level].actions.at(a)->deriv(Us, force, sRNG, pRNG);  // deriv should NOT include Ta // zyd: should still be fine if deriv has Ta when smearing is off
+
+    this->as[level].actions.at(a)->deriv(Us, force, sRNG, pRNG, first_step);  // deriv should NOT include Ta // zyd: should still be fine if deriv has Ta when smearing is off
 
     // std::cout << GridLogIntegrator << "Smearing (on/off): " << this->as[level].actions.at(a)->is_smeared << std::endl;
     if (this->as[level].actions.at(a)->is_smeared) this->Smearer.smeared_force(force);

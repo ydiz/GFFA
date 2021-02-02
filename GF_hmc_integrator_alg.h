@@ -33,23 +33,19 @@ class GFLeapFrog : public GFIntegrator<FieldImplementation, SmearingPolicy,
       int last_step = _last && (e == multiplier - 1);
 
       if (first_step) {  // initial half step
-        this->update_P(U, level, eps / 2.0, sRNG, pRNG);
+        // this->update_P(U, level, eps / 2.0, sRNG, pRNG);
+        this->update_P(U, level, eps / 2.0, sRNG, pRNG, true);
       }
-      // std::cout << "Leap Frog: after first half setp update_P" << std::endl;
-      // print_grid_field_site(this->P, {0,0,0,0});
-      // print_grid_field_site(this->P, {1,2,0,0});
 
       if (level == fl) {  // lowest level
         this->update_U(U, eps, KK);
       } else {  // recursive function call
         this->step(U, level + 1, first_step, last_step, KK, sRNG, pRNG);
       }
-      // std::cout << "Leap Frog: after  update_U" << std::endl;
-      // print_grid_field_site(U, {0,0,0,0});
-      // print_grid_field_site(U, {1,2,0,0});
 
       int mm = last_step ? 1 : 2;
-      this->update_P(U, level, mm * eps / 2.0, sRNG, pRNG);
+      // this->update_P(U, level, mm * eps / 2.0, sRNG, pRNG);
+      this->update_P(U, level, mm * eps / 2.0, sRNG, pRNG, false);
 
     }
   }
