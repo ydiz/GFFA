@@ -1,6 +1,7 @@
 #pragma once
 
 #include "./WilsonFlow/WF.h"
+#include "polyakov_util.h"
 
 namespace Grid {
 namespace QCD {
@@ -61,6 +62,13 @@ public:
 
 };
 
+
+
+
+
+
+
+
 template <class Impl>
 class PolyakovLoopLogger : public HmcObservable<typename Impl::Field> {
   PolyakovLoop_para Par;
@@ -78,8 +86,7 @@ public:
     if(!Par.do_measure) return;
 
     Coordinate fdims = U.Grid()->FullDimensions();
-    int V = fdims[0] * fdims[1] * fdims[2];
-    int T = fdims[3];
+    // int T = fdims[3];
 
     for(int mu=0; mu<4; ++mu) {       // Direction of Polaykov loop
       // LatticeColourMatrix tmp = peekLorentz(U, mu); // U_mu
@@ -93,44 +100,54 @@ public:
         tmp = tmp * Umu_shift;
       }   
 
+      LatticeComplex polya_lat = trace(tmp);
 
-      // get three directions perpendicular to direction mu
-      std::vector<int> perp_dirs {0,1,2,3};
-      perp_dirs.erase(perp_dirs.begin() + mu);   
-      int dir1 = perp_dirs[0], dir2 = perp_dirs[1], dir3 = perp_dirs[2];
+      LatticeComplex polya_phase(U.Grid()), polya_norm(U.Grid());  // imaginary part is zero; 
+      lat_cmpl_to_arg_norm(polya_lat, polya_phase, polya_norm);
 
-      std::vector<Complex> polya(V);
+      double avg, stdev;
 
-      autoView(tmp_v , tmp, CpuRead);
-      thread_for(ss, U.Grid()->lSites(), {
-        Coordinate lcoor, gcoor;
-        localIndexToLocalGlobalCoor(U.Grid(), ss, lcoor, gcoor);
+      avg_std_phases_norms(polya_phase, avg, stdev);
+      std::cout << "Phase avg for mu=[" << mu << "]: " << avg << std::endl;
+      std::cout << "Phase std for mu=[" << mu << "]: " << stdev << std::endl;
+      std::cout << "Phase bins for mu=[" << mu << "]: " << binning_phases(polya_phase) << std::endl;
 
-        if(gcoor[mu] == 0) {
-          typename LatticeColourMatrix::vector_object::scalar_object m;
-          peekLocalSite(m, tmp_v, lcoor);
+      avg_std_phases_norms(polya_norm, avg, stdev);
+      std::cout << "Norm avg for mu=[" << mu << "]: " << avg << std::endl;
+      std::cout << "Norm std for mu=[" << mu << "]: " << stdev << std::endl;
+      std::cout << "Norm bins for mu=[" << mu << "]: " << binning_norms(polya_norm) << std::endl;
 
-          typename LatticeComplex::vector_object::scalar_object m2;
-          m2 = trace(m);
-
-          // int x = gcoor[0], y = gcoor[1], z = gcoor[2];
-          // polya[x * fdims[0] * fdims[1] + y * fdims[1] + z] = m2()()();
-
-          int idx = gcoor[dir1] * fdims[dir1] * fdims[dir2] + gcoor[dir2] * fdims[dir2] + gcoor[dir3];
-          polya[idx] = m2()()();
-        }
-      });
-      int def_prec = std::cout.precision();
-      std::cout << std::setprecision(3) << "Polyakov loop: [ " << traj << " ] mu = " << mu << ": " << polya << std::endl;
-
-      Complex avg_polya = 0.;
-      for(int i=0; i<polya.size(); ++i) avg_polya += polya[i];
-      avg_polya /= double(polya.size());
-
-      std::cout << GridLogMessage
-          << std::setprecision(std::numeric_limits<Real>::digits10 + 1)
-          << "AvgPolyakovLoop: [ " << traj << " ] mu = " << mu << ": " << avg_polya << std::endl;
-      std::cout.precision(def_prec);
+      // std::vector<Complex> polya(V);
+      // autoView(polya_lat_v, polya_lat, CpuRead);
+      // thread_for(ss, U.Grid()->lSites(), {
+      //   Coordinate lcoor, gcoor;
+      //   localIndexToLocalGlobalCoor(U.Grid(), ss, lcoor, gcoor);
+      //
+      //   if(gcoor[mu] == 0) {
+      //     typename LatticeColourMatrix::vector_object::scalar_object m;
+      //     peekLocalSite(m, tmp_v, lcoor);
+      //
+      //     typename LatticeComplex::vector_object::scalar_object m2;
+      //     m2 = trace(m);
+      //
+      //     // int x = gcoor[0], y = gcoor[1], z = gcoor[2];
+      //     // polya[x * fdims[0] * fdims[1] + y * fdims[1] + z] = m2()()();
+      //
+      //     int idx = gcoor[dir1] * fdims[dir1] * fdims[dir2] + gcoor[dir2] * fdims[dir2] + gcoor[dir3];
+      //     polya[idx] = m2()()();
+      //   }
+      // });
+      // int def_prec = std::cout.precision();
+      // std::cout << std::setprecision(3) << "Polyakov loop: [ " << traj << " ] mu = " << mu << ": " << polya << std::endl;
+      //
+      // Complex avg_polya = 0.;
+      // for(int i=0; i<polya.size(); ++i) avg_polya += polya[i];
+      // avg_polya /= double(polya.size());
+      //
+      // std::cout << GridLogMessage
+      //     << std::setprecision(std::numeric_limits<Real>::digits10 + 1)
+      //     << "AvgPolyakovLoop: [ " << traj << " ] mu = " << mu << ": " << avg_polya << std::endl;
+      // std::cout.precision(def_prec);
     }
 
   }
@@ -212,9 +229,7 @@ public:
     static bool last_log_evals_initialized = false;
 
     // measure_A(U, Par.coors, last_log_evals, last_log_evals_initialized);
-    std::cout << "before measure_A function" << std::endl;
     measure_A(U, Par.modes, last_log_evals, last_log_evals_initialized);
-    std::cout << "after measure_A function" << std::endl;
 
   }
 };

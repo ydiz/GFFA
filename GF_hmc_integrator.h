@@ -137,7 +137,7 @@ void update_U(Field& U, double ep, const Momenta_k &KK) {
 
   this->t_U += ep;
   int fl = this->levels - 1;
-  std::cout << GridLogIntegrator << "   " << "[" << fl << "] U " << " dt " << ep << " : t_U " << this->t_U << std::endl;
+  // std::cout << GridLogIntegrator << "   " << "[" << fl << "] U " << " dt " << ep << " : t_U " << this->t_U << std::endl;
 }
 
 void update_U(LatticeGaugeField& Mom, LatticeGaugeField& U, double ep, const Momenta_k &KK) {
@@ -146,27 +146,15 @@ void update_U(LatticeGaugeField& Mom, LatticeGaugeField& U, double ep, const Mom
   if(KK.newHp) deltaU = dHdP(Mom, KK);
   else deltaU = Mom;
 
-  // // // set zero mode to zero // FIXME: Talk to Norman; is doing this right ?
-  // set_zero_mode_to_zero(deltaU);
-  // // measure_A(deltaU, {{0,0,0,0}, {1,0,0,0}}, false);
-
-  // auto U_v = U.View();
-  // auto deltaU_v = deltaU.View();
   autoView(U_v, U, AcceleratorWrite);
   autoView(deltaU_v, deltaU, AcceleratorRead);
 
-  // parallel_for(int ss=0;ss<Mom.Grid()->oSites();ss++){
   // thread_for(ss, Mom.Grid()->oSites(), {
   accelerator_for(ss, Mom.Grid()->oSites(), vComplex::Nsimd(), {
    for (int mu = 0; mu < Nd; mu++)
      // U[ss]._internal[mu] = ProjectOnGroup(Exponentiate(deltaU[ss]._internal[mu], ep, Nexp) * U[ss]._internal[mu]);
      U_v[ss](mu) = ProjectOnGroup(Exponentiate(deltaU_v[ss](mu), ep, Nexp) * U_v[ss](mu));
   });
-
-  // std::cout << "explicitly setting A(k=0) to 0" << std::endl;
-  // set_zero_mode_U_to_zero(U); // FIXME: set zero mode to 0
-  // // std::cout << "after setting A(k=0) to 0" << std::endl;
-  // // measure_A(U, {{0,0,0,0}});
 
   this->Smearer.set_Field(U);
   this->Representations.update(U);  // void functions if fundamental representation
@@ -177,7 +165,7 @@ void update_P(Field& U, int level, double ep, GridSerialRNG &sRNG, GridParallelR
   this->t_P[level] += ep;
   update_P(this->P, U, level, ep, sRNG, pRNG);
 
-  std::cout << GridLogIntegrator << "[" << level << "] P " << " dt " << ep << " : t_P " << this->t_P[level] << std::endl;
+  // std::cout << GridLogIntegrator << "[" << level << "] P " << " dt " << ep << " : t_P " << this->t_P[level] << std::endl;
 }
 
 
@@ -195,17 +183,17 @@ void update_P(MomentaField& Mom, Field& U, int level, double ep, GridSerialRNG &
     double start_force = usecond();
     this->as[level].actions.at(a)->deriv(Us, force, sRNG, pRNG);  // deriv should NOT include Ta // zyd: should still be fine if deriv has Ta when smearing is off
 
-    std::cout << GridLogIntegrator << "Smearing (on/off): " << this->as[level].actions.at(a)->is_smeared << std::endl;
+    // std::cout << GridLogIntegrator << "Smearing (on/off): " << this->as[level].actions.at(a)->is_smeared << std::endl;
     if (this->as[level].actions.at(a)->is_smeared) this->Smearer.smeared_force(force);
     force = FieldImplementation::projectForce(force); // Ta for gauge fields
     double end_force = usecond();
     Real force_abs = std::sqrt(norm2(force)/U.Grid()->gSites());
-    std::cout << GridLogIntegrator << "["<<level<<"]["<<a<<"] Force average: " << force_abs << std::endl;
+    // std::cout << GridLogIntegrator << "["<<level<<"]["<<a<<"] Force average: " << force_abs << std::endl;
     Mom -= force * ep* HMC_MOMENTUM_DENOMINATOR;; 
     double end_full = usecond();
     double time_full  = (end_full - start_full) / 1e3;
     double time_force = (end_force - start_force) / 1e3;
-    std::cout << GridLogMessage << "["<<level<<"]["<<a<<"] P update elapsed time: " << time_full << " ms (force: " << time_force << " ms)"  << std::endl;
+    // std::cout << GridLogMessage << "["<<level<<"]["<<a<<"] P update elapsed time: " << time_full << " ms (force: " << time_force << " ms)"  << std::endl;
   }
 
   // // Force from the other representations
@@ -226,7 +214,11 @@ void GF_integrate(Field& U, const Momenta_k &KK, const GFFAParams &HMC_para, Gri
   for (int step = 0; step < this->Params.MDsteps; ++step) {  // MD step
     int first_step = (step == 0);
     int last_step = (step == this->Params.MDsteps - 1);
+
     this->step(U, 0, first_step, last_step, KK, sRNG, pRNG);
+
+    // std::cout << "U" << std::endl;
+    // print_grid_field_site(U, {1,2,3,4});
 
     // For measureing A
     if(HMC_para.measure_A) {
@@ -244,8 +236,8 @@ void GF_integrate(Field& U, const Momenta_k &KK, const GFFAParams &HMC_para, Gri
   // Check the clocks all match on all levels
   for (int level = 0; level < this->as.size(); ++level) {
     assert(fabs(this->t_U - this->t_P[level]) < 1.0e-6);  // must be the same
-    std::cout << GridLogIntegrator << " times[" << level
-              << "]= " << this->t_P[level] << " " << this->t_U << std::endl;
+    // std::cout << GridLogIntegrator << " times[" << level
+    //           << "]= " << this->t_P[level] << " " << this->t_U << std::endl;
   }
 
   // and that we indeed got to the end of the trajectory

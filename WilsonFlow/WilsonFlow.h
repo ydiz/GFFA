@@ -30,6 +30,8 @@ public:
 template <class Gimpl>
 class MyWilsonFlow {
 
+    bool verbose = false; // whether print out TC after every step
+
     RealD initial_epsilon, epsilon, tau, adaptiveErrorTolerance; // the tau printed out is flow time after this step
     std::vector<double> meas_taus;  // only for fixedMaxTau
     int traj;  // current trajectory number; for printing logs
@@ -120,7 +122,7 @@ void MyWilsonFlow<Gimpl>::evolve_step_adaptive_fixed_tau(typename Gimpl::GaugeFi
     double energy_density = energyDensity(U);
     double new_tSqauredE = tau * tau * energy_density;
 
-    std::cout << "tau: " << tau << "; E: "
+    if(verbose) std::cout << "tau: " << tau << "; E: "
       << energy_density << "; t^2 E: " << new_tSqauredE << std::endl;
 
 
@@ -160,18 +162,17 @@ void MyWilsonFlow<Gimpl>::smear_adaptive_fixed_tau(GaugeField& out, const GaugeF
 
   int times_i = 0; // the i-th WF time points to measure
   do{
-    std::cout << GridLogMessage << "[WilsonFlow] step: " << step << "; ";
+    if(verbose) std::cout << GridLogMessage << "[WilsonFlow] step: " << step << "; ";
     step++;
 
     evolve_step_adaptive_fixed_tau(out);
 
     if(tau + epsilon > meas_taus[times_i]) {  // meas_taus[times_i]: the i-th Wilson Flow time point to do measurement
-      std::cout << GridLogMessage << "[WilsonFlow] step: " << step << "; ";
+      if(verbose) std::cout << GridLogMessage << "[WilsonFlow] step: " << step << "; ";
       epsilon = meas_taus[times_i] - tau;
       evolve_step_adaptive_fixed_tau(out);  // tau == 
 
       if(std::abs(tau - meas_taus[times_i]) < 1e-3) {  // If last step is accepted (step size not too large)
-        // save_TC(out, tau); // save flowed topological charge
         std::vector<double> topoCharge = timeSliceTopologicalCharge(out);
         std::cout << GridLogMessage << "TC: [ " << traj << " ] : " << "tau: " << tau << " : " << topoCharge << std::endl;
         if(times_i == meas_taus.size() -1) break;

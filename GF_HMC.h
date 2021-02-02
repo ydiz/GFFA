@@ -52,6 +52,8 @@ class GF_HybridMonteCarlo {
   /////////////////////////////////////////////////////////
   RealD evolve_hmc_step(Field &U, const Momenta_k &KK, const GFFAParams &HMC_para, GridSerialRNG &sRNG, GridParallelRNG &pRNG) {
     TheIntegrator.GF_refresh(U, pRNG, KK, HMC_para);  // set U and initialize P and phi's
+    // std::cout << "P after GF_refresh" << std::endl;
+    // print_grid_field_site(TheIntegrator.P, {1,2,3,4});
 
     double H0;
     if(!HMC_para.isGFFA) {
@@ -110,6 +112,13 @@ class GF_HybridMonteCarlo {
       if (traj < Params.StartTrajectory + Params.NoMetropolisUntil) {
       	std::cout << GridLogMessage << "-- Thermalization" << std::endl;
       }
+      
+      // if(traj == 5501) {
+      //   LatticeColourMatrix lat(Ucur.Grid());
+      //   random(pRNG, lat);
+      //   std::cout << lat << std::endl;
+      //   exit(0);
+      // }
 
       double t0=usecond();
       Ucopy = Ucur;
