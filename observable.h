@@ -302,6 +302,8 @@ public:
                           GridSerialRNG &sRNG,
                           GridParallelRNG &pRNG) {
 
+    if(!Par.do_measure) return;
+
     // MyWilsonFlow<PeriodicGimplR> WF(Par.step_size, Par.adaptiveErrorTolerance, Par.meas_taus, Par.topoChargeOutFile, traj);
     MyWilsonFlow<PeriodicGimplR> WF(Par.step_size, Par.adaptiveErrorTolerance, Par.meas_taus, traj);
 
