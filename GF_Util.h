@@ -4,6 +4,24 @@
 
 namespace Grid{
 
+template<class T>
+void writeScidac(T& field, const std::string &filename) { // because of writeScidacFieldRecord, field cannot be const
+  emptyUserRecord record;
+  ScidacWriter WR(field.Grid()->IsBoss()); // the parameter is necessary for writer(but not for reader) when using multiple nodes
+  WR.open(filename);
+  WR.writeScidacFieldRecord(field, record);
+  WR.close();
+};
+
+template<class T>
+void readScidac(T& field, const std::string &filename){
+  emptyUserRecord record;
+  ScidacReader RD;
+  RD.open(filename);
+  RD.readScidacFieldRecord(field, record);
+  RD.close();
+};
+
 
 template<class T>
 void print_grid_field_site(const T &field, const std::vector<int> &coor) {

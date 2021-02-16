@@ -86,8 +86,11 @@ public:
     if(!Par.do_measure) return;
 
     Coordinate fdims = U.Grid()->FullDimensions();
+    int V = 1;
+    for(int i=0; i<4; ++i) V *= fdims[i];
     // int T = fdims[3];
 
+    Lattice<iVector<iScalar<iScalar<vComplex>>, 4>> all_polya(U.Grid());
     for(int mu=0; mu<4; ++mu) {       // Direction of Polaykov loop
       // LatticeColourMatrix tmp = peekLorentz(U, mu); // U_mu
       // for(int i=0; i<fdims[mu]-1; ++i) tmp = tmp * Cshift(tmp, mu, 1);  // WRONG
@@ -101,21 +104,26 @@ public:
       }   
 
       LatticeComplex polya_lat = trace(tmp);
+      pokeLorentz(all_polya, polya_lat, mu);
 
-      LatticeComplex polya_phase(U.Grid()), polya_norm(U.Grid());  // imaginary part is zero; 
-      lat_cmpl_to_arg_norm(polya_lat, polya_phase, polya_norm);
+        
+      Complex avg_polya = sum(polya_lat)()()() / double(V);
+      std::cout << "Average polyakov line for mu=[" << mu << "]: " << avg_polya << std::endl;
 
-      double avg, stdev;
-
-      avg_std_phases_norms(polya_phase, avg, stdev);
-      std::cout << "Phase avg for mu=[" << mu << "]: " << avg << std::endl;
-      std::cout << "Phase std for mu=[" << mu << "]: " << stdev << std::endl;
-      std::cout << "Phase bins for mu=[" << mu << "]: " << binning_phases(polya_phase) << std::endl;
-
-      avg_std_phases_norms(polya_norm, avg, stdev);
-      std::cout << "Norm avg for mu=[" << mu << "]: " << avg << std::endl;
-      std::cout << "Norm std for mu=[" << mu << "]: " << stdev << std::endl;
-      std::cout << "Norm bins for mu=[" << mu << "]: " << binning_norms(polya_norm) << std::endl;
+      // LatticeComplex polya_phase(U.Grid()), polya_norm(U.Grid());  // imaginary part is zero; 
+      // lat_cmpl_to_arg_norm(polya_lat, polya_phase, polya_norm);
+      //
+      // double avg, stdev;
+      //
+      // avg_std_phases_norms(polya_phase, avg, stdev);
+      // std::cout << "Phase avg for mu=[" << mu << "]: " << avg << std::endl;
+      // std::cout << "Phase std for mu=[" << mu << "]: " << stdev << std::endl;
+      // std::cout << "Phase bins for mu=[" << mu << "]: " << binning_phases(polya_phase) << std::endl;
+      //
+      // avg_std_phases_norms(polya_norm, avg, stdev);
+      // std::cout << "Norm avg for mu=[" << mu << "]: " << avg << std::endl;
+      // std::cout << "Norm std for mu=[" << mu << "]: " << stdev << std::endl;
+      // std::cout << "Norm bins for mu=[" << mu << "]: " << binning_norms(polya_norm) << std::endl;
 
       // std::vector<Complex> polya(V);
       // autoView(polya_lat_v, polya_lat, CpuRead);
@@ -149,6 +157,7 @@ public:
       //     << "AvgPolyakovLoop: [ " << traj << " ] mu = " << mu << ": " << avg_polya << std::endl;
       // std::cout.precision(def_prec);
     }
+    writeScidac(all_polya, "polya."+std::to_string(traj));
 
   }
 };
@@ -258,6 +267,7 @@ struct MyTC_para: Serializable {
 
 public:
   GRID_SERIALIZABLE_CLASS_MEMBERS(MyTC_para,
+    bool, do_measure,
     std::string, type,
     std::vector<double>, meas_taus,
     int, TrajectoryStart,
