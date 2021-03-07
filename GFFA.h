@@ -5,6 +5,7 @@
 
 #include "GF_params.h"
 #include "GF_Util.h"
+#include "cell_util.h"
 #include "GF_init_k.h"
 #include "measure_A.h"
 #include "observable.h"
