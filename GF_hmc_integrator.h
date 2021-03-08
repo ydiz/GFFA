@@ -36,19 +36,23 @@ public:
 
   const MyActionSet<Field, RepresentationPolicy> as;
 
+  LatticeLorentzScalar mask; // For update only a cell
 
 GFIntegrator(GridBase* grid, IntegratorParameters Par,
            MyActionSet<Field, RepresentationPolicy>& Aset,
-           SmearingPolicy& Sm)
+           SmearingPolicy& Sm, const Coordinate &cell_size)
   : Params(Par),
     as(Aset),
     P(grid),
     levels(Aset.size()),
     Smearer(Sm),
-    Representations(grid) 
+    Representations(grid),
+    mask(grid) // For update only a cell
 {
   t_P.resize(levels, 0.0);
   t_U = 0.0;
+
+  mask = get_mask(grid, cell_size);
   // initialization of smearer delegated outside of Integrator
 };
 
@@ -107,9 +111,28 @@ inline void GF_refresh(Field& U, GridParallelRNG& pRNG, const Momenta_k &KK, con
   //   FieldImplementation::generate_momenta(this->P, pRNG);
   // }
   // else {
-  if(KK.newHp) GF_generate_P(this->P, pRNG, KK);
+  if(KK.newHp) {
+    GF_generate_P(this->P, pRNG, KK);
+    // std::cout << this->P << std::endl;
+    // exit(0);
+
+    // Gauge transform U inside the cell
+    LatticeColourMatrix g(U.Grid()); g = 1.0;
+    GF_heatbath(U, g, HMC_para.innerMC_N, HMC_para.betaMM, HMC_para.table_path, pRNG); //hb_nsweeps before calculate equilibrium value
+
+    // // Set g(x) = 1.0 for x outside the cell
+    LatticeColourMatrix one(U.Grid()); one = 1.0;
+    for(int mu=0; mu<4; mu++){
+      LatticeInteger coor_mu(U.Grid());
+      LatticeCoordinate(coor_mu, mu);
+      g = where(coor_mu >= (Integer)HMC_para.cell_size[mu], one, g); // Must explicitly convert to Integer to compile
+    }
+
+    SU<3>::GaugeTransform(U, g);
+  }
   else FieldImplementation::generate_momenta(this->P, pRNG);
   // }
+
 
   // // I am not setting initial zero mode P(k=0) to zero
   // // set zero mode to zero // FIXME: is this right?
@@ -118,18 +141,18 @@ inline void GF_refresh(Field& U, GridParallelRNG& pRNG, const Momenta_k &KK, con
   //   set_zero_mode_to_zero(this->P);
   // }
 
-  this->Smearer.set_Field(U);
-  this->Representations.update(U);
-
-  for (int level = 0; level < this->as.size(); ++level) {
-    for (int actionID = 0; actionID < this->as[level].actions.size(); ++actionID) {
-      Field& Us =
-          this->Smearer.get_U(this->as[level].actions.at(actionID)->is_smeared);
-      this->as[level].actions.at(actionID)->refresh(Us, pRNG);
-    }
-
-    // this->as[level].apply(this->refresh_hireps, this->Representations, pRNG);
-  }
+  // this->Smearer.set_Field(U);
+  // this->Representations.update(U);
+  //
+  // for (int level = 0; level < this->as.size(); ++level) {
+  //   for (int actionID = 0; actionID < this->as[level].actions.size(); ++actionID) {
+  //     Field& Us =
+  //         this->Smearer.get_U(this->as[level].actions.at(actionID)->is_smeared);
+  //     this->as[level].actions.at(actionID)->refresh(Us, pRNG);
+  //   }
+  //
+  //   // this->as[level].apply(this->refresh_hireps, this->Representations, pRNG);
+  // }
 }
 
 void update_U(Field& U, double ep, const Momenta_k &KK) {
@@ -143,7 +166,12 @@ void update_U(Field& U, double ep, const Momenta_k &KK) {
 void update_U(LatticeGaugeField& Mom, LatticeGaugeField& U, double ep, const Momenta_k &KK) {
   LatticeGaugeField deltaU(Mom.Grid());
 
-  if(KK.newHp) deltaU = dHdP(Mom, KK);
+  if(KK.newHp) {
+    deltaU = dHdP(Mom, KK);
+    // deltaU = Mom; // FIXME
+    // std::cout << deltaU << std::endl;
+    // exit(0);
+  }
   else deltaU = Mom;
 
   autoView(U_v, U, AcceleratorWrite);
@@ -152,10 +180,11 @@ void update_U(LatticeGaugeField& Mom, LatticeGaugeField& U, double ep, const Mom
   // thread_for(ss, Mom.Grid()->oSites(), {
   accelerator_for(ss, Mom.Grid()->oSites(), vComplex::Nsimd(), {
    for (int mu = 0; mu < Nd; mu++)
-     // U[ss]._internal[mu] = ProjectOnGroup(Exponentiate(deltaU[ss]._internal[mu], ep, Nexp) * U[ss]._internal[mu]);
      U_v[ss](mu) = ProjectOnGroup(Exponentiate(deltaU_v[ss](mu), ep, Nexp) * U_v[ss](mu));
   });
 
+  // std::cout << U << std::endl;
+  // exit(0);
   this->Smearer.set_Field(U);
   this->Representations.update(U);  // void functions if fundamental representation
 }
@@ -164,7 +193,11 @@ void update_P(Field& U, int level, double ep, GridSerialRNG &sRNG, GridParallelR
 {
   this->t_P[level] += ep;
   update_P(this->P, U, level, ep, sRNG, pRNG, first_step);
-
+  
+  P = P * mask; // Set P to 0 for P outside the cell // P outside the cell will be non-zero after update_P
+  // // std::cout << this->P << std::endl;
+  // // exit(0);
+  //
   // std::cout << GridLogIntegrator << "[" << level << "] P " << " dt " << ep << " : t_P " << this->t_P[level] << std::endl;
 }
 
@@ -191,9 +224,9 @@ void update_P(MomentaField& Mom, Field& U, int level, double ep, GridSerialRNG &
     Real force_abs = std::sqrt(norm2(force)/U.Grid()->gSites());
     // std::cout << GridLogIntegrator << "["<<level<<"]["<<a<<"] Force average: " << force_abs << std::endl;
     Mom -= force * ep* HMC_MOMENTUM_DENOMINATOR;; 
-    double end_full = usecond();
-    double time_full  = (end_full - start_full) / 1e3;
-    double time_force = (end_force - start_force) / 1e3;
+    // double end_full = usecond();
+    // double time_full  = (end_full - start_full) / 1e3;
+    // double time_force = (end_force - start_force) / 1e3;
     // std::cout << GridLogMessage << "["<<level<<"]["<<a<<"] P update elapsed time: " << time_full << " ms (force: " << time_force << " ms)"  << std::endl;
   }
 

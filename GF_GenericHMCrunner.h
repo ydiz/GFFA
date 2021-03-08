@@ -44,7 +44,7 @@ class GF_HMCWrapperTemplate {
 
     // Can move this outside?
     typedef IntegratorType<SmearingPolicy> TheIntegrator;
-    TheIntegrator MDynamics(UGrid, this->Parameters.MD, this->TheAction, Smearing);
+    TheIntegrator MDynamics(UGrid, this->Parameters.MD, this->TheAction, Smearing, HMC_para.cell_size);
 
     if (this->Parameters.StartingType == "HotStart") {
       // Hot start

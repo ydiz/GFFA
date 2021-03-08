@@ -19,6 +19,7 @@ public:
     std::string, UFile,
     int, innerMC_N,
     int, hb_offset,
+    std::vector<int>, cell_size,
 
     bool, measure_A,
     // double, fixed_P_k,

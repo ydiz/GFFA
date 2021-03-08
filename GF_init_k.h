@@ -100,6 +100,10 @@ public:
     return kDotP;
   }
 
+  GridBase *Grid() const {
+    return k[0].Grid();
+  }
+
 
 };
 

@@ -94,7 +94,9 @@ class GF_HybridMonteCarlo {
 
   void evolve(const GFFAParams &HMC_para) {
 
-    const Momenta_k KK(Ucur.Grid(), HMC_para.M, HMC_para.epsilon, HMC_para.newHp);
+    GridCartesian             cell_grid(HMC_para.cell_size, GridDefaultSimd(Nd,vComplex::Nsimd()), GridDefaultMpi());
+    const Momenta_k KK(&cell_grid, HMC_para.M, HMC_para.epsilon, HMC_para.newHp);
+    // const Momenta_k KK(Ucur.Grid(), HMC_para.M, HMC_para.epsilon, HMC_para.newHp);
 
     Real DeltaH;
 

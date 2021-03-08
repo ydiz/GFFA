@@ -14,9 +14,9 @@ class GFLeapFrog : public GFIntegrator<FieldImplementation, SmearingPolicy,
   std::string integrator_name(){return "GFLeapFrog";}
 
   GFLeapFrog(GridBase* grid, IntegratorParameters Par,
-           MyActionSet<Field, RepresentationPolicy>& Aset, SmearingPolicy& Sm)
+           MyActionSet<Field, RepresentationPolicy>& Aset, SmearingPolicy& Sm, const Coordinate &cell_size)
       : GFIntegrator<FieldImplementation, SmearingPolicy, RepresentationPolicy>(
-            grid, Par, Aset, Sm){};
+            grid, Par, Aset, Sm, cell_size){};
 
   void step(Field& U, int level, int first, int last) {assert(0);}
 
