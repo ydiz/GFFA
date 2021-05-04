@@ -1,7 +1,8 @@
 namespace Grid{
 namespace QCD{
 
-int Nexp = 12;
+// int Nexp = 12;
+int Nexp = 20; // Taylor expansion with Nexp=20 is very close to Cayley-Hamilton
 
 
 //implement GF_refresh, S, and update_U
@@ -115,44 +116,36 @@ inline void GF_refresh(Field& U, GridParallelRNG& pRNG, const Momenta_k &KK, con
     GF_generate_P(this->P, pRNG, KK);
     // std::cout << this->P << std::endl;
     // exit(0);
-
-    // Gauge transform U inside the cell
-    LatticeColourMatrix g(U.Grid()); g = 1.0;
-    GF_heatbath(U, g, HMC_para.innerMC_N, HMC_para.betaMM, HMC_para.table_path, pRNG); //hb_nsweeps before calculate equilibrium value
-
-    // // Set g(x) = 1.0 for x outside the cell
-    LatticeColourMatrix one(U.Grid()); one = 1.0;
-    for(int mu=0; mu<4; mu++){
-      LatticeInteger coor_mu(U.Grid());
-      LatticeCoordinate(coor_mu, mu);
-      g = where(coor_mu >= (Integer)HMC_para.cell_size[mu], one, g); // Must explicitly convert to Integer to compile
-    }
-
-    SU<3>::GaugeTransform(U, g);
   }
   else FieldImplementation::generate_momenta(this->P, pRNG);
   // }
 
+  this->P = this->P * mask; // set "links that are perpendicular to surface" to 0.
+  // std::cout << "Not doing gauge transformation at the beginning of a trajectory."  << std::endl;
+  std::cout << "doing gauge transformation at the beginning of a trajectory."  << std::endl;
+  if(HMC_para.isGFFA) { // FIXME
+    GridBase *cell_grid = KK.Grid();
+    Coordinate cell_size = cell_grid->_fdimensions;
 
-  // // I am not setting initial zero mode P(k=0) to zero
-  // // set zero mode to zero // FIXME: is this right?
-  // if(KK.newHp) {
-  //   std::cout << "Setting zero mode of initial P to zero" << std::endl;
-  //   set_zero_mode_to_zero(this->P);
-  // }
+    LatticeGaugeField U_cell(cell_grid); U_cell = Zero();
+    localCopyRegion(U, U_cell, Coordinate({0,0,0,0}), Coordinate({0,0,0,0}), cell_size);
+    LatticeLorentzScalar cell_mask = get_cell_mask(cell_grid);
+    U_cell = U_cell * cell_mask;
+    // Gauge transform U inside the cell
+    // LatticeColourMatrix g(U.Grid()); g = 1.0;
+    LatticeColourMatrix g_cell(cell_grid); g_cell = 1.0;
+    GridParallelRNG pRNG_cell(cell_grid);      pRNG_cell.SeedFixedIntegers(std::vector<int>({45,12,81,9}));
+    GF_heatbath(U_cell, g_cell, HMC_para.innerMC_N, HMC_para.betaMM, HMC_para.table_path, pRNG_cell); //hb_nsweeps before calculate equilibrium value
 
-  // this->Smearer.set_Field(U);
-  // this->Representations.update(U);
-  //
-  // for (int level = 0; level < this->as.size(); ++level) {
-  //   for (int actionID = 0; actionID < this->as[level].actions.size(); ++actionID) {
-  //     Field& Us =
-  //         this->Smearer.get_U(this->as[level].actions.at(actionID)->is_smeared);
-  //     this->as[level].actions.at(actionID)->refresh(Us, pRNG);
-  //   }
-  //
-  //   // this->as[level].apply(this->refresh_hireps, this->Representations, pRNG);
-  // }
+    LatticeColourMatrix g(U.Grid()); g = 1.0;
+    localCopyRegion(g_cell, g, Coordinate({0,0,0,0}), Coordinate({0,0,0,0}), cell_size);
+
+    SU<3>::GaugeTransform(U, g);
+    std::cout << "Plaquette after gauge transformation: "<< WilsonLoops<PeriodicGimplR>::avgPlaquette(U) << std::endl;
+    std::cout << "Link trace after gauge transformation: "<< WilsonLoops<PeriodicGimplR>::linkTrace(U) << std::endl;
+  }
+  std::cout << "end of GF_refresh" << std::endl;
+
 }
 
 void update_U(Field& U, double ep, const Momenta_k &KK) {
@@ -164,15 +157,16 @@ void update_U(Field& U, double ep, const Momenta_k &KK) {
 }
 
 void update_U(LatticeGaugeField& Mom, LatticeGaugeField& U, double ep, const Momenta_k &KK) {
+  // std::cout << "begining of update_U" << std::endl;
   LatticeGaugeField deltaU(Mom.Grid());
 
   if(KK.newHp) {
     deltaU = dHdP(Mom, KK);
-    // deltaU = Mom; // FIXME
-    // std::cout << deltaU << std::endl;
-    // exit(0);
   }
   else deltaU = Mom;
+
+  deltaU = deltaU * mask; // set "links that are perpendicular to surface" to 0.
+  // exit(0);
 
   autoView(U_v, U, AcceleratorWrite);
   autoView(deltaU_v, deltaU, AcceleratorRead);
@@ -182,11 +176,14 @@ void update_U(LatticeGaugeField& Mom, LatticeGaugeField& U, double ep, const Mom
    for (int mu = 0; mu < Nd; mu++)
      U_v[ss](mu) = ProjectOnGroup(Exponentiate(deltaU_v[ss](mu), ep, Nexp) * U_v[ss](mu));
   });
+  // print_grid_field_site(deltaU, {0,0,0,7});
 
   // std::cout << U << std::endl;
   // exit(0);
   this->Smearer.set_Field(U);
   this->Representations.update(U);  // void functions if fundamental representation
+  // std::cout << "end of update_U" << std::endl;
+
 }
 
 void update_P(Field& U, int level, double ep, GridSerialRNG &sRNG, GridParallelRNG &pRNG, bool first_step) 
@@ -195,8 +192,8 @@ void update_P(Field& U, int level, double ep, GridSerialRNG &sRNG, GridParallelR
   update_P(this->P, U, level, ep, sRNG, pRNG, first_step);
   
   P = P * mask; // Set P to 0 for P outside the cell // P outside the cell will be non-zero after update_P
-  // // std::cout << this->P << std::endl;
-  // // exit(0);
+  // std::cout << this->P << std::endl;
+  // exit(0);
   //
   // std::cout << GridLogIntegrator << "[" << level << "] P " << " dt " << ep << " : t_P " << this->t_P[level] << std::endl;
 }
@@ -207,6 +204,7 @@ void update_P(MomentaField& Mom, Field& U, int level, double ep, GridSerialRNG &
   // input U actually not used in the fundamental case
   // Fundamental updates, include smearing
 
+  // std::cout << "begining of update_P" << std::endl;
   for (int a = 0; a < this->as[level].actions.size(); ++a) {
     double start_full = usecond();
     Field force(U.Grid());
@@ -215,7 +213,9 @@ void update_P(MomentaField& Mom, Field& U, int level, double ep, GridSerialRNG &
     Field& Us = this->Smearer.get_U(this->as[level].actions.at(a)->is_smeared);
     double start_force = usecond();
 
+    // std::cout << "before deriv" << std::endl;
     this->as[level].actions.at(a)->deriv(Us, force, sRNG, pRNG, first_step);  // deriv should NOT include Ta // zyd: should still be fine if deriv has Ta when smearing is off
+    // std::cout << "after deriv" << std::endl;
 
     // std::cout << GridLogIntegrator << "Smearing (on/off): " << this->as[level].actions.at(a)->is_smeared << std::endl;
     if (this->as[level].actions.at(a)->is_smeared) this->Smearer.smeared_force(force);
@@ -229,6 +229,7 @@ void update_P(MomentaField& Mom, Field& U, int level, double ep, GridSerialRNG &
     // double time_force = (end_force - start_force) / 1e3;
     // std::cout << GridLogMessage << "["<<level<<"]["<<a<<"] P update elapsed time: " << time_full << " ms (force: " << time_force << " ms)"  << std::endl;
   }
+  // std::cout << "end of update_P" << std::endl;
 
   // // Force from the other representations
   // as[level].apply(update_P_hireps, Representations, Mom, U, ep);
@@ -276,6 +277,27 @@ void GF_integrate(Field& U, const Momenta_k &KK, const GFFAParams &HMC_para, Gri
 
   // and that we indeed got to the end of the trajectory
   assert(fabs(this->t_U - this->Params.trajL) < 1.0e-6);
+
+
+  {
+    GridBase *cell_grid = KK.Grid();
+    Coordinate cell_size = cell_grid->_fdimensions;
+
+    LatticeGaugeField U_cell(cell_grid); U_cell = Zero();
+    localCopyRegion(U, U_cell, Coordinate({0,0,0,0}), Coordinate({0,0,0,0}), cell_size);
+    LatticeLorentzScalar cell_mask = get_cell_mask(cell_grid);
+    U_cell = U_cell * cell_mask;
+
+
+    int n = 6; // FIXME: inner cell must be 6.6.6.6
+// # `lost` is the number of plaqs that are 0 because links perpendicular to the boundaries are set to 0
+    int lost = 4 * (n-1)*(n-1)*(n-1) * 3 + 6 * (n-1)*(n-1) * 5 + 4 * (n-1) * 6 + 6;
+
+    int total = n*n*n*n * 6;  // total number of size;
+    double multiplier = total / double(total - lost);  // Average plaq should be multiplied by this number 
+    std::cout << "Average Plaquette of U_cell: "<< WilsonLoops<PeriodicGimplR>::avgPlaquette(U_cell) * multiplier << std::endl;
+  }
+
 
 }
 

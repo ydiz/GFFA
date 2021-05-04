@@ -10,7 +10,7 @@ void GF_heatbath(const LatticeGaugeField &Umu, LatticeColourMatrix &g,
                 LatticeGaugeField (* const ForceFunc)(const LatticeColourMatrix &, const std::vector<LatticeColourMatrix> &)=NULL)//, bool verbose=0)
 {
 
-  static GridRedBlackCartesian rbGrid(Umu.Grid());
+  GridRedBlackCartesian rbGrid(Umu.Grid());
 
   RealD coeff = _betaMM * (1./3.);
   // Real betaMM = _betaMM * 3; //In heatbath routine, the coefficient is beta/Nc

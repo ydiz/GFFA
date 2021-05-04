@@ -7,16 +7,52 @@ using LatticeLorentzScalar = Lattice<vLorentzScalar>;
 
 LatticeLorentzScalar get_mask(GridBase *grid, const Coordinate &cell_size) { // grid for entire lattice, not for inner cell
 
-  LatticeLorentzScalar mask(grid); mask = 1.;
-  LatticeLorentzScalar zero(grid); zero = 0.;
-  for(int mu=0; mu<4; mu++){
-    LatticeInteger coor_mu(grid);
-    LatticeCoordinate(coor_mu, mu);
+  LatticeLorentzScalar mask(grid);
 
-    mask = where(coor_mu >= (Integer)cell_size[mu], zero, mask);   // Must explicitly convert to Integer to compile.
-  }
+  autoView(mask_v, mask, CpuWrite);
+  thread_for(ss, grid->lSites(), {
+    Coordinate lcoor, gcoor;
+    localIndexToLocalGlobalCoor(grid, ss, lcoor, gcoor);
+
+    typename LatticeLorentzScalar::vector_object::scalar_object m;
+    m = 1.0;
+    for(int mu=0; mu<4; ++mu) {
+      if(gcoor[mu] >= cell_size[mu]) {  // If x is outside cell, m(mu) = 0, for any mu
+        m = 0.;
+        break;
+      }
+      if(gcoor[mu] == cell_size[mu] - 1) m(mu)()() = 0.; // [1,5,3,5] ->  mask = (1,0,1,0) // If x is outside cell, m(mu) = 0, for any mu
+    }
+
+    pokeLocalSite(m, mask_v, lcoor);
+  });
   return mask;
 }
+
+
+LatticeLorentzScalar get_cell_mask(GridBase *cell_grid) { // grid for entire lattice, not for inner cell
+
+  LatticeLorentzScalar mask(cell_grid);
+
+  Coordinate cell_size = cell_grid->_fdimensions;
+
+  autoView(mask_v, mask, CpuWrite);
+  thread_for(ss, cell_grid->lSites(), {
+    Coordinate lcoor, gcoor;
+    localIndexToLocalGlobalCoor(cell_grid, ss, lcoor, gcoor);
+
+    typename LatticeLorentzScalar::vector_object::scalar_object m;
+    m = 1.0;
+    for(int mu=0; mu<4; ++mu) {
+      if(gcoor[mu] == cell_size[mu] - 1) m(mu)()() = 0.; // [1,5,3,5] ->  mask = (1,0,1,0) 
+    }
+    pokeLocalSite(m, mask_v, lcoor);
+  });
+  return mask;
+}
+
+
+
 
 }
 
