@@ -115,13 +115,6 @@ class GF_HybridMonteCarlo {
       	std::cout << GridLogMessage << "-- Thermalization" << std::endl;
       }
       
-      // if(traj == 5501) {
-      //   LatticeColourMatrix lat(Ucur.Grid());
-      //   random(pRNG, lat);
-      //   std::cout << lat << std::endl;
-      //   exit(0);
-      // }
-
       double t0=usecond();
       Ucopy = Ucur;
 

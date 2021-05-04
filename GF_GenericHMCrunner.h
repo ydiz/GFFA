@@ -1,11 +1,9 @@
 namespace Grid {
 namespace QCD {
 
-// redefined runner function; change HybridMonteCarlo to GF_HybridMonteCarlo
 template <class Implementation,
           template <typename, typename, typename> class Integrator,
           class RepresentationsPolicy = NoHirep, class ReaderClass = XmlReader>
-// class GF_HMCWrapperTemplate: public HMCWrapperTemplate<Implementation, Integrator, RepresentationsPolicy, ReaderClass> {
 class GF_HMCWrapperTemplate {
  public:
   INHERIT_FIELD_TYPES(Implementation);
@@ -19,14 +17,6 @@ class GF_HMCWrapperTemplate {
 
   // The set of actions (keep here for lower level users, for now)
   MyActionSet<Field, RepresentationsPolicy> TheAction;
-
-  // INHERIT_FIELD_TYPES(Implementation);
-  // typedef Implementation ImplPolicy;  // visible from outside
-  // template <typename S = NoSmearing<Implementation> >
-  // using IntegratorType = Integrator<Implementation, S, RepresentationsPolicy>;
-  // MyActionSet<Field, RepresentationsPolicy> TheAction; // replace the TheAction in HMCWrapperTemplate class
-
-  // GF_HMCWrapperTemplate(const HMCparameters &hmc_params) : HMCWrapperTemplate<Implementation, Integrator, RepresentationsPolicy, ReaderClass>(hmc_params) {}
   GF_HMCWrapperTemplate(const HMCparameters &Par) {
     Parameters = Par;
   }

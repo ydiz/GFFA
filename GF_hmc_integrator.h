@@ -8,21 +8,9 @@ int Nexp = 20; // Taylor expansion with Nexp=20 is very close to Cayley-Hamilton
 //implement GF_refresh, S, and update_U
 //A inherits from B, B inherits from C; then the constructor in B must be written explicitly.
 template <class FieldImplementation, class SmearingPolicy, class RepresentationPolicy>
-// class GFIntegrator : public Integrator<FieldImplementation, SmearingPolicy, RepresentationPolicy> {
 class GFIntegrator  {
 
 public:
-// INHERIT_FIELD_TYPES(FieldImplementation);
-
-// typedef typename FieldImplementation::Field MomentaField;  //for readability
-
-// GFIntegrator(GridBase* grid, IntegratorParameters Par,
-//          ActionSet<Field, RepresentationPolicy>& Aset, SmearingPolicy& Sm)
-//     : Integrator<FieldImplementation, SmearingPolicy, RepresentationPolicy>(
-//           grid, Par, Aset, Sm) {};
-
-// const MyActionSet<Field, RepresentationPolicy> as; // replace the ActionSet in Integrator class
-
   typedef typename FieldImplementation::Field MomentaField;  //for readability
   typedef typename FieldImplementation::Field Field;
 
@@ -31,8 +19,8 @@ public:
   std::vector<double> t_P;  
 
   MomentaField P;
-  SmearingPolicy& Smearer;
-  RepresentationPolicy Representations;
+  // SmearingPolicy& Smearer;
+  // RepresentationPolicy Representations;
   IntegratorParameters Params;
 
   const MyActionSet<Field, RepresentationPolicy> as;
@@ -46,8 +34,8 @@ GFIntegrator(GridBase* grid, IntegratorParameters Par,
     as(Aset),
     P(grid),
     levels(Aset.size()),
-    Smearer(Sm),
-    Representations(grid),
+    // Smearer(Sm),
+    // Representations(grid),
     mask(grid) // For update only a cell
 {
   t_P.resize(levels, 0.0);
@@ -67,19 +55,16 @@ RealD GF_S(Field& U, const Momenta_k &KK) {
   RealD Hterm;
   std::cout << GridLogMessage << "Momentum action H_p = "<<  std::setprecision(8)  << H << "\n";
 
-  // Actions
   for (int level = 0; level < this->as.size(); ++level) {
     for (int actionID = 0; actionID < this->as[level].actions.size(); ++actionID) {
-      // get gauge field from the SmearingPolicy and
-      // based on the boolean is_smeared in actionID
-      Field& Us =
-          this->Smearer.get_U(this->as[level].actions.at(actionID)->is_smeared);
-      Hterm = this->as[level].actions.at(actionID)->S(Us);
+
+      // Field& Us =
+      //     this->Smearer.get_U(this->as[level].actions.at(actionID)->is_smeared);
+      Hterm = this->as[level].actions.at(actionID)->S(U);
       std::cout << GridLogMessage << "S Level " << level << " term "
                 << actionID << " H = " << Hterm << std::endl;
       H += Hterm;
     }
-    // this->as[level].apply(this->S_hireps, this->Representations, level, H);
   }
 
   return H;
@@ -114,16 +99,18 @@ inline void GF_refresh(Field& U, GridParallelRNG& pRNG, const Momenta_k &KK, con
   // else {
   if(KK.newHp) {
     GF_generate_P(this->P, pRNG, KK);
-    // std::cout << this->P << std::endl;
-    // exit(0);
   }
   else FieldImplementation::generate_momenta(this->P, pRNG);
   // }
 
   this->P = this->P * mask; // set "links that are perpendicular to surface" to 0.
+
   // std::cout << "Not doing gauge transformation at the beginning of a trajectory."  << std::endl;
-  std::cout << "doing gauge transformation at the beginning of a trajectory."  << std::endl;
-  if(HMC_para.isGFFA) { // FIXME
+
+  static bool first_traj = true;
+  if(HMC_para.isGFFA && first_traj) {  // gauge transformation must be done only before the first trajectory!
+    std::cout << "Doing gauge transformation at the beginning of a trajectory."  << std::endl;
+
     GridBase *cell_grid = KK.Grid();
     Coordinate cell_size = cell_grid->_fdimensions;
 
@@ -132,7 +119,6 @@ inline void GF_refresh(Field& U, GridParallelRNG& pRNG, const Momenta_k &KK, con
     LatticeLorentzScalar cell_mask = get_cell_mask(cell_grid);
     U_cell = U_cell * cell_mask;
     // Gauge transform U inside the cell
-    // LatticeColourMatrix g(U.Grid()); g = 1.0;
     LatticeColourMatrix g_cell(cell_grid); g_cell = 1.0;
     GridParallelRNG pRNG_cell(cell_grid);      pRNG_cell.SeedFixedIntegers(std::vector<int>({45,12,81,9}));
     GF_heatbath(U_cell, g_cell, HMC_para.innerMC_N, HMC_para.betaMM, HMC_para.table_path, pRNG_cell); //hb_nsweeps before calculate equilibrium value
@@ -143,8 +129,10 @@ inline void GF_refresh(Field& U, GridParallelRNG& pRNG, const Momenta_k &KK, con
     SU<3>::GaugeTransform(U, g);
     std::cout << "Plaquette after gauge transformation: "<< WilsonLoops<PeriodicGimplR>::avgPlaquette(U) << std::endl;
     std::cout << "Link trace after gauge transformation: "<< WilsonLoops<PeriodicGimplR>::linkTrace(U) << std::endl;
+
+    first_traj = false;
   }
-  std::cout << "end of GF_refresh" << std::endl;
+  // std::cout << "end of GF_refresh" << std::endl;
 
 }
 
@@ -153,11 +141,9 @@ void update_U(Field& U, double ep, const Momenta_k &KK) {
 
   this->t_U += ep;
   int fl = this->levels - 1;
-  // std::cout << GridLogIntegrator << "   " << "[" << fl << "] U " << " dt " << ep << " : t_U " << this->t_U << std::endl;
 }
 
 void update_U(LatticeGaugeField& Mom, LatticeGaugeField& U, double ep, const Momenta_k &KK) {
-  // std::cout << "begining of update_U" << std::endl;
   LatticeGaugeField deltaU(Mom.Grid());
 
   if(KK.newHp) {
@@ -166,24 +152,16 @@ void update_U(LatticeGaugeField& Mom, LatticeGaugeField& U, double ep, const Mom
   else deltaU = Mom;
 
   deltaU = deltaU * mask; // set "links that are perpendicular to surface" to 0.
-  // exit(0);
 
   autoView(U_v, U, AcceleratorWrite);
   autoView(deltaU_v, deltaU, AcceleratorRead);
 
-  // thread_for(ss, Mom.Grid()->oSites(), {
   accelerator_for(ss, Mom.Grid()->oSites(), vComplex::Nsimd(), {
    for (int mu = 0; mu < Nd; mu++)
      U_v[ss](mu) = ProjectOnGroup(Exponentiate(deltaU_v[ss](mu), ep, Nexp) * U_v[ss](mu));
   });
-  // print_grid_field_site(deltaU, {0,0,0,7});
-
-  // std::cout << U << std::endl;
-  // exit(0);
-  this->Smearer.set_Field(U);
-  this->Representations.update(U);  // void functions if fundamental representation
-  // std::cout << "end of update_U" << std::endl;
-
+  // this->Smearer.set_Field(U);
+  // this->Representations.update(U);  // void functions if fundamental representation
 }
 
 void update_P(Field& U, int level, double ep, GridSerialRNG &sRNG, GridParallelRNG &pRNG, bool first_step) 
@@ -191,48 +169,26 @@ void update_P(Field& U, int level, double ep, GridSerialRNG &sRNG, GridParallelR
   this->t_P[level] += ep;
   update_P(this->P, U, level, ep, sRNG, pRNG, first_step);
   
-  P = P * mask; // Set P to 0 for P outside the cell // P outside the cell will be non-zero after update_P
-  // std::cout << this->P << std::endl;
-  // exit(0);
-  //
-  // std::cout << GridLogIntegrator << "[" << level << "] P " << " dt " << ep << " : t_P " << this->t_P[level] << std::endl;
+  P = P * mask; // Set P to 0 for P outside the cell // zyd: this is not necessary, as dS/dU is 0 outsie the cell 
 }
 
 
 
 void update_P(MomentaField& Mom, Field& U, int level, double ep, GridSerialRNG &sRNG, GridParallelRNG &pRNG, bool first_step) {
-  // input U actually not used in the fundamental case
-  // Fundamental updates, include smearing
-
-  // std::cout << "begining of update_P" << std::endl;
   for (int a = 0; a < this->as[level].actions.size(); ++a) {
     double start_full = usecond();
     Field force(U.Grid());
     conformable(U.Grid(), Mom.Grid());
 
-    Field& Us = this->Smearer.get_U(this->as[level].actions.at(a)->is_smeared);
-    double start_force = usecond();
+    // Field& Us = this->Smearer.get_U(this->as[level].actions.at(a)->is_smeared);
 
-    // std::cout << "before deriv" << std::endl;
-    this->as[level].actions.at(a)->deriv(Us, force, sRNG, pRNG, first_step);  // deriv should NOT include Ta // zyd: should still be fine if deriv has Ta when smearing is off
-    // std::cout << "after deriv" << std::endl;
+    this->as[level].actions.at(a)->deriv(U, force, sRNG, pRNG, first_step);  // deriv should NOT include Ta // zyd: should still be fine if deriv has Ta when smearing is off
 
-    // std::cout << GridLogIntegrator << "Smearing (on/off): " << this->as[level].actions.at(a)->is_smeared << std::endl;
-    if (this->as[level].actions.at(a)->is_smeared) this->Smearer.smeared_force(force);
-    force = FieldImplementation::projectForce(force); // Ta for gauge fields
-    double end_force = usecond();
-    Real force_abs = std::sqrt(norm2(force)/U.Grid()->gSites());
-    // std::cout << GridLogIntegrator << "["<<level<<"]["<<a<<"] Force average: " << force_abs << std::endl;
-    Mom -= force * ep* HMC_MOMENTUM_DENOMINATOR;; 
-    // double end_full = usecond();
-    // double time_full  = (end_full - start_full) / 1e3;
-    // double time_force = (end_force - start_force) / 1e3;
-    // std::cout << GridLogMessage << "["<<level<<"]["<<a<<"] P update elapsed time: " << time_full << " ms (force: " << time_force << " ms)"  << std::endl;
+    // if (this->as[level].actions.at(a)->is_smeared) this->Smearer.smeared_force(force);
+    force = FieldImplementation::projectForce(force); // same as Ta(force) 
+    Mom -= force * ep * HMC_MOMENTUM_DENOMINATOR; 
   }
-  // std::cout << "end of update_P" << std::endl;
 
-  // // Force from the other representations
-  // as[level].apply(update_P_hireps, Representations, Mom, U, ep);
 }
 
 
@@ -252,9 +208,6 @@ void GF_integrate(Field& U, const Momenta_k &KK, const GFFAParams &HMC_para, Gri
 
     this->step(U, 0, first_step, last_step, KK, sRNG, pRNG);
 
-    // std::cout << "U" << std::endl;
-    // print_grid_field_site(U, {1,2,3,4});
-
     // For measureing A
     if(HMC_para.measure_A) {
       std::cout << "step: " << step << std::endl;
@@ -271,40 +224,34 @@ void GF_integrate(Field& U, const Momenta_k &KK, const GFFAParams &HMC_para, Gri
   // Check the clocks all match on all levels
   for (int level = 0; level < this->as.size(); ++level) {
     assert(fabs(this->t_U - this->t_P[level]) < 1.0e-6);  // must be the same
-    // std::cout << GridLogIntegrator << " times[" << level
-    //           << "]= " << this->t_P[level] << " " << this->t_U << std::endl;
   }
-
   // and that we indeed got to the end of the trajectory
   assert(fabs(this->t_U - this->Params.trajL) < 1.0e-6);
 
 
-  {
-    GridBase *cell_grid = KK.Grid();
-    Coordinate cell_size = cell_grid->_fdimensions;
-
-    LatticeGaugeField U_cell(cell_grid); U_cell = Zero();
-    localCopyRegion(U, U_cell, Coordinate({0,0,0,0}), Coordinate({0,0,0,0}), cell_size);
-    LatticeLorentzScalar cell_mask = get_cell_mask(cell_grid);
-    U_cell = U_cell * cell_mask;
-
-
-    int n = 6; // FIXME: inner cell must be 6.6.6.6
-// # `lost` is the number of plaqs that are 0 because links perpendicular to the boundaries are set to 0
-    int lost = 4 * (n-1)*(n-1)*(n-1) * 3 + 6 * (n-1)*(n-1) * 5 + 4 * (n-1) * 6 + 6;
-
-    int total = n*n*n*n * 6;  // total number of size;
-    double multiplier = total / double(total - lost);  // Average plaq should be multiplied by this number 
-    std::cout << "Average Plaquette of U_cell: "<< WilsonLoops<PeriodicGimplR>::avgPlaquette(U_cell) * multiplier << std::endl;
-  }
+//   { // calculate average plaq inside the cell
+//     GridBase *cell_grid = KK.Grid();
+//     Coordinate cell_size = cell_grid->_fdimensions;
+//
+//     LatticeGaugeField U_cell(cell_grid); U_cell = Zero();
+//     localCopyRegion(U, U_cell, Coordinate({0,0,0,0}), Coordinate({0,0,0,0}), cell_size);
+//     LatticeLorentzScalar cell_mask = get_cell_mask(cell_grid);
+//     U_cell = U_cell * cell_mask;
+//
+//
+//     int n = 6; // FIXME: inner cell must be 6.6.6.6
+// // # `lost` is the number of plaqs that are 0 because links perpendicular to the boundaries are set to 0
+//     int lost = 4 * (n-1)*(n-1)*(n-1) * 3 + 6 * (n-1)*(n-1) * 5 + 4 * (n-1) * 6 + 6;
+//
+//     int total = n*n*n*n * 6;  // total number of size;
+//     double multiplier = total / double(total - lost);  // Average plaq should be multiplied by this number 
+//     std::cout << "Average Plaquette of U_cell: "<< WilsonLoops<PeriodicGimplR>::avgPlaquette(U_cell) * multiplier << std::endl;
+//   }
 
 
 }
 
-virtual void step(Field& U, int level, int first, int last, const Momenta_k &KK, GridSerialRNG &sRNG, GridParallelRNG &pRNG) = 0;
-
-
-
+  virtual void step(Field& U, int level, int first, int last, const Momenta_k &KK, GridSerialRNG &sRNG, GridParallelRNG &pRNG) = 0;
 
   virtual ~GFIntegrator() {}
 
@@ -323,8 +270,8 @@ virtual void step(Field& U, int level, int first, int last, const Momenta_k &KK,
     for (int level = 0; level < as.size(); ++level) {
       std::cout << GridLogMessage << "[Integrator] ---- Level: "<< level << std::endl;
       for (int actionID = 0; actionID < as[level].actions.size(); ++actionID) {
-  std::cout << GridLogMessage << "["<< as[level].actions.at(actionID)->action_name() << "] ID: " << actionID << std::endl;
-  std::cout << as[level].actions.at(actionID)->LogParameters();
+        std::cout << GridLogMessage << "["<< as[level].actions.at(actionID)->action_name() << "] ID: " << actionID << std::endl;
+        std::cout << as[level].actions.at(actionID)->LogParameters();
       }
     }
     std::cout << GridLogMessage << ":::::::::::::::::::::::::::::::::::::::::"<< std::endl;

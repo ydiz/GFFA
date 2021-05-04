@@ -71,6 +71,7 @@ int main(int argc, char **argv) {
   My_WilsonActionR Wilson_action(hmc_para.beta);
   // WilsonGaugeActionR Wilson_action(hmc_para.beta);
   GFActionR GF_Wilson_action(hmc_para.beta, hmc_para.betaMM, hmc_para.innerMC_N, hmc_para.hb_offset, hmc_para.table_path);
+  GFActionR_cell GF_Wilson_action_cell(hmc_para.beta, hmc_para.betaMM, hmc_para.innerMC_N, hmc_para.hb_offset, hmc_para.table_path);
   // DBW2GaugeAction<PeriodicGimplR> DBW2_action(hmc_para.beta);
   // GF_DBW2ActionR GF_DBW2_action(hmc_para.beta, hmc_para.betaMM, hmc_para.innerMC_N, hmc_para.hb_offset, hmc_para.table_path);
 
@@ -79,6 +80,9 @@ int main(int argc, char **argv) {
   }
   else if(hmc_para.action == "GF_Wilson"){
     Level1.push_back(&GF_Wilson_action);
+  }
+  else if(hmc_para.action == "GF_Wilson_cell"){
+    Level1.push_back(&GF_Wilson_action_cell);
   }
   // else if(hmc_para.action == "DBW2"){
   //   Level1.push_back(&DBW2_action);
