@@ -1,7 +1,6 @@
 #include <Grid/Grid.h>
 
 namespace Grid {
-namespace QCD {
 
 
 
@@ -87,4 +86,4 @@ void writeVector(const std::vector<T> &vec, int traj, double tau, const std::str
 
 
 }
-}
+

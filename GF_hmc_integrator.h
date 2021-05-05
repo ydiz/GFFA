@@ -1,5 +1,4 @@
 namespace Grid{
-namespace QCD{
 
 // int Nexp = 12;
 int Nexp = 20; // Taylor expansion with Nexp=20 is very close to Cayley-Hamilton
@@ -7,7 +6,7 @@ int Nexp = 20; // Taylor expansion with Nexp=20 is very close to Cayley-Hamilton
 
 //implement GF_refresh, S, and update_U
 //A inherits from B, B inherits from C; then the constructor in B must be written explicitly.
-template <class FieldImplementation, class SmearingPolicy, class RepresentationPolicy>
+template <class FieldImplementation, class RepresentationPolicy>
 class GFIntegrator  {
 
 public:
@@ -19,8 +18,6 @@ public:
   std::vector<double> t_P;  
 
   MomentaField P;
-  // SmearingPolicy& Smearer;
-  // RepresentationPolicy Representations;
   IntegratorParameters Params;
 
   const MyActionSet<Field, RepresentationPolicy> as;
@@ -29,20 +26,17 @@ public:
 
 GFIntegrator(GridBase* grid, IntegratorParameters Par,
            MyActionSet<Field, RepresentationPolicy>& Aset,
-           SmearingPolicy& Sm, const Coordinate &cell_size)
+           const Coordinate &cell_size)
   : Params(Par),
     as(Aset),
     P(grid),
     levels(Aset.size()),
-    // Smearer(Sm),
-    // Representations(grid),
     mask(grid) // For update only a cell
 {
   t_P.resize(levels, 0.0);
   t_U = 0.0;
 
   mask = get_mask(grid, cell_size);
-  // initialization of smearer delegated outside of Integrator
 };
 
 
@@ -58,8 +52,6 @@ RealD GF_S(Field& U, const Momenta_k &KK) {
   for (int level = 0; level < this->as.size(); ++level) {
     for (int actionID = 0; actionID < this->as[level].actions.size(); ++actionID) {
 
-      // Field& Us =
-      //     this->Smearer.get_U(this->as[level].actions.at(actionID)->is_smeared);
       Hterm = this->as[level].actions.at(actionID)->S(U);
       std::cout << GridLogMessage << "S Level " << level << " term "
                 << actionID << " H = " << Hterm << std::endl;
@@ -98,17 +90,38 @@ inline void GF_refresh(Field& U, GridParallelRNG& pRNG, const Momenta_k &KK, con
   // }
   // else {
   if(KK.newHp) {
-    GF_generate_P(this->P, pRNG, KK);
+    if(HMC_para.isCell) {
+      GridBase *cell_grid = pRNG.Grid();
+      Coordinate cell_size = cell_grid->_fdimensions;
+
+      LatticeGaugeField tmp(cell_grid);
+      GF_generate_P(tmp, pRNG, KK);
+
+      localCopyRegion(tmp, this->P, Coordinate({0,0,0,0}), Coordinate({0,0,0,0}), cell_size);
+      this->P = this->P * mask; // set "links that are perpendicular to surface" to 0.
+    }
+    else GF_generate_P(this->P, pRNG, KK);
   }
-  else FieldImplementation::generate_momenta(this->P, pRNG);
+  else {
+    if(HMC_para.isCell) {
+      GridBase *cell_grid = pRNG.Grid();
+      Coordinate cell_size = cell_grid->_fdimensions;
+
+      LatticeGaugeField tmp(cell_grid);
+      FieldImplementation::generate_momenta(tmp, pRNG);
+
+      localCopyRegion(tmp, this->P, Coordinate({0,0,0,0}), Coordinate({0,0,0,0}), cell_size);
+      this->P = this->P * mask; // set "links that are perpendicular to surface" to 0.
+    }
+    else FieldImplementation::generate_momenta(this->P, pRNG);
+  }
   // }
 
-  this->P = this->P * mask; // set "links that are perpendicular to surface" to 0.
 
   // std::cout << "Not doing gauge transformation at the beginning of a trajectory."  << std::endl;
 
   static bool first_traj = true;
-  if(HMC_para.isGFFA && first_traj) {  // gauge transformation must be done only before the first trajectory!
+  if(HMC_para.isGFFA && HMC_para.isCell && first_traj) {  // gauge transformation must be done only before the first trajectory!
     std::cout << "Doing gauge transformation at the beginning of a trajectory."  << std::endl;
 
     GridBase *cell_grid = KK.Grid();
@@ -147,48 +160,54 @@ void update_U(LatticeGaugeField& Mom, LatticeGaugeField& U, double ep, const Mom
   LatticeGaugeField deltaU(Mom.Grid());
 
   if(KK.newHp) {
-    deltaU = dHdP(Mom, KK);
-  }
-  else deltaU = Mom;
+    if(KK.isCell) {
+      GridBase *cell_grid = KK.Grid();
+      Coordinate cell_size = cell_grid->_fdimensions;
 
-  deltaU = deltaU * mask; // set "links that are perpendicular to surface" to 0.
+      LatticeGaugeField Mom_cell(cell_grid);
+      localCopyRegion(Mom, Mom_cell, Coordinate({0,0,0,0}), Coordinate({0,0,0,0}), cell_size);
+
+      LatticeGaugeField tmp(cell_grid);
+      tmp = dHdP(Mom_cell, KK);
+
+      localCopyRegion(tmp, deltaU, Coordinate({0,0,0,0}), Coordinate({0,0,0,0}), cell_size);
+      deltaU = deltaU * mask; // set "links that are perpendicular to surface" to 0.
+    }
+    else deltaU = dHdP(Mom, KK);
+  }
+  else {
+    deltaU = Mom;
+    if(KK.isCell) deltaU = deltaU * mask; // set "links that are perpendicular to surface" to 0.
+  }
+
 
   autoView(U_v, U, AcceleratorWrite);
   autoView(deltaU_v, deltaU, AcceleratorRead);
-
   accelerator_for(ss, Mom.Grid()->oSites(), vComplex::Nsimd(), {
    for (int mu = 0; mu < Nd; mu++)
      U_v[ss](mu) = ProjectOnGroup(Exponentiate(deltaU_v[ss](mu), ep, Nexp) * U_v[ss](mu));
   });
-  // this->Smearer.set_Field(U);
-  // this->Representations.update(U);  // void functions if fundamental representation
 }
 
 void update_P(Field& U, int level, double ep, GridSerialRNG &sRNG, GridParallelRNG &pRNG, bool first_step) 
 {
   this->t_P[level] += ep;
   update_P(this->P, U, level, ep, sRNG, pRNG, first_step);
-  
-  P = P * mask; // Set P to 0 for P outside the cell // zyd: this is not necessary, as dS/dU is 0 outsie the cell 
 }
 
 
 
 void update_P(MomentaField& Mom, Field& U, int level, double ep, GridSerialRNG &sRNG, GridParallelRNG &pRNG, bool first_step) {
-  for (int a = 0; a < this->as[level].actions.size(); ++a) {
-    double start_full = usecond();
-    Field force(U.Grid());
-    conformable(U.Grid(), Mom.Grid());
+  conformable(U.Grid(), Mom.Grid());
 
-    // Field& Us = this->Smearer.get_U(this->as[level].actions.at(a)->is_smeared);
+  for (int a = 0; a < this->as[level].actions.size(); ++a) {
+    Field force(U.Grid());
 
     this->as[level].actions.at(a)->deriv(U, force, sRNG, pRNG, first_step);  // deriv should NOT include Ta // zyd: should still be fine if deriv has Ta when smearing is off
 
-    // if (this->as[level].actions.at(a)->is_smeared) this->Smearer.smeared_force(force);
     force = FieldImplementation::projectForce(force); // same as Ta(force) 
     Mom -= force * ep * HMC_MOMENTUM_DENOMINATOR; 
   }
-
 }
 
 
@@ -285,4 +304,4 @@ void GF_integrate(Field& U, const Momenta_k &KK, const GFFAParams &HMC_para, Gri
 
 
 
-}}
+}

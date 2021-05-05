@@ -1,7 +1,6 @@
 #include <cmath>
 
 namespace Grid{
-namespace QCD{
 
 //calculate coordinate after shifting considering periodic boundary condition
 template<class vobj> int shiftUp(const Lattice<vobj> &U, int x, int mu)
@@ -162,4 +161,4 @@ void GF_metro(const LatticeGaugeField &U, LatticeColourMatrix &g, int nsweeps, R
 
 
 
-}}
+}

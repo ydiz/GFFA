@@ -1,7 +1,6 @@
 #include <cmath>
 
 namespace Grid{
-namespace QCD{
 
 void GF_heatbath(const LatticeGaugeField &Umu, LatticeColourMatrix &g,
                 int nsweeps, Real _betaMM, const std::string &table_path,
@@ -116,4 +115,4 @@ void GF_heatbath(const LatticeGaugeField &Umu, LatticeColourMatrix &g,
 
 
 
-}}
+}

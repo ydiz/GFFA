@@ -1,5 +1,4 @@
 namespace Grid{
-namespace QCD{
 
 
 LatticeColourMatrix multField(const LatticeGaugeField &R1, const LatticeGaugeField &R2)
@@ -42,35 +41,27 @@ Real Hp(const LatticeGaugeField &P, const Momenta_k &KK)
 
 LatticeGaugeField dHdP(LatticeGaugeField &P, const Momenta_k &KK)
 {
-  // return P;  // FIXME
-  GridBase *full_grid = P.Grid();
-  GridBase *cell_grid = KK.Grid();
-  Coordinate cell_size  = cell_grid->_fdimensions;
+  LatticeGaugeField ret(P.Grid());
+  FFT theFFT((Grid::GridCartesian *)P.Grid());
 
-  LatticeGaugeField P_cell(cell_grid);
-  localCopyRegion(P, P_cell, Coordinate({0,0,0,0}), Coordinate({0,0,0,0}), cell_size);
+  LatticeGaugeField realP(P.Grid());
+  realP = -timesI(P);  //this is necessary, otherwise nan.
 
-
-  LatticeGaugeField ret_cell(cell_grid);
-  FFT theFFT((Grid::GridCartesian *)cell_grid);
-
-  LatticeGaugeField realP_cell(cell_grid);
-  realP_cell = -timesI(P_cell);  //this is necessary, otherwise nan.
-
-  LatticeGaugeField Pk_cell(cell_grid);
-  theFFT.FFT_all_dim(Pk_cell, realP_cell, FFT::forward);
+  LatticeGaugeField Pk(P.Grid());
+  theFFT.FFT_all_dim(Pk, realP, FFT::forward);
   // Pk = Pk * (1.0 / std::sqrt(KK.vol)); //not necessary
 
-  LatticeColourMatrix sinKNgExpDotPk = KK.sinKNgExpDotP_func(Pk_cell);
+  LatticeColourMatrix sinKNgExpDotPk(P.Grid());
+  sinKNgExpDotPk = KK.sinKNgExpDotP_func(Pk);
 
-  LatticeColourMatrix dHdP2mu(cell_grid);
+  LatticeColourMatrix dHdP2mu(P.Grid());
   for(int mu=0; mu<Nd; ++mu)
   {
     dHdP2mu = KK.sinKPsExp[mu] * KK.Ck_D * sinKNgExpDotPk;
-    pokeLorentz(ret_cell, dHdP2mu, mu);
+    pokeLorentz(ret, dHdP2mu, mu);
   }
 
-  ret_cell = ret_cell + KK.one / KK.FourSinKSquareEpsilon * Pk_cell;
+  ret = ret + KK.one / KK.FourSinKSquareEpsilon * Pk;
   
   // Must do this when epsilon is 0 ;
   // set force of 0 mode to be 0 (KK.FourSinKSquareEpsilon = 0 for k=0)
@@ -78,7 +69,7 @@ LatticeGaugeField dHdP(LatticeGaugeField &P, const Momenta_k &KK)
     // std::cout << "I am setting the dH/dP of zero mode to 0; must do this when setting epsilon  to 0" << std::endl;
     typename LatticeGaugeField::vector_object::scalar_object m;
     m = 0.0;
-    pokeSite(m, ret_cell, Coordinate({0,0,0,0}));
+    pokeSite(m, ret, Coordinate({0,0,0,0}));
   }
 
 
@@ -87,23 +78,77 @@ LatticeGaugeField dHdP(LatticeGaugeField &P, const Momenta_k &KK)
   // print_grid_field_site(ret, {1,0,0,0});
   // print_grid_field_site(ret, {1,2,0,0});
 
-  theFFT.FFT_all_dim(ret_cell, ret_cell, FFT::backward);
-  ret_cell = timesI(ret_cell); // because realP before= -timesI(P);
-
-
-  LatticeGaugeField ret(P.Grid()); ret = Zero();
-  // LatticeGaugeField ret(P.Grid()); ret = P; // FIXME
-  localCopyRegion(ret_cell, ret, Coordinate({0,0,0,0}), Coordinate({0,0,0,0}), cell_size);
-
+  theFFT.FFT_all_dim(ret, ret, FFT::backward);
+  ret = timesI(ret); // because realP = -timesI(P);
   return ret;
 }
 
 
 
 
+// LatticeGaugeField dHdP(LatticeGaugeField &P, const Momenta_k &KK)
+// {
+//   // return P;  // FIXME
+//   GridBase *cell_grid = KK.Grid();
+//   Coordinate cell_size  = cell_grid->_fdimensions;
+//
+//   LatticeGaugeField P_cell(cell_grid);
+//   localCopyRegion(P, P_cell, Coordinate({0,0,0,0}), Coordinate({0,0,0,0}), cell_size);
+//
+//
+//   LatticeGaugeField ret_cell(cell_grid);
+//   FFT theFFT((Grid::GridCartesian *)cell_grid);
+//
+//   LatticeGaugeField realP_cell(cell_grid);
+//   realP_cell = -timesI(P_cell);  //this is necessary, otherwise nan.
+//
+//   LatticeGaugeField Pk_cell(cell_grid);
+//   theFFT.FFT_all_dim(Pk_cell, realP_cell, FFT::forward);
+//   // Pk = Pk * (1.0 / std::sqrt(KK.vol)); //not necessary
+//
+//   LatticeColourMatrix sinKNgExpDotPk = KK.sinKNgExpDotP_func(Pk_cell);
+//
+//   LatticeColourMatrix dHdP2mu(cell_grid);
+//   for(int mu=0; mu<Nd; ++mu)
+//   {
+//     dHdP2mu = KK.sinKPsExp[mu] * KK.Ck_D * sinKNgExpDotPk;
+//     pokeLorentz(ret_cell, dHdP2mu, mu);
+//   }
+//
+//   ret_cell = ret_cell + KK.one / KK.FourSinKSquareEpsilon * Pk_cell;
+//   
+//   // Must do this when epsilon is 0 ;
+//   // set force of 0 mode to be 0 (KK.FourSinKSquareEpsilon = 0 for k=0)
+//   if(KK.epsi == 0.) {
+//     // std::cout << "I am setting the dH/dP of zero mode to 0; must do this when setting epsilon  to 0" << std::endl;
+//     typename LatticeGaugeField::vector_object::scalar_object m;
+//     m = 0.0;
+//     pokeSite(m, ret_cell, Coordinate({0,0,0,0}));
+//   }
+//
+//
+//   // std::cout << "Check dH/dP : " << std::endl;
+//   // // printGrid()_field_site(ret, {0,0,0,0});
+//   // print_grid_field_site(ret, {1,0,0,0});
+//   // print_grid_field_site(ret, {1,2,0,0});
+//
+//   theFFT.FFT_all_dim(ret_cell, ret_cell, FFT::backward);
+//   ret_cell = timesI(ret_cell); // because realP before= -timesI(P);
+//
+//
+//   LatticeGaugeField ret(P.Grid()); ret = Zero();
+//   // LatticeGaugeField ret(P.Grid()); ret = P; // FIXME
+//   localCopyRegion(ret_cell, ret, Coordinate({0,0,0,0}), Coordinate({0,0,0,0}), cell_size);
+//
+//   return ret;
+// }
+
+
+
+
 
 
 
 
 }
-}
+

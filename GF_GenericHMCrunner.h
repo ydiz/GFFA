@@ -1,15 +1,13 @@
 namespace Grid {
-namespace QCD {
 
 template <class Implementation,
-          template <typename, typename, typename> class Integrator,
+          template <typename, typename> class Integrator,
           class RepresentationsPolicy = NoHirep, class ReaderClass = XmlReader>
 class GF_HMCWrapperTemplate {
  public:
   INHERIT_FIELD_TYPES(Implementation);
   typedef Implementation ImplPolicy;  // visible from outside
-  template <typename S = NoSmearing<Implementation> >
-  using IntegratorType = Integrator<Implementation, S, RepresentationsPolicy>;
+  using TheIntegrator = Integrator<Implementation, RepresentationsPolicy>;
 
   HMCparameters Parameters;
   std::string ParameterFile;
@@ -22,24 +20,32 @@ class GF_HMCWrapperTemplate {
   }
 
   void Run(const GFFAParams &HMC_para){
-    NoSmearing<Implementation> S;
-    Runner(S, HMC_para);
-  }
-
-  template <class SmearingPolicy>
-  void Runner(SmearingPolicy &Smearing, const GFFAParams &HMC_para) {
+  //   NoSmearing<Implementation> S;
+  //   Runner(S, HMC_para);
+  // }
+  //
+  // template <class SmearingPolicy>
+  // void Runner(SmearingPolicy &Smearing, const GFFAParams &HMC_para) {
     auto UGrid = this->Resources.GetCartesian();
     this->Resources.AddRNGs();
     Field U(UGrid);
 
-    // Can move this outside?
-    typedef IntegratorType<SmearingPolicy> TheIntegrator;
-    TheIntegrator MDynamics(UGrid, this->Parameters.MD, this->TheAction, Smearing, HMC_para.cell_size);
+    TheIntegrator MDynamics(UGrid, this->Parameters.MD, this->TheAction, HMC_para.cell_size);
 
     if (this->Parameters.StartingType == "HotStart") {
       // Hot start
       this->Resources.SeedFixedIntegers();
-      Implementation::HotConfiguration(this->Resources.GetParallelRNG(), U);
+      // Implementation::HotConfiguration(this->Resources.GetParallelRNG(), U); // the scale of LieRandomize is 1.0 // Grid HotStart is not really hot start
+
+      LatticeColourMatrix Umu(U.Grid());
+      for (int mu = 0; mu < Nd; mu++) {
+        SU3::LieRandomize(this->Resources.GetParallelRNG(), Umu, 2. * M_PI);
+        PokeIndex<LorentzIndex>(U, Umu, mu);
+      }
+
+      std::cout << "Hot Starting Configuration: Plaq " << WilsonLoops<PeriodicGimplR>::avgPlaquette(U) << std::endl;
+      std::cout << "Hot Starting Configuration: LinkTrace " << WilsonLoops<PeriodicGimplR>::linkTrace(U) << std::endl;
+
     } else if (this->Parameters.StartingType == "ColdStart") {
       // Cold start
       this->Resources.SeedFixedIntegers();
@@ -55,16 +61,12 @@ class GF_HMCWrapperTemplate {
                                    this->Resources.GetParallelRNG());
     }
 
-    Smearing.set_Field(U);
-
     //read U in equilibrium
     if( !(this->Parameters.StartingType == "CheckpointStart") && !HMC_para.UFile.empty() ){
 
       this->Resources.SeedFixedIntegers(); // this is enough!
       FieldMetaData header;
-      std::string file(HMC_para.UFile);
-      // std::string file("./U_softly_fixed_4_M0.5");
-      NerscIO::readConfiguration(U, header,file);
+      NerscIO::readConfiguration(U, header, HMC_para.UFile);
     }
 
     GF_HybridMonteCarlo<TheIntegrator> HMC(this->Parameters, MDynamics,
@@ -82,7 +84,10 @@ class GF_HMCWrapperTemplate {
 // template <template <typename, typename, typename> class Integrator>
 // using GF_GenericHMCRunner = GF_HMCWrapperTemplate<PeriodicGimplR, Integrator>;
 
-template <template <typename, typename, typename> class Integrator>
+// template <template <typename, typename, typename> class Integrator>
+// using GF_GenericHMCRunner = GF_HMCWrapperTemplate<PeriodicGimplR, Integrator, NoHirep, JSONReader>;
+//
+template <template <typename, typename> class Integrator>
 using GF_GenericHMCRunner = GF_HMCWrapperTemplate<PeriodicGimplR, Integrator, NoHirep, JSONReader>;
-}  // namespace QCD
+
 }  // namespace Grid

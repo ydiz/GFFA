@@ -1,5 +1,4 @@
 namespace Grid {
-namespace QCD {
 
 
 
@@ -214,8 +213,11 @@ class GFAction_cell : public MyAction<typename Gimpl::GaugeField> {
     return Sw + SGF1;
   }
 
-  virtual void deriv(const GaugeField &U, GaugeField &dSdU, GridSerialRNG &sRNG, GridParallelRNG &pRNG, bool first_step) {
-    Coordinate cell_size({6,6,6,6});
+  virtual void deriv(const GaugeField &U, GaugeField &dSdU, GridSerialRNG &sRNG, GridParallelRNG &pRNG_cell, bool first_step) {
+    // FIXME: add first step
+    GridBase *cell_grid = pRNG_cell.Grid();
+    // Coordinate cell_size({6,6,6,6});
+    Coordinate cell_size = cell_grid->_fdimensions;
 
     WilsonGaugeAction<Gimpl> Waction(beta);
     GaugeField dSwdU(U.Grid());
@@ -228,18 +230,17 @@ class GFAction_cell : public MyAction<typename Gimpl::GaugeField> {
 
     // std::cout << "Calculate Force on 6^4 cell" << std::endl;
 
-    ///////////////
-    GridCartesian cell_grid(cell_size, GridDefaultSimd(Nd,vComplex::Nsimd()), GridDefaultMpi());
-    LatticeGaugeField U_cell(&cell_grid);
+    //////// Extract U_cell
+    // GridCartesian cell_grid(cell_size, GridDefaultSimd(Nd,vComplex::Nsimd()), GridDefaultMpi());
+    LatticeGaugeField U_cell(cell_grid);
     localCopyRegion(U, U_cell, Coordinate({0,0,0,0}), Coordinate({0,0,0,0}), cell_size);
-    LatticeLorentzScalar cell_mask = get_cell_mask(&cell_grid);
+    LatticeLorentzScalar cell_mask = get_cell_mask(cell_grid);
     U_cell = U_cell * cell_mask;
-    // Gauge transform U inside the cell
-    // LatticeColourMatrix g(U.Grid()); g = 1.0;
-    LatticeColourMatrix g_cell(&cell_grid); g_cell = 1.0;
-    GridParallelRNG pRNG_cell(&cell_grid);      pRNG_cell.SeedFixedIntegers(std::vector<int>({45,12,81,9}));
 
-    GaugeField dSGF2dU_cell(&cell_grid); dSGF2dU_cell = Zero();
+    LatticeColourMatrix g_cell(cell_grid); g_cell = 1.0;
+    // GridParallelRNG pRNG_cell(&cell_grid);      pRNG_cell.SeedFixedIntegers(std::vector<int>({45,12,81,9}));
+
+    GaugeField dSGF2dU_cell(cell_grid); dSGF2dU_cell = Zero();
     GF_heatbath(U_cell, g_cell, hb_offset, betaMM, table_path, pRNG_cell); //hb_nsweeps before calculate equilibrium value
     GF_heatbath(U_cell, g_cell, innerMC_N, betaMM, table_path, pRNG_cell, &dSGF2dU_cell, dOmegadU_g); // calculate dSGF2dU
 
@@ -334,4 +335,4 @@ typedef GFAction<PeriodicGimplR>          GFActionR;
 typedef GFAction_cell<PeriodicGimplR>          GFActionR_cell;
 // typedef GF_DBW2Action<PeriodicGimplR>     GF_DBW2ActionR;
 
-}}
+}

@@ -1,5 +1,4 @@
 namespace Grid{
-namespace QCD{
 
 class Momenta_k{
 
@@ -9,6 +8,7 @@ public:
   vTComplex one;
   Real epsi;
   bool newHp;
+  bool isCell;
   std::vector<LatticeComplex> k;//(4, grid); //cannot initialzie here
   std::vector<LatticeComplex> sinK; // sin(k/2)
   std::vector<LatticeComplex> sinKNgExp; // sin(k/2) exp(-ik/2)
@@ -21,7 +21,7 @@ public:
   LatticeComplex Ck_SqrtInvD; //(M-\sqrt{sin(k/2)^2+\epsilon^2})\frac{1}{sin(k/2)^2}
 
 
-  Momenta_k(GridBase* grid, Real _M, Real _epsi, bool _newHp): k(4, grid), sinK(4, grid), sinKNgExp(4, grid), sinKPsExp(4, grid), sinKNormSquare(grid), sinKNorm(grid), FourSinKSquareEpsilon(grid), SqrtFourSinKSquareEpsilon(grid), Ck_D(grid), Ck_SqrtInvD(grid), M(_M), newHp(_newHp)
+  Momenta_k(GridBase* grid, Real _M, Real _epsi, bool _newHp, bool _isCell): k(4, grid), sinK(4, grid), sinKNgExp(4, grid), sinKPsExp(4, grid), sinKNormSquare(grid), sinKNorm(grid), FourSinKSquareEpsilon(grid), SqrtFourSinKSquareEpsilon(grid), Ck_D(grid), Ck_SqrtInvD(grid), M(_M), newHp(_newHp), isCell(_isCell)
   {
     std::cout << "beginning of initialzing Momenta_k" << std::endl;
     // generate k, and sinK
@@ -110,4 +110,4 @@ public:
 
 
 }
-}
+

@@ -1,7 +1,6 @@
 #include <cmath>
 
 namespace Grid {
-namespace QCD {
 
 template <class IntegratorType>
 class GF_HybridMonteCarlo {
@@ -47,39 +46,6 @@ class GF_HybridMonteCarlo {
     }
   }
 
-  /////////////////////////////////////////////////////////
-  // Evolution
-  /////////////////////////////////////////////////////////
-  RealD evolve_hmc_step(Field &U, const Momenta_k &KK, const GFFAParams &HMC_para, GridSerialRNG &sRNG, GridParallelRNG &pRNG) {
-    TheIntegrator.GF_refresh(U, pRNG, KK, HMC_para);  // set U and initialize P and phi's
-    // std::cout << "P after GF_refresh" << std::endl;
-    // print_grid_field_site(TheIntegrator.P, {1,2,3,4});
-
-    double H0;
-    if(!HMC_para.isGFFA) {
-      H0 = TheIntegrator.GF_S(U, KK);  // initial state action
-
-      std::streamsize current_precision = std::cout.precision();
-      std::cout.precision(15);
-      std::cout << GridLogMessage << "Total H before trajectory = " << H0 << "\n";
-      std::cout.precision(current_precision);
-    }
-
-    TheIntegrator.GF_integrate(U, KK, HMC_para, sRNG, pRNG);
-
-    if(!HMC_para.isGFFA) {
-      RealD H1 = TheIntegrator.GF_S(U, KK);  // updated state action
-
-      std::streamsize current_precision = std::cout.precision();
-      std::cout.precision(15);
-      std::cout << GridLogMessage << "Total H after trajectory  = " << H1
-          << "  dH = " << H1 - H0 << "\n";
-      std::cout.precision(current_precision);
-
-      return (H1 - H0);
-    }
-    else return 0;
-  }
 
 
  public:
@@ -94,9 +60,21 @@ class GF_HybridMonteCarlo {
 
   void evolve(const GFFAParams &HMC_para) {
 
-    GridCartesian             cell_grid(HMC_para.cell_size, GridDefaultSimd(Nd,vComplex::Nsimd()), GridDefaultMpi());
-    const Momenta_k KK(&cell_grid, HMC_para.M, HMC_para.epsilon, HMC_para.newHp);
-    // const Momenta_k KK(Ucur.Grid(), HMC_para.M, HMC_para.epsilon, HMC_para.newHp);
+    GridCartesian cell_grid(HMC_para.cell_size, GridDefaultSimd(Nd,vComplex::Nsimd()), GridDefaultMpi());
+    GridParallelRNG pRNG_cell(&cell_grid);  // For inner cell HMC
+
+    std::vector<int> seeds; // generate seed of pRNG_cell from sRNG, so that the program is reproducible.
+    for(int i=0; i<4; ++i) {
+      Real tmp;
+      random(sRNG, tmp);
+      seeds.push_back(int(std::abs(tmp) * 100));
+    }
+    std::cout << "Seeds of pRNG_cell: " << seeds << std::endl;
+    pRNG_cell.SeedFixedIntegers(seeds);
+    // pRNG_cell.SeedFixedIntegers(std::vector<int>({45,12,81,9}));
+
+    const Momenta_k KK(Ucur.Grid(), HMC_para.M, HMC_para.epsilon, HMC_para.newHp, HMC_para.isCell);
+    const Momenta_k KK_cell(&cell_grid, HMC_para.M, HMC_para.epsilon, HMC_para.newHp, HMC_para.isCell);
 
     Real DeltaH;
 
@@ -118,7 +96,8 @@ class GF_HybridMonteCarlo {
       double t0=usecond();
       Ucopy = Ucur;
 
-      DeltaH = evolve_hmc_step(Ucopy, KK, HMC_para, sRNG, pRNG);
+      if(HMC_para.isCell) DeltaH = evolve_hmc_step(Ucopy, KK_cell, HMC_para, sRNG, pRNG_cell); // run a trajectory
+      else DeltaH = evolve_hmc_step(Ucopy, KK, HMC_para, sRNG, pRNG);
 
   	  // Real tt=0;
   	  // Real FinalDeltaH=0;
@@ -196,8 +175,44 @@ class GF_HybridMonteCarlo {
     }
   }
 
+  /////////////////////////////////////////////////////////
+  // Evolution
+  /////////////////////////////////////////////////////////
+  RealD evolve_hmc_step(Field &U, const Momenta_k &KK, const GFFAParams &HMC_para, GridSerialRNG &sRNG, GridParallelRNG &pRNG) {
+    TheIntegrator.GF_refresh(U, pRNG, KK, HMC_para);  // set U and initialize P and phi's
+    // std::cout << "P after GF_refresh" << std::endl;
+    // print_grid_field_site(TheIntegrator.P, {1,2,3,4});
+
+    double H0;
+    if(!HMC_para.isGFFA) {
+      H0 = TheIntegrator.GF_S(U, KK);  // initial state action
+
+      std::streamsize current_precision = std::cout.precision();
+      std::cout.precision(15);
+      std::cout << GridLogMessage << "Total H before trajectory = " << H0 << "\n";
+      std::cout.precision(current_precision);
+    }
+
+    TheIntegrator.GF_integrate(U, KK, HMC_para, sRNG, pRNG);
+
+    if(!HMC_para.isGFFA) {
+      RealD H1 = TheIntegrator.GF_S(U, KK);  // updated state action
+
+      std::streamsize current_precision = std::cout.precision();
+      std::cout.precision(15);
+      std::cout << GridLogMessage << "Total H after trajectory  = " << H1
+          << "  dH = " << H1 - H0 << "\n";
+      std::cout.precision(current_precision);
+
+      return (H1 - H0);
+    }
+    else return 0;
+  }
+
+
+
+
 };
 
 
-}  // QCD
 }  // Grid

@@ -1,5 +1,4 @@
 namespace Grid{
-namespace QCD{
 
 template <class vcplx>
 strong_inline vcplx matrix_mult_elem(const SU3::iSUnMatrix<vcplx> &m, const SU3::iSUnMatrix<vcplx> &n, int i0, int i1) {
@@ -238,4 +237,4 @@ void GF_SubGroupHeatBath(
 
 
 }
-}
+

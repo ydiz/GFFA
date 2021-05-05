@@ -1,10 +1,7 @@
 #include <Grid/Grid.h>
 #include <Grid/Eigen/unsupported/MatrixFunctions>
 
-// #include "Test_gauge_force.h"
-
 namespace Grid {
-namespace QCD {
 
 inline iMatrix<Complex, 3> Log(iMatrix<Complex, 3> &U, iVector<Complex, 3> &last_log_evals, const bool last_log_evals_initialized) { // parameter cannot be const in order to initialize in_eigen
   using namespace Eigen;
@@ -124,7 +121,7 @@ void measure_A(const LatticeGaugeField &U, const std::vector<std::vector<int>> &
     std::cout << "coor=";
     print_grid_field_site(alg, coor);
   }
-  std::cout << "end of measure_A function" << std::endl;
+  // std::cout << "end of measure_A function" << std::endl;
 }
 
 
@@ -192,4 +189,4 @@ void set_zero_mode_to_zero(LatticeGaugeField &P) {
 
 
 
-}}
+}

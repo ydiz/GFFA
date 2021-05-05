@@ -89,23 +89,22 @@ strong_inline auto operator*(const iVector<rtype, N> &rhs, const iVector<ltype, 
 	return ret;
 }
 
-namespace QCD{
 
 using LatticeGaugeFieldSite = typename LatticeGaugeField::vector_object::scalar_object;
 using LatticeComplexSite = typename LatticeComplex::vector_object::scalar_object;
 
-template <class T>
-std::ostream& operator<<(std::ostream &out, const std::vector<T> &v) {
-  if(v.empty()) {
-    out << "[]";
-    return out;
-  }
-
-  out << "[";
-  for(size_t i=0; i<v.size()-1; ++i) out << v[i] << " "; // if v.size()=0, then v.size()-1 is a very large number (v.size() is unsigned!)
-  out << v.back() << "]";
-  return out;
-}
+// template <class T>
+// std::ostream& operator<<(std::ostream &out, const std::vector<T> &v) {
+//   if(v.empty()) {
+//     out << "[]";
+//     return out;
+//   }
+//
+//   out << "[";
+//   for(size_t i=0; i<v.size()-1; ++i) out << v[i] << " "; // if v.size()=0, then v.size()-1 is a very large number (v.size() is unsigned!)
+//   out << v.back() << "]";
+//   return out;
+// }
 
 
 
@@ -387,4 +386,4 @@ Real dOmegaSquare2(const LatticeColourMatrix &g,const LatticeGaugeField &Umu)
 //
 
 
-}}
+}

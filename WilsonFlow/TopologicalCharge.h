@@ -1,5 +1,4 @@
 namespace Grid {
-namespace QCD {
 
 void stapleUpper(LatticeColourMatrix &staple, const LatticeGaugeField &Umu, int mu, int nu, int m=1, int n = 1) {
   assert(nu != mu);
@@ -274,4 +273,4 @@ double energyDensity(const LatticeGaugeField &U) {
 
 
 }
-}
+

@@ -1,5 +1,4 @@
 namespace Grid{
-namespace QCD{
 
 bool isHermitian(const LatticeGaugeField &P)
 {
@@ -40,4 +39,4 @@ ColourMatrix take00(const LatticeGaugeField &P)
 
 
 }
-}
+

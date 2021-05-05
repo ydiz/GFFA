@@ -4,7 +4,6 @@
 #include <Grid/Grid.h>
 
 namespace Grid {
-namespace QCD {
 
 class WilsonFlow_para {
 public:
@@ -359,7 +358,6 @@ void MyWilsonFlow<Gimpl>::smear_adaptive_fixed0p3(GaugeField& out, const GaugeFi
 
 
 
-}  // namespace QCD
 } // namespace Grid
 
 #endif // WILSONFLOW_H

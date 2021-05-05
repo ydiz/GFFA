@@ -4,7 +4,6 @@
 #include "polyakov_util.h"
 
 namespace Grid {
-namespace QCD {
 
 template <class Impl>
 class LinkTraceLogger : public HmcObservable<typename Impl::Field> {
@@ -339,4 +338,4 @@ class MyTCMod: public ObservableModule<MyTC<Impl>, MyTC_para>{
 
 
 
-}}
+}
