@@ -91,6 +91,7 @@ inline void GF_refresh(Field& U, GridParallelRNG& pRNG, const Momenta_k &KK, con
   // else {
   if(KK.newHp) {
     if(HMC_para.isCell) {
+      // std::cout << "before cell_grid" << std::endl;
       GridBase *cell_grid = pRNG.Grid();
       Coordinate cell_size = cell_grid->_fdimensions;
 
@@ -99,6 +100,7 @@ inline void GF_refresh(Field& U, GridParallelRNG& pRNG, const Momenta_k &KK, con
 
       localCopyRegion(tmp, this->P, Coordinate({0,0,0,0}), Coordinate({0,0,0,0}), cell_size);
       this->P = this->P * mask; // set "links that are perpendicular to surface" to 0.
+      // std::cout << "after cell_grid" << std::endl;
     }
     else GF_generate_P(this->P, pRNG, KK);
   }
@@ -157,6 +159,7 @@ void update_U(Field& U, double ep, const Momenta_k &KK) {
 }
 
 void update_U(LatticeGaugeField& Mom, LatticeGaugeField& U, double ep, const Momenta_k &KK) {
+  // std::cout << "before update_U" << std::endl;
   LatticeGaugeField deltaU(Mom.Grid());
 
   if(KK.newHp) {
@@ -187,6 +190,7 @@ void update_U(LatticeGaugeField& Mom, LatticeGaugeField& U, double ep, const Mom
    for (int mu = 0; mu < Nd; mu++)
      U_v[ss](mu) = ProjectOnGroup(Exponentiate(deltaU_v[ss](mu), ep, Nexp) * U_v[ss](mu));
   });
+  // std::cout << "after update_U" << std::endl;
 }
 
 void update_P(Field& U, int level, double ep, GridSerialRNG &sRNG, GridParallelRNG &pRNG, bool first_step) 
@@ -198,6 +202,7 @@ void update_P(Field& U, int level, double ep, GridSerialRNG &sRNG, GridParallelR
 
 
 void update_P(MomentaField& Mom, Field& U, int level, double ep, GridSerialRNG &sRNG, GridParallelRNG &pRNG, bool first_step) {
+  // std::cout << "before update_P" << std::endl;
   conformable(U.Grid(), Mom.Grid());
 
   for (int a = 0; a < this->as[level].actions.size(); ++a) {
@@ -207,6 +212,7 @@ void update_P(MomentaField& Mom, Field& U, int level, double ep, GridSerialRNG &
 
     force = FieldImplementation::projectForce(force); // same as Ta(force) 
     Mom -= force * ep * HMC_MOMENTUM_DENOMINATOR; 
+  // std::cout << "after update_P" << std::endl;
   }
 }
 

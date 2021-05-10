@@ -107,6 +107,52 @@ private:
 };
 
 
+template <class Gimpl>
+class My_WilsonAction_cell : public MyAction<typename Gimpl::GaugeField> {
+ public:
+  INHERIT_GIMPL_TYPES(Gimpl);
+
+  explicit My_WilsonAction_cell(RealD beta_) : beta(beta_){};
+
+  virtual std::string action_name() {return "WilsonGaugeAction_cell";}
+
+  virtual std::string LogParameters(){
+    std::stringstream sstream;
+    sstream << GridLogMessage << "[WilsonGaugeAction_cell] Beta: " << beta << std::endl;
+    return sstream.str();
+  }
+
+  virtual void refresh(const GaugeField &U,
+                       GridParallelRNG &pRNG){};  // noop as no pseudoferms
+
+  virtual RealD S(const GaugeField &U) {
+    WilsonGaugeAction<Gimpl> Waction(beta);
+    return Waction.S(U);
+
+  }
+
+  virtual void deriv(const GaugeField &U, GaugeField &dSdU, GridSerialRNG &sRNG, GridParallelRNG &pRNG, bool first_step) {
+    // std::cout << "before deriv" << std::endl;
+    WilsonGaugeAction<Gimpl> Waction(beta);
+    Waction.deriv(U, dSdU);
+
+    // LatticeLorentzScalar mask = get_mask(U.Grid(), cell_size);
+    if(mask == NULL) {
+      mask = new LatticeLorentzScalar(U.Grid());
+      Coordinate cell_size = pRNG.Grid()->_fdimensions;
+      *mask = get_mask(U.Grid(), cell_size);
+    }
+    dSdU = dSdU * (*mask);
+    // std::cout << "after deriv" << std::endl;
+  }
+private:
+  RealD beta;
+  LatticeLorentzScalar *mask=NULL;
+};
+
+
+
+
 
 
 
@@ -214,9 +260,7 @@ class GFAction_cell : public MyAction<typename Gimpl::GaugeField> {
   }
 
   virtual void deriv(const GaugeField &U, GaugeField &dSdU, GridSerialRNG &sRNG, GridParallelRNG &pRNG_cell, bool first_step) {
-    // FIXME: add first step
     GridBase *cell_grid = pRNG_cell.Grid();
-    // Coordinate cell_size({6,6,6,6});
     Coordinate cell_size = cell_grid->_fdimensions;
 
     WilsonGaugeAction<Gimpl> Waction(beta);
@@ -228,17 +272,24 @@ class GFAction_cell : public MyAction<typename Gimpl::GaugeField> {
     GaugeField dSGF1dU(U.Grid());
     dSGF1dU = factor * Ta(U);
 
-    // std::cout << "Calculate Force on 6^4 cell" << std::endl;
-
     //////// Extract U_cell
-    // GridCartesian cell_grid(cell_size, GridDefaultSimd(Nd,vComplex::Nsimd()), GridDefaultMpi());
     LatticeGaugeField U_cell(cell_grid);
     localCopyRegion(U, U_cell, Coordinate({0,0,0,0}), Coordinate({0,0,0,0}), cell_size);
-    LatticeLorentzScalar cell_mask = get_cell_mask(cell_grid);
-    U_cell = U_cell * cell_mask;
+    // LatticeLorentzScalar cell_mask = get_cell_mask(cell_grid);
+    // U_cell = U_cell * cell_mask;
+    if(cell_mask == NULL) {
+      cell_mask = new LatticeLorentzScalar(cell_grid);
+      *cell_mask = get_cell_mask(cell_grid);
+    }
+    U_cell = U_cell * (*cell_mask);
 
-    LatticeColourMatrix g_cell(cell_grid); g_cell = 1.0;
-    // GridParallelRNG pRNG_cell(&cell_grid);      pRNG_cell.SeedFixedIntegers(std::vector<int>({45,12,81,9}));
+    // LatticeColourMatrix g_cell(cell_grid); g_cell = 1.0;
+    static LatticeColourMatrix g_cell(cell_grid);
+    if(first_step) {    // If it is the first step in a trajectory, set g=1.0 and run extra 10 heatbath sweeps
+      g_cell = 1.0;
+      int sweeps = 10;
+      GF_heatbath(U_cell, g_cell, sweeps, betaMM, table_path, pRNG_cell); //hb_nsweeps before calculate equilibrium value
+    }
 
     GaugeField dSGF2dU_cell(cell_grid); dSGF2dU_cell = Zero();
     GF_heatbath(U_cell, g_cell, hb_offset, betaMM, table_path, pRNG_cell); //hb_nsweeps before calculate equilibrium value
@@ -251,8 +302,13 @@ class GFAction_cell : public MyAction<typename Gimpl::GaugeField> {
 
     dSdU = dSwdU + dSGF1dU - dSGF2dU;
 
-    LatticeLorentzScalar mask = get_mask(U.Grid(), cell_size);
-    dSdU = dSdU * mask;
+    // LatticeLorentzScalar mask = get_mask(U.Grid(), cell_size);
+    // dSdU = dSdU * mask;
+    if(mask == NULL) {
+      mask = new LatticeLorentzScalar(U.Grid());
+      *mask = get_mask(U.Grid(), cell_size);
+    }
+    dSdU = dSdU * (*mask);
   }
 private:
   RealD beta;
@@ -260,6 +316,8 @@ private:
   int innerMC_N;
   int hb_offset;
   std::string table_path;
+  LatticeLorentzScalar *cell_mask=NULL;
+  LatticeLorentzScalar *mask=NULL;
 };
 
 
@@ -331,6 +389,7 @@ private:
 // };
 
 typedef My_WilsonAction<PeriodicGimplR>          My_WilsonActionR;
+typedef My_WilsonAction_cell<PeriodicGimplR>          My_WilsonActionR_cell;
 typedef GFAction<PeriodicGimplR>          GFActionR;
 typedef GFAction_cell<PeriodicGimplR>          GFActionR_cell;
 // typedef GF_DBW2Action<PeriodicGimplR>     GF_DBW2ActionR;

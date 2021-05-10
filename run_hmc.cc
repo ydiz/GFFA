@@ -68,6 +68,7 @@ int main(int argc, char **argv) {
   MyActionLevel<HMCWrapper::Field> Level1(1);
 
   My_WilsonActionR Wilson_action(hmc_para.beta);
+  My_WilsonActionR_cell Wilson_action_cell(hmc_para.beta);
   // WilsonGaugeActionR Wilson_action(hmc_para.beta);
   GFActionR GF_Wilson_action(hmc_para.beta, hmc_para.betaMM, hmc_para.innerMC_N, hmc_para.hb_offset, hmc_para.table_path);
   GFActionR_cell GF_Wilson_action_cell(hmc_para.beta, hmc_para.betaMM, hmc_para.innerMC_N, hmc_para.hb_offset, hmc_para.table_path);
@@ -76,6 +77,9 @@ int main(int argc, char **argv) {
 
   if(hmc_para.action == "Wilson"){
     Level1.push_back(&Wilson_action);
+  }
+  else if(hmc_para.action == "Wilson_cell"){
+    Level1.push_back(&Wilson_action_cell);
   }
   else if(hmc_para.action == "GF_Wilson"){
     Level1.push_back(&GF_Wilson_action);
