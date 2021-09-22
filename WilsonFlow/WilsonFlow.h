@@ -173,7 +173,9 @@ void MyWilsonFlow<Gimpl>::smear_adaptive_fixed_tau(GaugeField& out, const GaugeF
 
       if(std::abs(tau - meas_taus[times_i]) < 1e-3) {  // If last step is accepted (step size not too large)
         std::vector<double> topoCharge = timeSliceTopologicalCharge(out);
-        std::cout << GridLogMessage << "TC: [ " << traj << " ] : " << "tau: " << tau << " : " << topoCharge << std::endl;
+        double energy_density = energyDensity(out);
+        std::cout << GridLogMessage << "TC: [ " << traj << " ] : " << "tau: " << tau << " : TopoCharge: " << topoCharge << std::endl;
+        std::cout << GridLogMessage << "TC: [ " << traj << " ] : " << "tau: " << tau << " : Energy Density: " << energy_density << std::endl;
         if(times_i == meas_taus.size() -1) break;
         else ++times_i;
       }

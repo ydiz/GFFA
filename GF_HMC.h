@@ -184,7 +184,8 @@ class GF_HybridMonteCarlo {
     // print_grid_field_site(TheIntegrator.P, {1,2,3,4});
 
     double H0;
-    if(!HMC_para.isGFFA && !HMC_para.isCell) {
+    // if(!HMC_para.isGFFA && !HMC_para.isCell) {
+    if(!HMC_para.isGFFA) {
       H0 = TheIntegrator.GF_S(U, KK);  // initial state action
 
       std::streamsize current_precision = std::cout.precision();
@@ -195,7 +196,8 @@ class GF_HybridMonteCarlo {
 
     TheIntegrator.GF_integrate(U, KK, HMC_para, sRNG, pRNG);
 
-    if(!HMC_para.isGFFA && !HMC_para.isCell) {
+    // if(!HMC_para.isGFFA && !HMC_para.isCell) {
+    if(!HMC_para.isGFFA) {
       RealD H1 = TheIntegrator.GF_S(U, KK);  // updated state action
 
       std::streamsize current_precision = std::cout.precision();
