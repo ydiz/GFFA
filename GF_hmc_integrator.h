@@ -95,6 +95,7 @@ inline void GF_refresh(Field& U, GridParallelRNG& pRNG, const Momenta_k &KK, con
       GridBase *cell_grid = pRNG.Grid();
       Coordinate cell_size = cell_grid->_fdimensions;
 
+
       LatticeGaugeField tmp(cell_grid);
       GF_generate_P(tmp, pRNG, KK);
 
@@ -127,15 +128,26 @@ inline void GF_refresh(Field& U, GridParallelRNG& pRNG, const Momenta_k &KK, con
     std::cout << "Doing gauge transformation at the beginning of a trajectory."  << std::endl;
 
     GridBase *cell_grid = KK.Grid();
-    Coordinate cell_size = cell_grid->_fdimensions;
+    // Coordinate cell_size = cell_grid->_fdimensions;
+    Coordinate cell_size(4);
+    Coordinate mpi_size = GridDefaultMpi();
+    for(int i=0; i<4; ++i) cell_size[i] = cell_grid->_fdimensions[i] / mpi_size[i];
 
     LatticeGaugeField U_cell(cell_grid); U_cell = Zero();
     localCopyRegion(U, U_cell, Coordinate({0,0,0,0}), Coordinate({0,0,0,0}), cell_size);
+    std::cout << "print U" << std::endl;
+    print_grid_field_site(U, {0,0,0,0});
+    std::cout << "print U_cell" << std::endl;
+    print_grid_field_site(U_cell, {0,0,0,0});
+    assert(0);
+
+    std::cout << "before get_cell_mask" << std::endl;
     LatticeLorentzScalar cell_mask = get_cell_mask(cell_grid);
     U_cell = U_cell * cell_mask;
     // Gauge transform U inside the cell
     LatticeColourMatrix g_cell(cell_grid); g_cell = 1.0;
     GridParallelRNG pRNG_cell(cell_grid);      pRNG_cell.SeedFixedIntegers(std::vector<int>({45,12,81,9}));
+    std::cout << "before GF_heatbath" << std::endl;
     GF_heatbath(U_cell, g_cell, HMC_para.innerMC_N, HMC_para.betaMM, HMC_para.table_path, pRNG_cell); //hb_nsweeps before calculate equilibrium value
 
     LatticeColourMatrix g(U.Grid()); g = 1.0;

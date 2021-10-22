@@ -282,6 +282,8 @@ class GFAction_cell : public MyAction<typename Gimpl::GaugeField> {
       *cell_mask = get_cell_mask(cell_grid);
     }
     U_cell = U_cell * (*cell_mask);
+    // std::cout << U_cell << std::endl;
+    // assert(0);
 
     // LatticeColourMatrix g_cell(cell_grid); g_cell = 1.0;
     static LatticeColourMatrix g_cell(cell_grid);

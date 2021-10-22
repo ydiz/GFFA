@@ -60,7 +60,10 @@ class GF_HybridMonteCarlo {
 
   void evolve(const GFFAParams &HMC_para) {
 
-    GridCartesian cell_grid(HMC_para.cell_size, GridDefaultSimd(Nd,vComplex::Nsimd()), GridDefaultMpi());
+    Coordinate mpi_size = GridDefaultMpi();
+    Coordinate cell_grid_size(4);
+    for(int i=0; i<4; ++i) cell_grid_size[i] = mpi_size[i] * HMC_para.cell_size[i];
+    GridCartesian cell_grid(cell_grid_size, GridDefaultSimd(Nd,vComplex::Nsimd()), mpi_size);
     GridParallelRNG pRNG_cell(&cell_grid);  // For inner cell HMC
 
     std::vector<int> seeds; // generate seed of pRNG_cell from sRNG, so that the program is reproducible.
