@@ -12,6 +12,7 @@ public:
   GRID_SERIALIZABLE_CLASS_MEMBERS(GFFAParams,
     bool, newHp,
     std::string, action,
+    bool, add_fermion,
     double, beta,
     double, M,
     double, epsilon,   // When epsilon is set to 0., the force of zero mode is automatically set to 0; see GF_deltaU.h

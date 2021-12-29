@@ -11,6 +11,9 @@ int main(int argc, char **argv) {
   Grid_init(&argc, &argv);
   GridLogLayout();
 
+
+  std::cout << "HMC_MOMENTUM_DENOMINATOR: " << HMC_MOMENTUM_DENOMINATOR << std::endl;
+
   JSONReader reader("GFFA.json");
 
   GFFAParams hmc_para(reader);
@@ -63,9 +66,17 @@ int main(int argc, char **argv) {
     TheHMC.Resources.AddObservable<GMObs>(gm_para);
   }
 
+  // Fermion Action 
+  GridCartesian *GridPtr = TheHMC.Resources.GetCartesian();
+  GridRedBlackCartesian *GridRBPtr = TheHMC.Resources.GetRBCartesian();
+  My_DomainWallFermionActionR  DWFAction(GridPtr, GridRBPtr);
+  MyActionLevel<HMCWrapper::Field> Level_fermion(1);
+  Level_fermion.push_back(&DWFAction);
+
+  if(hmc_para.add_fermion) TheHMC.TheAction.push_back(Level_fermion);
 
   // action
-  MyActionLevel<HMCWrapper::Field> Level1(1);
+  MyActionLevel<HMCWrapper::Field> Level1(1); 
 
   My_WilsonActionR Wilson_action(hmc_para.beta);
   My_WilsonActionR_cell Wilson_action_cell(hmc_para.beta);
@@ -97,6 +108,15 @@ int main(int argc, char **argv) {
     std::cout << "Action not available" << std::endl;
     return 0;
   }
+
+
+  // bool use_fermion = true; // FIXME // should be read from parameter file
+  if(hmc_para.add_fermion) {
+    assert(hmc_para.action.substr(hmc_para.action.size()-4) != "cell"); // with fermion, we do not use cell evolution
+    Level1.multiplier = 4; // multiplier should be 4 when using fermion
+  }
+
+
 
   TheHMC.TheAction.push_back(Level1);
 

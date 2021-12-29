@@ -9,7 +9,7 @@ class MyAction
 public:
   bool is_smeared = false;
   // Heatbath?
-  virtual void refresh(const GaugeField& U, GridParallelRNG& pRNG) = 0; // refresh pseudofermions
+  virtual void refresh(const GaugeField& U, GridSerialRNG & sRNG, GridParallelRNG& pRNG) = 0; // refresh pseudofermions
   virtual RealD S(const GaugeField& U) = 0;                             // evaluate the action
   virtual void deriv(const GaugeField& U, GaugeField& dSdU, GridSerialRNG &sRNG, GridParallelRNG &pRNG, bool first_step) = 0;        // evaluate the action derivative
   virtual std::string action_name()    = 0;                             // return the action name
@@ -76,6 +76,75 @@ using MyActionSet = std::vector<MyActionLevel<GaugeField, R> >;
 
 
 template <class Gimpl>
+class My_DomainWallFermionAction : public MyAction<typename Gimpl::GaugeField> {
+ public:
+  INHERIT_GIMPL_TYPES(Gimpl);
+
+  typedef WilsonImplR FermionImplPolicy;
+  typedef WilsonFermionR FermionAction;
+  typedef typename FermionAction::FermionField FermionField;
+
+
+  // typedef WilsonImplR FermionImplPolicy;
+
+  explicit My_DomainWallFermionAction(GridCartesian *_GridPtr, GridRedBlackCartesian *_GridRBPtr) : CG(1.0e-8, 2000) { 
+
+    GridPtr = _GridPtr;
+    GridRBPtr = _GridRBPtr;
+    FGrid     = SpaceTimeGrid::makeFiveDimGrid(Ls, GridPtr);
+    FrbGrid   = SpaceTimeGrid::makeFiveDimRedBlackGrid(Ls, GridPtr);
+
+    LatticeGaugeField _U(GridPtr); // // temporarily need a gauge field for syntax
+    fermOp = new DomainWallFermionR(_U, *FGrid, *FrbGrid, *GridPtr, *GridRBPtr, mass, M5);
+
+    Nf2 = new TwoFlavourPseudoFermionAction<FermionImplPolicy>(*fermOp, CG, CG);
+    Nf2->is_smeared = false;
+  }
+
+  virtual std::string action_name() {return "My_DomainWallFermionAction";}
+
+  virtual std::string LogParameters(){
+    std::stringstream sstream;
+    return sstream.str();
+  }
+
+  virtual void refresh(const GaugeField &U, GridSerialRNG & sRNG, 
+                       GridParallelRNG &pRNG){
+    // Nf2->refresh(U, sRNG, pRNG); 
+    Nf2->refresh(U, pRNG);
+  }  // noop as no pseudoferms
+
+  virtual RealD S(const GaugeField &U) {
+
+    return Nf2->S(U);
+    // return 0;  // FIXME
+  }
+
+  virtual void deriv(const GaugeField &U, GaugeField &dSdU, GridSerialRNG &sRNG, GridParallelRNG &pRNG, bool first_step) {
+    Nf2->deriv(U, dSdU);
+  }
+private:
+  int Ls = 2;
+  Real mass = 0.5;
+  Real M5 = 1.8;
+
+  GridCartesian *GridPtr; 
+  GridRedBlackCartesian *GridRBPtr;
+  GridCartesian *FGrid; 
+  GridRedBlackCartesian *FrbGrid;
+
+  TwoFlavourPseudoFermionAction<FermionImplPolicy> *Nf2;
+  DomainWallFermionR *fermOp;
+  ConjugateGradient<FermionField> CG; // in constructor: CG(1.0e-8, 2000)
+
+  // TwoFlavourPseudoFermionAction<FermionImplPolicy> *Nf2; // do not know why; got error "pure virtual method called"
+};
+
+
+
+
+
+template <class Gimpl>
 class My_WilsonAction : public MyAction<typename Gimpl::GaugeField> {
  public:
   INHERIT_GIMPL_TYPES(Gimpl);
@@ -90,7 +159,7 @@ class My_WilsonAction : public MyAction<typename Gimpl::GaugeField> {
     return sstream.str();
   }
 
-  virtual void refresh(const GaugeField &U,
+  virtual void refresh(const GaugeField &U,GridSerialRNG & sRNG, 
                        GridParallelRNG &pRNG){};  // noop as no pseudoferms
 
   virtual RealD S(const GaugeField &U) {
@@ -122,7 +191,7 @@ class My_WilsonAction_cell : public MyAction<typename Gimpl::GaugeField> {
     return sstream.str();
   }
 
-  virtual void refresh(const GaugeField &U,
+  virtual void refresh(const GaugeField &U,GridSerialRNG & sRNG, 
                        GridParallelRNG &pRNG){};  // noop as no pseudoferms
 
   virtual RealD S(const GaugeField &U) {
@@ -173,7 +242,7 @@ class GFAction : public MyAction<typename Gimpl::GaugeField> {
     return sstream.str();
   }
 
-  virtual void refresh(const GaugeField &U,
+  virtual void refresh(const GaugeField &U,GridSerialRNG & sRNG, 
                        GridParallelRNG &pRNG){};  // noop as no pseudoferms
 
   //delta S_GF2 is calculated in GF_HMC.h: evolve();
@@ -244,7 +313,7 @@ class GFAction_cell : public MyAction<typename Gimpl::GaugeField> {
     return sstream.str();
   }
 
-  virtual void refresh(const GaugeField &U,
+  virtual void refresh(const GaugeField &U,GridSerialRNG & sRNG, 
                        GridParallelRNG &pRNG){};  // noop as no pseudoferms
 
   //delta S_GF2 is calculated in GF_HMC.h: evolve();
@@ -393,5 +462,7 @@ typedef My_WilsonAction_cell<PeriodicGimplR>          My_WilsonActionR_cell;
 typedef GFAction<PeriodicGimplR>          GFActionR;
 typedef GFAction_cell<PeriodicGimplR>          GFActionR_cell;
 // typedef GF_DBW2Action<PeriodicGimplR>     GF_DBW2ActionR;
+
+typedef My_DomainWallFermionAction<PeriodicGimplR>          My_DomainWallFermionActionR;
 
 }

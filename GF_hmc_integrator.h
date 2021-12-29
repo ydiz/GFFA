@@ -62,7 +62,7 @@ RealD GF_S(Field& U, const Momenta_k &KK) {
   return H;
 }
 
-inline void GF_refresh(Field& U, GridParallelRNG& pRNG, const Momenta_k &KK, const GFFAParams &HMC_para) {
+inline void GF_refresh(Field& U, GridSerialRNG & sRNG, GridParallelRNG& pRNG, const Momenta_k &KK, const GFFAParams &HMC_para) {
   assert(this->P.Grid() == U.Grid());
   std::cout << GridLogIntegrator << "Integrator refresh\n";
 
@@ -119,6 +119,16 @@ inline void GF_refresh(Field& U, GridParallelRNG& pRNG, const Momenta_k &KK, con
   }
   // }
 
+  for (int level = 0; level < as.size(); ++level) {
+    for (int actionID = 0; actionID < as[level].actions.size(); ++actionID) {
+      // get gauge field from the SmearingPolicy and
+      // based on the boolean is_smeared in actionID
+      // Field& Us = Smearer.get_U(as[level].actions.at(actionID)->is_smeared);
+      as[level].actions.at(actionID)->refresh(U, sRNG, pRNG); // This is necessary when adding fermion action
+    }
+    // Refresh the higher representation actions
+    // as[level].apply(refresh_hireps, Representations, sRNG, pRNG);
+  }
 
   // std::cout << "Not doing gauge transformation at the beginning of a trajectory."  << std::endl;
 

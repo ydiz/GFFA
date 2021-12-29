@@ -179,7 +179,7 @@ class GF_HybridMonteCarlo {
   // Evolution
   /////////////////////////////////////////////////////////
   RealD evolve_hmc_step(Field &U, const Momenta_k &KK, const GFFAParams &HMC_para, GridSerialRNG &sRNG, GridParallelRNG &pRNG) {
-    TheIntegrator.GF_refresh(U, pRNG, KK, HMC_para);  // set U and initialize P and phi's
+    TheIntegrator.GF_refresh(U, sRNG, pRNG, KK, HMC_para);  // set U and initialize P and phi's
     // std::cout << "P after GF_refresh" << std::endl;
     // print_grid_field_site(TheIntegrator.P, {1,2,3,4});
 
