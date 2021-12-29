@@ -261,7 +261,7 @@ class GFAction_cell : public MyAction<typename Gimpl::GaugeField> {
 
   virtual void deriv(const GaugeField &U, GaugeField &dSdU, GridSerialRNG &sRNG, GridParallelRNG &pRNG_cell, bool first_step) {
     GridBase *cell_grid = pRNG_cell.Grid();
-    Coordinate cell_size = cell_grid->_fdimensions;
+    Coordinate cell_size = cell_grid->_ldimensions; // Note: _ldimensions, not _fdimensions
 
     WilsonGaugeAction<Gimpl> Waction(beta);
     GaugeField dSwdU(U.Grid());

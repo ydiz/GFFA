@@ -45,7 +45,7 @@ void GF_heatbath(const LatticeGaugeField &Umu, LatticeColourMatrix &g,
       for(int cb=0; cb<2; cb++) pickCheckerboard(cb, UMinusShift_oe[mu][cb], UMinusShift_tmp);
     }
   }
-  print_grid_half_field_site(U_oe[0][0]);
+  // print_grid_half_field_site(U_oe[0][0]);
   // assert(0);
 
   std::vector<std::vector<LatticeColourMatrix>> dSGF2dU_oe(4, std::vector<LatticeColourMatrix>(2, &rbGrid));
@@ -75,12 +75,7 @@ void GF_heatbath(const LatticeGaugeField &Umu, LatticeColourMatrix &g,
         // if we choose the sign of S_GF1 to be postive, sign of staple should be negative
         staple_half += U_oe[mu][cb] * adj(Cshift(g_oe[cb_inverse],mu,1))
                         + adj( Cshift(g_oe[cb_inverse], mu, -1) * UMinusShift_oe[mu][cb]);
-        // print_grid_half_field_site(U_oe[mu][cb]);
-        // // print_grid_half_field_site(UMinusShift_oe[mu][cb]);
-        // // print_grid_half_field_site(Cshift(g_oe[cb_inverse],mu,1));
-        // // print_grid_half_field_site(Cshift(g_oe[cb_inverse], mu, -1));
-        // // print_grid_half_field_site(staple_half);
-        // // // staple_half += U_oe[mu][cb] * adj(my_Cshift_local_rb(g_oe[cb_inverse],mu,1))
+        // // // staple_half += U_oe[mu][cb] * adj(my_Cshift_local_rb(g_oe[cb_inverse],mu,1)) // this should also work
         // // //                 + adj( my_Cshift_local_rb(g_oe[cb_inverse], mu, -1) * UMinusShift_oe[mu][cb]);
       }
       // std::cout << "cb: " << cb << std::endl;

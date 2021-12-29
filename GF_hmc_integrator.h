@@ -93,13 +93,12 @@ inline void GF_refresh(Field& U, GridParallelRNG& pRNG, const Momenta_k &KK, con
     if(HMC_para.isCell) {
       // std::cout << "before cell_grid" << std::endl;
       GridBase *cell_grid = pRNG.Grid();
-      Coordinate cell_size = cell_grid->_fdimensions;
 
 
       LatticeGaugeField tmp(cell_grid);
       GF_generate_P(tmp, pRNG, KK);
 
-      localCopyRegion(tmp, this->P, Coordinate({0,0,0,0}), Coordinate({0,0,0,0}), cell_size);
+      localCopyRegion(tmp, this->P, Coordinate({0,0,0,0}), Coordinate({0,0,0,0}), HMC_para.cell_size);
       this->P = this->P * mask; // set "links that are perpendicular to surface" to 0.
       // std::cout << "after cell_grid" << std::endl;
     }
@@ -108,12 +107,11 @@ inline void GF_refresh(Field& U, GridParallelRNG& pRNG, const Momenta_k &KK, con
   else {
     if(HMC_para.isCell) {
       GridBase *cell_grid = pRNG.Grid();
-      Coordinate cell_size = cell_grid->_fdimensions;
 
       LatticeGaugeField tmp(cell_grid);
       FieldImplementation::generate_momenta(tmp, pRNG);
 
-      localCopyRegion(tmp, this->P, Coordinate({0,0,0,0}), Coordinate({0,0,0,0}), cell_size);
+      localCopyRegion(tmp, this->P, Coordinate({0,0,0,0}), Coordinate({0,0,0,0}), HMC_para.cell_size);
       this->P = this->P * mask; // set "links that are perpendicular to surface" to 0.
     }
     else FieldImplementation::generate_momenta(this->P, pRNG);
@@ -129,17 +127,14 @@ inline void GF_refresh(Field& U, GridParallelRNG& pRNG, const Momenta_k &KK, con
 
     GridBase *cell_grid = KK.Grid();
     // Coordinate cell_size = cell_grid->_fdimensions;
-    Coordinate cell_size(4);
-    Coordinate mpi_size = GridDefaultMpi();
-    for(int i=0; i<4; ++i) cell_size[i] = cell_grid->_fdimensions[i] / mpi_size[i];
 
     LatticeGaugeField U_cell(cell_grid); U_cell = Zero();
-    localCopyRegion(U, U_cell, Coordinate({0,0,0,0}), Coordinate({0,0,0,0}), cell_size);
-    std::cout << "print U" << std::endl;
-    print_grid_field_site(U, {0,0,0,0});
-    std::cout << "print U_cell" << std::endl;
-    print_grid_field_site(U_cell, {0,0,0,0});
-    assert(0);
+    localCopyRegion(U, U_cell, Coordinate({0,0,0,0}), Coordinate({0,0,0,0}), HMC_para.cell_size);
+    // std::cout << "print U" << std::endl;
+    // print_grid_field_site(U, {0,0,0,0});
+    // std::cout << "print U_cell" << std::endl;
+    // print_grid_field_site(U_cell, {0,0,0,0});
+    // assert(0);
 
     std::cout << "before get_cell_mask" << std::endl;
     LatticeLorentzScalar cell_mask = get_cell_mask(cell_grid);
@@ -151,7 +146,7 @@ inline void GF_refresh(Field& U, GridParallelRNG& pRNG, const Momenta_k &KK, con
     GF_heatbath(U_cell, g_cell, HMC_para.innerMC_N, HMC_para.betaMM, HMC_para.table_path, pRNG_cell); //hb_nsweeps before calculate equilibrium value
 
     LatticeColourMatrix g(U.Grid()); g = 1.0;
-    localCopyRegion(g_cell, g, Coordinate({0,0,0,0}), Coordinate({0,0,0,0}), cell_size);
+    localCopyRegion(g_cell, g, Coordinate({0,0,0,0}), Coordinate({0,0,0,0}), HMC_para.cell_size);
 
     SU<3>::GaugeTransform(U, g);
     std::cout << "Plaquette after gauge transformation: "<< WilsonLoops<PeriodicGimplR>::avgPlaquette(U) << std::endl;
@@ -177,7 +172,7 @@ void update_U(LatticeGaugeField& Mom, LatticeGaugeField& U, double ep, const Mom
   if(KK.newHp) {
     if(KK.isCell) {
       GridBase *cell_grid = KK.Grid();
-      Coordinate cell_size = cell_grid->_fdimensions;
+      Coordinate cell_size = cell_grid->_ldimensions; // Note: _ldimensions, not _fdimensions
 
       LatticeGaugeField Mom_cell(cell_grid);
       localCopyRegion(Mom, Mom_cell, Coordinate({0,0,0,0}), Coordinate({0,0,0,0}), cell_size);
