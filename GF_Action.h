@@ -87,7 +87,9 @@ class My_DomainWallFermionAction : public MyAction<typename Gimpl::GaugeField> {
 
   // typedef WilsonImplR FermionImplPolicy;
 
-  explicit My_DomainWallFermionAction(GridCartesian *_GridPtr, GridRedBlackCartesian *_GridRBPtr) : CG(1.0e-8, 2000) { 
+  // explicit My_DomainWallFermionAction(GridCartesian *_GridPtr, GridRedBlackCartesian *_GridRBPtr) : CG(1.0e-8, 2000) { 
+  explicit My_DomainWallFermionAction(GridCartesian *_GridPtr, GridRedBlackCartesian *_GridRBPtr, 
+      double _mass, double _M5, int _Ls) : CG(1.0e-8, 2000), mass(_mass), M5(_M5), Ls(_Ls) { 
 
     GridPtr = _GridPtr;
     GridRBPtr = _GridRBPtr;
@@ -99,6 +101,10 @@ class My_DomainWallFermionAction : public MyAction<typename Gimpl::GaugeField> {
 
     Nf2 = new TwoFlavourPseudoFermionAction<FermionImplPolicy>(*fermOp, CG, CG);
     Nf2->is_smeared = false;
+
+    // std::cout << "Ls: " << Ls<< std::endl;
+    // std::cout << "M5: " << M5 << std::endl;
+    // std::cout << "mass:" << mass << std::endl;
   }
 
   virtual std::string action_name() {return "My_DomainWallFermionAction";}
@@ -124,9 +130,12 @@ class My_DomainWallFermionAction : public MyAction<typename Gimpl::GaugeField> {
     Nf2->deriv(U, dSdU);
   }
 private:
-  int Ls = 2;
-  Real mass = 0.5;
-  Real M5 = 1.8;
+  // int Ls = 2;
+  // Real mass = 0.5;
+  // Real M5 = 1.8;
+  int Ls;
+  Real mass;
+  Real M5;
 
   GridCartesian *GridPtr; 
   GridRedBlackCartesian *GridRBPtr;

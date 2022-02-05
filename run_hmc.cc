@@ -18,12 +18,15 @@ int main(int argc, char **argv) {
 
   GFFAParams hmc_para(reader);
   HMCparameters hmcParams(reader);
+  My_DomainWallFermionParameters dwfParams(reader);
   MyTC_para tc_para(reader);
   GaugeModes_para gm_para(reader);
   PolyakovLoop_para pl_para(reader);
 
   std::cout << hmcParams << std::endl;
   std::cout << hmc_para << std::endl;
+  if(hmc_para.add_fermion) std::cout << dwfParams << std::endl;
+
   if(hmc_para.measure_A) {
     hmcParams.StartTrajectory = 0;
     hmcParams.NoMetropolisUntil = 1;
@@ -69,7 +72,8 @@ int main(int argc, char **argv) {
   // Fermion Action 
   GridCartesian *GridPtr = TheHMC.Resources.GetCartesian();
   GridRedBlackCartesian *GridRBPtr = TheHMC.Resources.GetRBCartesian();
-  My_DomainWallFermionActionR  DWFAction(GridPtr, GridRBPtr);
+
+  My_DomainWallFermionActionR  DWFAction(GridPtr, GridRBPtr, dwfParams.mass, dwfParams.M5, dwfParams.Ls);
   MyActionLevel<HMCWrapper::Field> Level_fermion(1);
   Level_fermion.push_back(&DWFAction);
 

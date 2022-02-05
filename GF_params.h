@@ -45,5 +45,20 @@ public:
 
 };
 
+
+struct My_DomainWallFermionParameters : Serializable {
+public:
+  GRID_SERIALIZABLE_CLASS_MEMBERS(My_DomainWallFermionParameters,
+          RealD, mass,
+          RealD, M5,
+          unsigned int, Ls);
+
+  template <class ReaderClass>
+  My_DomainWallFermionParameters(Reader<ReaderClass>& reader) {
+    read(reader, "DomainWallFermionParameters", *this);
+    // std::cout << *this << std::endl;
+  }
+};
+
 }
 
